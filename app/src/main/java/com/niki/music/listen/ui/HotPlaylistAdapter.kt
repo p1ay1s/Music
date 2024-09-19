@@ -29,7 +29,7 @@ class HotPlaylistAdapter(
 
     override fun LayoutHotPlaylistBinding.onBindViewHolder(bean: Tag, position: Int) {
         if (bean.name.isBlank()) {
-            removeItem(position)
+            removeItem(position, bean.id)
             logE(TAG, "删除了无名 item")
             return
         }
@@ -58,7 +58,7 @@ class HotPlaylistAdapter(
 
         musicViewModel.getSongsFromPlaylist(bean.id, 3, 0) {
             if (it.isNullOrEmpty()) {
-                removeItem(position)
+                removeItem(position, bean.id)
                 logE(TAG, "删除了 item ${bean.name}")
             } else {
                 songAdapter.submitList(it)
@@ -67,9 +67,17 @@ class HotPlaylistAdapter(
 
     }
 
-    private fun removeItem(position: Int) =
+    private fun removeItem(position: Int, id: String) =
         with(currentList.toMutableList()) {
             this.removeAt(position)
+            /**
+             * 有时会移除失败
+             */
+            if (position < this.size) {
+                if (this[position].id == id) {
+                    this.removeAt(position)
+                }
+            }
             submitList(this)
         }
 

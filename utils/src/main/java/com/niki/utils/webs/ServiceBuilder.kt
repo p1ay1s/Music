@@ -3,12 +3,16 @@ package com.niki.utils.webs
 import com.niki.utils.base.baseUrl
 import com.niki.utils.base.logE
 import com.niki.utils.base.logI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
 import java.util.concurrent.TimeUnit
 
 const val ON_FAILURE_CODE = -1
@@ -17,6 +21,11 @@ const val ON_FAILURE_CODE = -1
  * 摘自招新系统，略有修改
  */
 object ServiceBuilder {
+    interface ConnectivityService {
+        @GET("/")
+        suspend fun checkConnectivity(): Response<Unit>
+    }
+
     val TAG = this::class.simpleName!!
 
     private const val TIMEOUT_SET = 15L
@@ -32,6 +41,12 @@ object ServiceBuilder {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
+    private fun retrofitBuilder(baseUrl: String) = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
     /**
      * 使用 ServiceBuilder.create(XXXService::class.java) 返回一个 Service 代理对象
      */
@@ -41,6 +56,16 @@ object ServiceBuilder {
      * 使用 ServiceBuilder.create<XXXService> 返回一个 Service 代理对象
      */
     inline fun <reified T> create(): T = create(T::class.java)
+
+    fun ping(url: String, callback: (Boolean) -> Unit) = CoroutineScope(Dispatchers.Main).launch {
+        try {
+            val connectivityService = retrofitBuilder(url).create(ConnectivityService::class.java)
+            val response = connectivityService.checkConnectivity()
+            callback(response.isSuccessful)
+        } catch (_: Exception) {
+            callback(false)
+        }
+    }
 
     /**
      * 在 model 层确定 T 的类型，进一步回调给 viewModel 层

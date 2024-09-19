@@ -91,6 +91,14 @@ class MyFragment : BaseFragment<FragmentMyBinding>() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        MusicRepository.run {
+            if (mLikePlaylist.isEmpty() && myViewModel.uiStateFlow.value.isLoggedIn)
+                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
+        }
+    }
+
     private fun SongAdapter.submitPartly(list: List<Song>) = lifecycleScope.launch {
         val newList = takePartOf(list)
         if (newList.isNotEmpty())
