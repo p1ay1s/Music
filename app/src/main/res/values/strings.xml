@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Music</string>
+    <string name="cate">分类</string>
+    <string name="playlist">歌单</string>
+    <string name="click_to_login">点击登录</string>
+    <string name="getCaptcha">获取验证码</string>
+    <string name="login">登录</string>
+    <string name="captcha">验证码</string>
+    <string name="phone">电话</string>
+</resources>

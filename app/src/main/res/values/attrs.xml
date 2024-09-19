@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CustomViewGroup">
+        <!-- 字符串属性 -->
+        <attr name="customText" format="string" />
+
+        <!-- 尺寸属性 -->
+        <attr name="customTextSize" format="dimension" />
+
+        <!-- 颜色属性 -->
+        <attr name="customColor" format="color" />
+
+        <!-- 布尔属性 -->
+        <attr name="customEnabled" format="boolean" />
+
+        <!-- 整数属性 -->
+        <attr name="customInteger" format="integer" />
+
+        <!-- 浮点数属性 -->
+        <attr name="customFloat" format="float" />
+
+        <!-- 枚举属性 -->
+        <attr name="customAlignment" format="enum">
+            <enum name="left" value="0" />
+            <enum name="center" value="1" />
+            <enum name="right" value="2" />
+        </attr>
+
+        <!-- 标志属性（可以组合多个值） -->
+        <attr name="customFlags" format="flags">
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+            <flag name="underline" value="4" />
+        </attr>
+
+        <!-- 引用属性 -->
+        <attr name="customDrawable" format="reference" />
+    </declare-styleable>
+</resources>
