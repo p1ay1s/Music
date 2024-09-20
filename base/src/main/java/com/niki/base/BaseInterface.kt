@@ -1,4 +1,4 @@
-package com.niki.utils.base
+package com.niki.base.base
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

@@ -1,4 +1,4 @@
-package com.niki.utils.base
+package com.niki.base.base
 
 import android.app.Application
 import android.content.Context

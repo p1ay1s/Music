@@ -1,4 +1,4 @@
-package com.niki.utils.base
+package com.niki.base
 
 import android.os.Handler
 import android.os.Looper

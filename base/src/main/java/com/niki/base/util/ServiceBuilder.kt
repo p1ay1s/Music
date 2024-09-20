@@ -1,8 +1,8 @@
-package com.niki.utils.webs
+package com.niki.base.utils
 
-import com.niki.utils.base.baseUrl
-import com.niki.utils.base.logE
-import com.niki.utils.base.logI
+import com.niki.base.baseUrl
+import com.niki.base.logE
+import com.niki.base.logI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,6 +57,9 @@ object ServiceBuilder {
      */
     inline fun <reified T> create(): T = create(T::class.java)
 
+    /**
+     * 检测连通性
+     */
     fun ping(url: String, callback: (Boolean) -> Unit) = CoroutineScope(Dispatchers.Main).launch {
         try {
             val connectivityService = retrofitBuilder(url).create(ConnectivityService::class.java)

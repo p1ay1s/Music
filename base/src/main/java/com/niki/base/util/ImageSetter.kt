@@ -1,4 +1,4 @@
-package com.niki.utils
+package com.niki.base.utils
 
 import android.graphics.drawable.Drawable
 import android.view.View

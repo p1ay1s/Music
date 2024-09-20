@@ -1,4 +1,4 @@
-package com.niki.utils.base.ui
+package com.niki.base.ui
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -11,6 +11,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 /**
+ * TODO 改用behavior
  * @param layoutId 布局id
  * @param collapsable 是否允许悬挂
  * @param collapseHeightPercent 悬挂时的高度百分比

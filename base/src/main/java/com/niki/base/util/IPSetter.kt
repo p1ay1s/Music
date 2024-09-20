@@ -1,4 +1,4 @@
-package com.niki.utils
+package com.niki.base.utils
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -8,10 +8,10 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
-import com.niki.utils.base.appContext
-import com.niki.utils.base.baseUrl
-import com.niki.utils.base.logD
-import com.niki.utils.base.logE
+import com.niki.base.appContext
+import com.niki.base.baseUrl
+import com.niki.base.logD
+import com.niki.base.logE
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
@@ -26,9 +26,8 @@ object IPSetter {
         appContext.registerReceiver(NetworkConnectChangedReceiver(), filter)
     }
 
-    fun setBaseUrl() {
+    fun getIp(): String {
         var ip = "0.0.0.0"
-        baseUrl = "http://$ip:3000/"
 
         val wifiManager: WifiManager =
             appContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -37,8 +36,8 @@ object IPSetter {
 
         try {
             if (wifiManager.isWifiEnabled) {
-                val network = connectivityManager.activeNetwork ?: return
-                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return
+                val network = connectivityManager.activeNetwork ?: return ip
+                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return ip
                 if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                     val wifiInfo = wifiManager.connectionInfo
                     val ipAddress = wifiInfo.ipAddress
@@ -52,18 +51,20 @@ object IPSetter {
                 NetworkInterface.getNetworkInterfaces().toList().forEach { networkInterface ->
                     networkInterface.inetAddresses.toList().forEach { inetAddress ->
                         if (!inetAddress.isLoopbackAddress && inetAddress is Inet4Address) {
-                            ip = inetAddress.hostAddress ?: return
+                            inetAddress.hostAddress?.let { ip = it }
                         }
                     }
                 }
             }
+            logD(TAG, ip)
         } catch (_: Exception) {
-            logE(TAG, "failed to get ip")
-            toast("ip信息获取失败")
-        } finally {
-            baseUrl = "http://$ip:3000/"
-            logD(TAG, baseUrl)
+            logE(TAG, "failed")
         }
+        return ip
+    }
+
+    fun setBaseUrl() {
+        baseUrl = "http://${getIp()}:3000/"
     }
 
     class NetworkConnectChangedReceiver : BroadcastReceiver() {

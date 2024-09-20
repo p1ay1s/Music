@@ -1,4 +1,4 @@
-package com.niki.utils.base.ui
+package com.niki.base.ui
 
 import android.content.Context
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,12 +35,12 @@ class BaseLayoutManager(
     ) {
         super.collectAdjacentPrefetchPositions(dx, dy, state, layoutPrefetchRegistry)
         // 根据滑动方向(dx, dy)收集相邻的预取位置
-        val anchorPos = findFirstVisibleItemPosition()
+        val firstPosition = findFirstVisibleItemPosition()
         val lastPosition = findLastVisibleItemPosition()
         // 预加载屏幕外的 n 个item
         if (dy > 0) {
             // 向下滑动，预取下面的 Item 数据
-            for (i in (anchorPos + 1) until
+            for (i in (firstPosition + 1) until
                     if ((state?.itemCount ?: 0) > (lastPosition + size))
                         lastPosition + size
                     else state?.itemCount ?: 0
@@ -49,8 +49,8 @@ class BaseLayoutManager(
             }
         } else {
             // 向上滑动，预取上面的Item数据
-            for (i in anchorPos - 1 downTo
-                    if (anchorPos - size > 0) anchorPos - size
+            for (i in firstPosition - 1 downTo
+                    if (firstPosition - size > 0) firstPosition - size
                     else 0
             ) {
                 layoutPrefetchRegistry.addPosition(i, 0)
