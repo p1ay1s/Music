@@ -1,4 +1,4 @@
-package com.niki.base.utils
+package com.niki.base.util
 
 import android.widget.Toast
 import com.google.gson.Gson

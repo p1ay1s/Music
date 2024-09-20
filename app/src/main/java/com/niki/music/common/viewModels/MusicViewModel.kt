@@ -1,13 +1,13 @@
-package com.niki.music.common.commonViewModels
+package com.niki.music.common.viewModels
 
 import androidx.lifecycle.MutableLiveData
-import com.niki.music.common.commonIntents.MusicEffect
-import com.niki.music.common.commonIntents.MusicIntent
-import com.niki.music.common.commonIntents.MusicState
+import com.niki.music.common.intents.MusicEffect
+import com.niki.music.common.intents.MusicIntent
+import com.niki.music.common.intents.MusicState
 import com.niki.music.model.Song
 import com.niki.music.my.appCookie
 import com.niki.music.search.SearchModel
-import com.niki.utils.webs.ON_FAILURE_CODE
+import com.niki.base.util.ON_FAILURE_CODE
 
 class MusicViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     companion object {

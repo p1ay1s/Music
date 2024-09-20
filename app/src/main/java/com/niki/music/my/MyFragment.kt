@@ -10,15 +10,16 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.music.R
 import com.niki.music.common.MusicRepository
-import com.niki.music.common.commonViewModels.MusicViewModel
 import com.niki.music.common.ui.SongAdapter
+import com.niki.music.common.viewModels.MusicViewModel
+import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
 import com.niki.music.model.Song
 import com.niki.music.my.login.LoginFragment
-import com.niki.utils.ImageSetter
-import com.niki.utils.base.BaseFragment
-import com.niki.utils.base.logE
-import com.niki.utils.base.ui.BaseLayoutManager
+import com.niki.base.util.ImageSetter
+import com.niki.base.view.BaseFragment
+import com.niki.base.log.logE
+import com.niki.base.view.ui.BaseLayoutManager
 import com.niki.utils.takePartOf
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -26,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-class MyFragment : BaseFragment<FragmentMyBinding>() {
+class MyFragment : BaseFragment<FragmentMyBinding>(), IView {
 
     companion object {
         const val CLICK_TO_LOGIN = "点击登录"
@@ -61,14 +62,14 @@ class MyFragment : BaseFragment<FragmentMyBinding>() {
             )
         }
 
-        handleStates()
+        handle()
     }
 
-    private fun handleStates() {
+    override fun handle() = myViewModel.apply {
         lifecycleScope.launch {
-            myViewModel.uiEffectFlow
+            uiEffectFlow
                 .collect {
-                    logE(TAG, "collected ${it::class.qualifiedName.toString()}")
+                    logE(TAG, "COLLECTED ${it::class.qualifiedName.toString()}")
                     when (it) {
                         is MyEffect.GetLikePlaylistEffect -> if (it.isSuccess)
                             songAdapter.submitPartly(MusicRepository.mLikePlaylist)
@@ -77,15 +78,13 @@ class MyFragment : BaseFragment<FragmentMyBinding>() {
                     }
                 }
         }
-        myViewModel.apply {
-            observeState {
-                lifecycleScope.launch {
-                    map { it.loggedInDatas }.distinctUntilChanged().collect {
-                        if (it == null)
-                            setUnLoggedInViews()
-                        else
-                            setLoggedInViews(it)
-                    }
+        observeState {
+            lifecycleScope.launch {
+                map { it.loggedInDatas }.distinctUntilChanged().collect {
+                    if (it == null)
+                        setUnLoggedInViews()
+                    else
+                        setLoggedInViews(it)
                 }
             }
         }
@@ -150,7 +149,11 @@ class MyFragment : BaseFragment<FragmentMyBinding>() {
 
     private fun initValues() {
         songAdapter = SongAdapter(musicViewModel)
-        baseLayoutManager = BaseLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, 4)
+        baseLayoutManager = BaseLayoutManager(
+            requireActivity(),
+            LinearLayoutManager.VERTICAL,
+            4
+        )
     }
 }
 

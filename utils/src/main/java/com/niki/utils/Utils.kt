@@ -4,16 +4,11 @@ import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import android.widget.Adapter
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.gson.Gson
-import com.niki.utils.base.appContext
-import com.niki.utils.webs.ServiceBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.ResponseBody
 import kotlin.random.Random
 
 
@@ -29,7 +24,7 @@ val Adapter.TAG
     get() = this::class.simpleName!!
 
 fun sendBroadcast(msg: String) =
-    LocalBroadcastManager.getInstance(appContext).sendBroadcast(Intent(msg))
+    LocalBroadcastManager.getInstance(com.niki.base.appContext).sendBroadcast(Intent(msg))
 
 fun <T> MutableList<T>.updateList(list: List<T>, clean: Boolean = false) {
     val originalSize = this.size
@@ -64,22 +59,4 @@ suspend fun <T> takePartOf(list: List<T>, size: Int = 30): List<T> = withContext
     }
 
     return@withContext result
-}
-
-suspend fun toastSuspended(msg: String, length: Int = Toast.LENGTH_SHORT) =
-    withContext(Dispatchers.Main) {
-        toast(msg, length)
-    }
-
-fun toast(msg: String, length: Int = Toast.LENGTH_SHORT) {
-    if (msg.isNotBlank())
-        Toast.makeText(appContext, msg, length).show()
-}
-
-inline fun <reified T> convertErrorBody(responseErrorBody: ResponseBody?): T? {
-    runCatching {
-        return Gson().fromJson(responseErrorBody!!.string(), T::class.java)
-    }
-    //异常不做处理
-    return null
 }

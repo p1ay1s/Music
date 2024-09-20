@@ -1,8 +1,9 @@
-package com.niki.base
+package com.niki.base.view
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.ViewDataBinding
+import com.niki.base.BaseInterface
 
 abstract class BaseActivity<VB : ViewDataBinding> : AppCompatActivity(),
     BaseInterface<VB> {

@@ -1,4 +1,4 @@
-package com.niki.base.ui
+package com.niki.base.view.ui
 
 import android.annotation.SuppressLint
 import android.app.Dialog

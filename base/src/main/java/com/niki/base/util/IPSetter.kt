@@ -1,4 +1,4 @@
-package com.niki.base.utils
+package com.niki.base.util
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -10,8 +10,8 @@ import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import com.niki.base.appContext
 import com.niki.base.baseUrl
-import com.niki.base.logD
-import com.niki.base.logE
+import com.niki.base.log.logD
+import com.niki.base.log.logE
 import java.net.Inet4Address
 import java.net.NetworkInterface
 

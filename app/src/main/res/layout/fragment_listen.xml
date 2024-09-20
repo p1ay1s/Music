@@ -63,18 +63,18 @@
                     android:layout_width="match_parent"
                     android:layout_height="35dp" />
 
-                <androidx.appcompat.widget.Toolbar
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:background="@color/white"
-                    app:title="@string/cate" />
+<!--                <androidx.appcompat.widget.Toolbar-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:background="@color/white"-->
+<!--                    app:title="@string/cate" />-->
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerView_Hot"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="170dp"
-                    android:orientation="horizontal" />
+<!--                <androidx.recyclerview.widget.RecyclerView-->
+<!--                    android:id="@+id/recyclerView_Hot"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:minHeight="170dp"-->
+<!--                    android:orientation="horizontal" />-->
 
                 <View
                     android:layout_width="match_parent"

@@ -1,8 +1,9 @@
-package com.niki.base.base
+package com.niki.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.niki.utils.TAG
+import com.niki.base.log.logE
+import com.niki.base.util.TAG
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow

@@ -5,14 +5,14 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DiffUtil
-import com.niki.music.common.commonIntents.MusicIntent
-import com.niki.music.common.commonViewModels.MusicViewModel
+import com.niki.base.view.ui.BaseAdapter
+import com.niki.base.util.ImageSetter.setRadiusImgView
+import com.niki.base.util.toast
+import com.niki.music.common.intents.MusicIntent
+import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.databinding.LayoutSongBinding
 import com.niki.music.model.Song
 import com.niki.music.model.SongInfo
-import com.niki.utils.ImageSetter.setRadiusImgView
-import com.niki.utils.base.ui.BaseAdapter
-import com.niki.utils.toast
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class SongAdapter(

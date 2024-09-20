@@ -15,8 +15,6 @@ data class HotPlaylistResponse(
 data class Tag(
     var id: String = "",
     var name: String = "",
-    var position: Int = -1,
-    var category: String = ""
 )
 
 /**

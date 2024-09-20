@@ -1,4 +1,4 @@
-package com.niki.base
+package com.niki.base.view
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
+import com.niki.base.BaseInterface
 
 abstract class BaseFragment<VB : ViewDataBinding> : Fragment(),
     BaseInterface<VB> {

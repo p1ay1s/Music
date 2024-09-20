@@ -1,9 +1,9 @@
 package com.niki.music.listen
 
 import com.niki.music.common.MusicRepository
-import com.niki.music.common.commonViewModels.BaseViewModel
+import com.niki.music.common.viewModels.BaseViewModel
 import com.niki.utils.TAG
-import com.niki.utils.base.logE
+import com.niki.base.log.logE
 
 class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>() {
     companion object {
@@ -14,10 +14,9 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
 
     override fun handleIntent(intent: ListenIntent) =
         intent.run {
-            logE(TAG, this::class.simpleName.toString())
+            logE(TAG, "RECEIVED" + this::class.simpleName.toString())
             when (this) {
                 is ListenIntent.GetTopPlaylists -> getTopPlaylists(resetPage)
-                is ListenIntent.GetHotPlaylists -> getHotPlaylists()
             }
         }
 
@@ -44,12 +43,4 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
             },
             { _, _ -> sendEffect { ListenEffect.GetTopPlaylistsEffect() } })
     }
-
-    private fun getHotPlaylists() =
-        playlistModel.getHotPlaylists(
-            {
-                MusicRepository.mHotPlaylists = it.tags
-                sendEffect { ListenEffect.GetHotPlaylistsEffect(true) }
-            },
-            { _, _ -> sendEffect { ListenEffect.GetHotPlaylistsEffect() } })
 }

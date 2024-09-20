@@ -1,4 +1,4 @@
-package com.niki.base
+package com.niki.base.view
 
 import androidx.databinding.ViewDataBinding
 

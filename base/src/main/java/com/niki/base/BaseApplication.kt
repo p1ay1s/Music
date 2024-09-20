@@ -1,15 +1,16 @@
-package com.niki.base.base
+package com.niki.base
 
 import android.app.Application
 import android.content.Context
-import com.niki.utils.IPSetter.setBaseUrl
-import com.niki.utils.toast
-import com.niki.utils.webs.ServiceBuilder
+import com.niki.base.log.Logger
+import com.niki.base.util.IPSetter.setBaseUrl
+import com.niki.base.util.ServiceBuilder
+import com.niki.base.util.toast
 
 lateinit var appContext: Context
 lateinit var baseUrl: String
 
-class BaseApplication : Application() {
+open class BaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         appContext = this

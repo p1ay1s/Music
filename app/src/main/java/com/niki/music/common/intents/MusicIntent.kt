@@ -1,4 +1,4 @@
-package com.niki.music.common.commonIntents
+package com.niki.music.common.intents
 
 import com.niki.music.model.Song
 import com.niki.music.model.Sub

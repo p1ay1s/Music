@@ -10,9 +10,6 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface PlaylistService {
-    @GET(WebConstant.PLAYLIST_HOT)
-    fun getHotPlaylists(): Call<HotPlaylistResponse>
-
     @GET(WebConstant.PLAYLIST_CATE)
     fun getCatePlaylists(): Call<CatePlaylistResponse>
 

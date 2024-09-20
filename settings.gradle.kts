@@ -36,3 +36,4 @@ rootProject.name = "Music"
 include(":app")
 include(":feature")
 include(":utils")
+include(":base")

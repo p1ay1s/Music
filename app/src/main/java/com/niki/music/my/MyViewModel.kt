@@ -1,12 +1,14 @@
 package com.niki.music.my
 
 import androidx.lifecycle.viewModelScope
+import com.niki.base.log.logE
+import com.niki.base.util.ON_FAILURE_CODE
+import com.niki.base.util.toast
 import com.niki.music.common.MusicRepository
-import com.niki.music.common.commonViewModels.BaseViewModel
+import com.niki.music.common.viewModels.BaseViewModel
 import com.niki.music.model.LoginResponse
 import com.niki.music.my.login.LoginModel
 import com.niki.utils.TAG
-import com.niki.utils.base.logE
 import com.niki.utils.datastore.getStringData
 import com.niki.utils.datastore.preferenceAvatar
 import com.niki.utils.datastore.preferenceBackground
@@ -14,8 +16,6 @@ import com.niki.utils.datastore.preferenceCookie
 import com.niki.utils.datastore.preferenceNickname
 import com.niki.utils.datastore.preferenceUid
 import com.niki.utils.datastore.putStringData
-import com.niki.utils.toast
-import com.niki.utils.webs.ON_FAILURE_CODE
 import kotlinx.coroutines.launch
 
 var appCookie = ""
@@ -34,6 +34,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
 
     override fun handleIntent(intent: MyIntent) {
         intent.run {
+            logE(TAG, "RECEIVED" + this::class.simpleName.toString())
             when (this) {
                 is MyIntent.UpdatePhone -> updateState { copy(phone = this@run.phone) }
                 is MyIntent.UpdateCaptcha -> updateState { copy(captcha = this@run.captcha) }

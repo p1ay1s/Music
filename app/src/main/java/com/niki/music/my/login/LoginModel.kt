@@ -7,8 +7,8 @@ import com.niki.music.model.RefreshCookieResponse
 import com.niki.music.model.SendCaptchaResponse
 import com.niki.music.model.UserExistApiResponse
 import com.niki.music.services.LoginService
-import com.niki.utils.webs.ServiceBuilder
-import com.niki.utils.webs.ServiceBuilder.makeRequest
+import com.niki.base.util.ServiceBuilder
+import com.niki.base.util.ServiceBuilder.makeRequest
 
 class LoginModel {
     val loginService by lazy {

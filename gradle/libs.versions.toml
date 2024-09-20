@@ -19,7 +19,6 @@ navigationDynamicFeaturesFragment = "2.7.7"
 picasso = "2.71828"
 recyclerview = "1.3.2"
 retrofit = "2.11.0"
-roundedimageview = "2.3.0"
 swiperefreshlayout = "1.1.0"
 ui = "1.6.8"
 datastoreCoreAndroid = "1.1.1"
@@ -49,7 +48,6 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-roundedimageview = { module = "com.makeramen:roundedimageview", version.ref = "roundedimageview" }
 androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastoreCoreAndroid" }
 
 [plugins]

@@ -40,6 +40,7 @@ android {
 
 dependencies {
     implementation(project(":utils"))
+    implementation(project(":base"))
 
     implementation(libs.retrofit)
 

@@ -1,8 +1,8 @@
-package com.niki.base.utils
+package com.niki.base.util
 
 import com.niki.base.baseUrl
-import com.niki.base.logE
-import com.niki.base.logI
+import com.niki.base.log.logE
+import com.niki.base.log.logI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

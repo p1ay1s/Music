@@ -4,8 +4,8 @@ import com.niki.music.model.AvailableResponse
 import com.niki.music.model.GetSongInfoApiResponse
 import com.niki.music.model.GetSongsFromPlaylistApiResponse
 import com.niki.music.services.PlayerService
-import com.niki.utils.webs.ServiceBuilder
-import com.niki.utils.webs.ServiceBuilder.makeRequest
+import com.niki.base.util.ServiceBuilder
+import com.niki.base.util.ServiceBuilder.makeRequest
 
 class PlayerModel {
     val playerService by lazy {

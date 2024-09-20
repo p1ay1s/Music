@@ -12,10 +12,10 @@ import com.niki.music.databinding.FragmentLoginBinding
 import com.niki.music.my.MyEffect
 import com.niki.music.my.MyIntent
 import com.niki.music.my.MyViewModel
-import com.niki.utils.ImageSetter.setCircleImgView
+import com.niki.base.util.ImageSetter.setCircleImgView
 import com.niki.utils.TAG
-import com.niki.utils.base.logE
-import com.niki.utils.base.ui.BaseBottomSheetDialogFragment
+import com.niki.base.log.logE
+import com.niki.base.view.ui.BaseBottomSheetDialogFragment
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -55,7 +55,10 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login) {
             launch {
                 myViewModel.uiEffectFlow
                     .collect {
-                        logE(TAG, "collected ${it::class.qualifiedName.toString()}")
+                        logE(
+                            TAG,
+                            "collected ${it::class.qualifiedName.toString()}"
+                        )
                         when (it) {
                             is MyEffect.GetAvatarUrlOkEffect -> {
                                 mBinding.userAvatar.setCircleImgView(

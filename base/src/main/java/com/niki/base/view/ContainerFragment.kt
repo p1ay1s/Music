@@ -1,24 +1,23 @@
-package com.niki.base
+package com.niki.base.view
 
-import android.content.Context
 import androidx.fragment.app.Fragment
-import com.niki.base.utils.FragmentManagerHelper
+import com.niki.base.databinding.FragmentContainerBinding
+import com.niki.base.view.ui.FragmentControllerView
 
 open class ContainerFragment(private val fragmentMap: LinkedHashMap<String, Fragment>) :
-    Fragment() {
+    BaseFragment<FragmentContainerBinding>() {
 
-    protected var helper: FragmentManagerHelper? = null
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        helper = FragmentManagerHelper(
-            childFragmentManager,
-            R.id.frameLayout_Container,
-            fragmentMap
-        )
+    protected var controllerView: FragmentControllerView? = null
+    override fun FragmentContainerBinding.initBinding() {
+        fragmentControllerViewContainer.run {
+            controllerView = this
+            setFragmentManager(childFragmentManager)
+            submitMap(fragmentMap)
+            init()
+        }
     }
 
     fun switchToFragment(index: String) {
-        helper?.switchToFragment(index)
+        controllerView?.switchToFragment(index)
     }
 }

@@ -1,25 +1,16 @@
 package com.niki.music.common.models
 
 import com.niki.music.model.CatePlaylistResponse
-import com.niki.music.model.HotPlaylistResponse
 import com.niki.music.model.LikePlaylistResponse
 import com.niki.music.model.TopPlaylistResponse
 import com.niki.music.services.PlaylistService
-import com.niki.utils.webs.ServiceBuilder
-import com.niki.utils.webs.ServiceBuilder.makeRequest
+import com.niki.base.util.ServiceBuilder
+import com.niki.base.util.ServiceBuilder.makeRequest
 
 class PlaylistModel {
     val playlistService by lazy {
         ServiceBuilder.create<PlaylistService>()
     }
-
-    /**
-     * 获取热门歌单信息
-     */
-    inline fun getHotPlaylists(
-        crossinline onSuccess: (HotPlaylistResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playlistService.getHotPlaylists(), onSuccess, onError)
 
     /**
      * 获取分类歌单信息

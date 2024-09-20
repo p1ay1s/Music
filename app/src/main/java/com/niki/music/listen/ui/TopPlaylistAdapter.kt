@@ -4,8 +4,8 @@ import androidx.recyclerview.widget.DiffUtil
 import com.niki.music.databinding.LayoutTopPlaylistBinding
 import com.niki.music.model.Playlist
 import com.niki.music.model.Song
-import com.niki.utils.ImageSetter.setRadiusImgView
-import com.niki.utils.base.ui.BaseAdapter
+import com.niki.base.util.ImageSetter.setRadiusImgView
+import com.niki.base.view.ui.BaseAdapter
 
 class TopPlaylistAdapter(
     val callback: (Playlist) -> Unit

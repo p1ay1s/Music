@@ -7,12 +7,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.niki.utils.base.appContext
-import kotlinx.coroutines.Dispatchers
+import com.niki.base.appContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
-import java.net.URLEncoder
 
 /**
  * 摘自招新系统

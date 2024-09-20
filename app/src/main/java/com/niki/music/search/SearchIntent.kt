@@ -1,10 +1,9 @@
 package com.niki.music.search
 
 sealed class SearchIntent {
-    class SearchSongs(val keywords: String?, val resetPage: Boolean, val clean: Boolean) :
-        SearchIntent()
-
-    data object ResetSearchContent : SearchIntent()
+    data class KeywordsChanged(val keywords: String) : SearchIntent()
+    data object CleanAll : SearchIntent()
+    data object SearchSongs : SearchIntent()
 }
 
 sealed class SearchEffect {
@@ -12,6 +11,7 @@ sealed class SearchEffect {
 }
 
 data class SearchState(
+    val searchContent: String,
     val searchHasMore: Boolean,
     val searchCurrentPage: Int,
 )

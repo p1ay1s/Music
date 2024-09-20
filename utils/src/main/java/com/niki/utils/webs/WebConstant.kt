@@ -13,9 +13,6 @@ object WebConstant {
     const val USER_LOGIN_REFRESH = "login/refresh"
     const val USER_LOGOUT = "logout"
 
-    // 热门歌单
-    const val PLAYLIST_HOT = "playlist/hot"
-
     // 歌单分类
     const val PLAYLIST_CATE = "playlist/catlist"
 

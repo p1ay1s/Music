@@ -3,14 +3,13 @@ package com.niki.music
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
-import com.niki.music.common.commonViewModels.MusicViewModel
+import com.niki.base.view.BaseActivity
+import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ListenFragment
 import com.niki.music.my.MyFragment
 import com.niki.music.my.MyViewModel
 import com.niki.music.search.SearchFragment
-import com.niki.utils.base.BaseActivity
-import com.niki.utils.base.utils.BaseFragmentManagerHelper
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -18,22 +17,29 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private lateinit var musicViewModel: MusicViewModel
     private lateinit var myViewModel: MyViewModel
 
+    val index0 = "ListenFragment"
+    val index1 = "MyFragment"
+    val index2 = "SearchFragment"
+
     override fun ActivityMainBinding.initBinding() {
         val bottomNav = bottomNavMain
-        val helper = BaseFragmentManagerHelper(
-            supportFragmentManager,
-            R.id.frameLayout_Main,
-            listOf(
-                ListenFragment(), MyFragment(), SearchFragment()
+        fragmentControllerViewMain.run {
+            setFragmentManager(supportFragmentManager)
+            submitMap(
+                linkedMapOf(
+                    index0 to ListenFragment(),
+                    index1 to MyFragment(),
+                    index2 to SearchFragment()
+                )
             )
-        )
+            init()
+        }
         bottomNav.setOnItemSelectedListener { item ->
-            helper.switchToFragment(
+            fragmentControllerViewMain.switchToFragment(
                 when (item.itemId) {
-                    R.id.menu_listen -> 0
-                    R.id.menu_my -> 1
-                    R.id.menu_search -> 2
-                    else -> 0
+                    R.id.menu_my -> index1
+                    R.id.menu_search -> index2
+                    else -> index0
                 }
             )
             true
