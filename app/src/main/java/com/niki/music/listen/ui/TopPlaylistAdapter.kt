@@ -2,8 +2,8 @@ package com.niki.music.listen.ui
 
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.music.databinding.LayoutTopPlaylistBinding
-import com.niki.music.model.Playlist
-import com.niki.music.model.Song
+import com.niki.music.dataclasses.Playlist
+import com.niki.music.dataclasses.Song
 import com.niki.base.util.ImageSetter.setRadiusImgView
 import com.niki.base.view.ui.BaseAdapter
 

@@ -8,18 +8,18 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.niki.base.log.logE
+import com.niki.base.util.ImageSetter
+import com.niki.base.view.BaseFragment
+import com.niki.base.view.ui.BaseLayoutManager
 import com.niki.music.R
 import com.niki.music.common.MusicRepository
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
-import com.niki.music.model.Song
+import com.niki.music.dataclasses.Song
 import com.niki.music.my.login.LoginFragment
-import com.niki.base.util.ImageSetter
-import com.niki.base.view.BaseFragment
-import com.niki.base.log.logE
-import com.niki.base.view.ui.BaseLayoutManager
 import com.niki.utils.takePartOf
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -50,16 +50,17 @@ class MyFragment : BaseFragment<FragmentMyBinding>(), IView {
         }
 
         recyclerView.apply {
-            isNestedScrollingEnabled = false
-            adapter = songAdapter
-            layoutManager = baseLayoutManager
-            animation = AnimationUtils.loadAnimation(context, R.anim.fade_in_anim)
-            addItemDecoration(
-                DividerItemDecoration(
-                    requireActivity(),
-                    DividerItemDecoration.VERTICAL
+            if (itemDecorationCount == 0) {
+                adapter = songAdapter
+                layoutManager = baseLayoutManager
+                animation = AnimationUtils.loadAnimation(context, R.anim.fade_in_anim)
+                addItemDecoration(
+                    DividerItemDecoration(
+                        requireActivity(),
+                        DividerItemDecoration.VERTICAL
+                    )
                 )
-            )
+            }
         }
 
         handle()
@@ -148,7 +149,12 @@ class MyFragment : BaseFragment<FragmentMyBinding>(), IView {
     }
 
     private fun initValues() {
-        songAdapter = SongAdapter(musicViewModel)
+        songAdapter = SongAdapter(
+            musicViewModel,
+            enableCache = false,
+            showDetails = true,
+            showImage = false
+        )
         baseLayoutManager = BaseLayoutManager(
             requireActivity(),
             LinearLayoutManager.VERTICAL,

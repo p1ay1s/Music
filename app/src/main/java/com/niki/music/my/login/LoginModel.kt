@@ -1,11 +1,11 @@
 package com.niki.music.my.login
 
-import com.niki.music.model.AnonymousLoginResponse
-import com.niki.music.model.LoginResponse
-import com.niki.music.model.LogoutResponse
-import com.niki.music.model.RefreshCookieResponse
-import com.niki.music.model.SendCaptchaResponse
-import com.niki.music.model.UserExistApiResponse
+import com.niki.music.dataclasses.AnonymousLoginResponse
+import com.niki.music.dataclasses.LoginResponse
+import com.niki.music.dataclasses.LogoutResponse
+import com.niki.music.dataclasses.RefreshCookieResponse
+import com.niki.music.dataclasses.SendCaptchaResponse
+import com.niki.music.dataclasses.UserExistApiResponse
 import com.niki.music.services.LoginService
 import com.niki.base.util.ServiceBuilder
 import com.niki.base.util.ServiceBuilder.makeRequest

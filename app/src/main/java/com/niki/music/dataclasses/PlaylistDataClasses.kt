@@ -1,4 +1,4 @@
-package com.niki.music.model
+package com.niki.music.dataclasses
 
 /**
  * 热门 - 包含热门大类的结果

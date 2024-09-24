@@ -1,4 +1,4 @@
-package com.niki.music.model
+package com.niki.music.dataclasses
 
 data class AnonymousLoginResponse(
     var code: Int,

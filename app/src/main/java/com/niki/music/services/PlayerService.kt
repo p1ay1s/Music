@@ -1,8 +1,8 @@
 package com.niki.music.services
 
-import com.niki.music.model.AvailableResponse
-import com.niki.music.model.GetSongInfoApiResponse
-import com.niki.music.model.GetSongsFromPlaylistApiResponse
+import com.niki.music.dataclasses.AvailableResponse
+import com.niki.music.dataclasses.GetSongInfoApiResponse
+import com.niki.music.dataclasses.GetSongsFromPlaylistApiResponse
 import com.niki.utils.webs.WebConstant
 import retrofit2.Call
 import retrofit2.http.GET

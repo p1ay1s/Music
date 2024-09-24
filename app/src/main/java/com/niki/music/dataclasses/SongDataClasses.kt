@@ -1,4 +1,4 @@
-package com.niki.music.model
+package com.niki.music.dataclasses
 
 /**
  * 从单个歌单获取的歌曲

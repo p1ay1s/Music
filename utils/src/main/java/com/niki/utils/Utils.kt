@@ -1,11 +1,7 @@
 package com.niki.utils
 
-import android.app.Activity
 import android.content.Intent
 import android.util.Log
-import android.widget.Adapter
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,15 +9,6 @@ import kotlin.random.Random
 
 
 // 摘自招新系统，略有修改
-
-val Activity.TAG
-    get() = this::class.simpleName!!
-val Fragment.TAG
-    get() = this::class.simpleName!!
-val ViewModel.TAG
-    get() = this::class.simpleName!!
-val Adapter.TAG
-    get() = this::class.simpleName!!
 
 fun sendBroadcast(msg: String) =
     LocalBroadcastManager.getInstance(com.niki.base.appContext).sendBroadcast(Intent(msg))

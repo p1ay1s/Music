@@ -1,9 +1,9 @@
 package com.niki.music.listen
 
+import com.niki.base.log.logE
+import com.niki.base.util.TAG
 import com.niki.music.common.MusicRepository
 import com.niki.music.common.viewModels.BaseViewModel
-import com.niki.utils.TAG
-import com.niki.base.log.logE
 
 class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>() {
     companion object {
@@ -14,7 +14,7 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
 
     override fun handleIntent(intent: ListenIntent) =
         intent.run {
-            logE(TAG, "RECEIVED" + this::class.simpleName.toString())
+            logE(TAG, "RECEIVED " + this::class.simpleName.toString())
             when (this) {
                 is ListenIntent.GetTopPlaylists -> getTopPlaylists(resetPage)
             }

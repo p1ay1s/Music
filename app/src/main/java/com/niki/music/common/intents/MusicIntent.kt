@@ -1,7 +1,7 @@
 package com.niki.music.common.intents
 
-import com.niki.music.model.Song
-import com.niki.music.model.Sub
+import com.niki.music.dataclasses.Song
+import com.niki.music.dataclasses.Sub
 
 sealed class MusicIntent {
     class SetNewSongList(val list: MutableList<Song>, val index: Int) : MusicIntent()

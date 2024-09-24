@@ -4,7 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import com.niki.music.common.intents.MusicEffect
 import com.niki.music.common.intents.MusicIntent
 import com.niki.music.common.intents.MusicState
-import com.niki.music.model.Song
+import com.niki.music.dataclasses.Song
 import com.niki.music.my.appCookie
 import com.niki.music.search.SearchModel
 import com.niki.base.util.ON_FAILURE_CODE

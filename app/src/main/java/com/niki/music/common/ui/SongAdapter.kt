@@ -11,8 +11,8 @@ import com.niki.base.util.toast
 import com.niki.music.common.intents.MusicIntent
 import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.databinding.LayoutSongBinding
-import com.niki.music.model.Song
-import com.niki.music.model.SongInfo
+import com.niki.music.dataclasses.Song
+import com.niki.music.dataclasses.SongInfo
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class SongAdapter(

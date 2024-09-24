@@ -1,8 +1,8 @@
 package com.niki.music.common.models
 
-import com.niki.music.model.CatePlaylistResponse
-import com.niki.music.model.LikePlaylistResponse
-import com.niki.music.model.TopPlaylistResponse
+import com.niki.music.dataclasses.CatePlaylistResponse
+import com.niki.music.dataclasses.LikePlaylistResponse
+import com.niki.music.dataclasses.TopPlaylistResponse
 import com.niki.music.services.PlaylistService
 import com.niki.base.util.ServiceBuilder
 import com.niki.base.util.ServiceBuilder.makeRequest

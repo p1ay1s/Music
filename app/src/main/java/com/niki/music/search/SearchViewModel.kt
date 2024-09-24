@@ -1,9 +1,9 @@
 package com.niki.music.search
 
+import com.niki.base.log.logE
+import com.niki.base.util.TAG
 import com.niki.music.common.MusicRepository
 import com.niki.music.common.viewModels.BaseViewModel
-import com.niki.utils.TAG
-import com.niki.base.log.logE
 
 class SearchViewModel : BaseViewModel<SearchIntent, SearchState, SearchEffect>() {
     private val searchModel by lazy { SearchModel() }
@@ -16,7 +16,7 @@ class SearchViewModel : BaseViewModel<SearchIntent, SearchState, SearchEffect>()
 
     override fun handleIntent(intent: SearchIntent) =
         intent.run {
-            logE(TAG, "RECEIVED" + this::class.simpleName.toString())
+            logE(TAG, "RECEIVED " + this::class.simpleName.toString())
             when (this) {
                 is SearchIntent.SearchSongs -> {
                     uiStateFlow.value.run {

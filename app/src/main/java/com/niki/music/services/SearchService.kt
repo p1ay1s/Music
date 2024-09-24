@@ -1,7 +1,6 @@
 package com.niki.music.services
 
-import com.niki.music.model.GetSongsFromPlaylistApiResponse
-import com.niki.music.model.SearchApiResponse
+import com.niki.music.dataclasses.SearchApiResponse
 import com.niki.utils.webs.WebConstant
 import retrofit2.Call
 import retrofit2.http.GET

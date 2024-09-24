@@ -39,6 +39,7 @@ android {
 }
 
 dependencies {
+    implementation("com.github.p1ay1s:Dev:2.0")
     implementation(project(":utils"))
     implementation(project(":base"))
 

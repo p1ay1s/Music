@@ -1,8 +1,8 @@
 package com.niki.music.common.models
 
-import com.niki.music.model.AvailableResponse
-import com.niki.music.model.GetSongInfoApiResponse
-import com.niki.music.model.GetSongsFromPlaylistApiResponse
+import com.niki.music.dataclasses.AvailableResponse
+import com.niki.music.dataclasses.GetSongInfoApiResponse
+import com.niki.music.dataclasses.GetSongsFromPlaylistApiResponse
 import com.niki.music.services.PlayerService
 import com.niki.base.util.ServiceBuilder
 import com.niki.base.util.ServiceBuilder.makeRequest

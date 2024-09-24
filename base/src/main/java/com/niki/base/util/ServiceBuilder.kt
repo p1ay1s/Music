@@ -26,8 +26,6 @@ object ServiceBuilder {
         suspend fun checkConnectivity(): Response<Unit>
     }
 
-    val TAG = this::class.simpleName!!
-
     private const val TIMEOUT_SET = 15L
 
     private val client = OkHttpClient.Builder()
@@ -41,7 +39,7 @@ object ServiceBuilder {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    private fun retrofitBuilder(baseUrl: String) = Retrofit.Builder()
+    fun retrofitBuilder(baseUrl: String) = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
@@ -84,9 +82,10 @@ object ServiceBuilder {
         override fun onResponse(call: Call<T>, response: Response<T>) {
             val url = call.request().url().toString()
             response.apply {
-                logI(TAG, message() + "\n at: " + url)
+                logI("ServiceBuilder", message() + "\n at: " + url)
                 when {
                     isSuccessful && body() != null -> onSuccess(body()!!)
+                    isSuccessful && body() == null -> onError(ON_FAILURE_CODE, "请求超时")
                     else -> onError(code(), message())
                 }
             }
@@ -94,7 +93,7 @@ object ServiceBuilder {
 
         override fun onFailure(call: Call<T>, t: Throwable) {
             val url = call.request().url().toString()
-            logE(TAG, t.message.toString() + "\n at: " + url)
+            logE("ServiceBuilder", t.message.toString() + "\n at: " + url)
             onError(ON_FAILURE_CODE, t.message.toString())
         }
     })

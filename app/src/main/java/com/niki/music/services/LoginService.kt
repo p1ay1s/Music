@@ -1,12 +1,12 @@
 package com.niki.music.services
 
-import com.niki.music.model.AnonymousLoginResponse
-import com.niki.music.model.LoginResponse
-import com.niki.music.model.LoginStateApiResponse
-import com.niki.music.model.LogoutResponse
-import com.niki.music.model.RefreshCookieResponse
-import com.niki.music.model.SendCaptchaResponse
-import com.niki.music.model.UserExistApiResponse
+import com.niki.music.dataclasses.AnonymousLoginResponse
+import com.niki.music.dataclasses.LoginResponse
+import com.niki.music.dataclasses.LoginStateApiResponse
+import com.niki.music.dataclasses.LogoutResponse
+import com.niki.music.dataclasses.RefreshCookieResponse
+import com.niki.music.dataclasses.SendCaptchaResponse
+import com.niki.music.dataclasses.UserExistApiResponse
 import com.niki.utils.webs.WebConstant
 import retrofit2.Call
 import retrofit2.http.GET

@@ -1,6 +1,6 @@
 package com.niki.music.search
 
-import com.niki.music.model.SearchApiResponse
+import com.niki.music.dataclasses.SearchApiResponse
 import com.niki.music.services.SearchService
 import com.niki.base.util.ServiceBuilder
 import com.niki.base.util.ServiceBuilder.makeRequest

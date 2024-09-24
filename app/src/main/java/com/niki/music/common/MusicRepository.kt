@@ -1,9 +1,8 @@
 package com.niki.music.common
 
-import androidx.lifecycle.MutableLiveData
-import com.niki.music.model.Playlist
-import com.niki.music.model.Song
-import com.niki.music.model.Tag
+import com.niki.music.dataclasses.Playlist
+import com.niki.music.dataclasses.Song
+import com.niki.music.dataclasses.Tag
 
 object MusicRepository {
     // 关于 top
