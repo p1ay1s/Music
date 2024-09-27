@@ -1,4 +1,4 @@
-package com.niki.music.search
+package com.niki.music.search.result
 
 sealed class SearchIntent {
     data class KeywordsChanged(val keywords: String) : SearchIntent()

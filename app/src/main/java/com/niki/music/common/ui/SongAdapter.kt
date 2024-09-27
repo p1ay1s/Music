@@ -5,14 +5,14 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DiffUtil
-import com.niki.base.view.ui.BaseAdapter
-import com.niki.base.util.ImageSetter.setRadiusImgView
-import com.niki.base.util.toast
 import com.niki.music.common.intents.MusicIntent
 import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.databinding.LayoutSongBinding
 import com.niki.music.dataclasses.Song
 import com.niki.music.dataclasses.SongInfo
+import com.p1ay1s.dev.base.toast
+import com.p1ay1s.dev.util.ImageSetter.setRadiusImgView
+import com.p1ay1s.dev.viewbinding.ui.ViewBindingListAdapter
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class SongAdapter(
@@ -20,8 +20,7 @@ class SongAdapter(
     private val enableCache: Boolean = false,
     private val showDetails: Boolean = true,
     private val showImage: Boolean = true
-) :
-    BaseAdapter<LayoutSongBinding, Song, SongInfo>(SongCallback()) {
+) : ViewBindingListAdapter<LayoutSongBinding, Song, SongInfo>(SongCallback()) {
 
     companion object {
         const val EXPLICIT = 1048576L
@@ -50,37 +49,37 @@ class SongAdapter(
     private fun isExplicit(mark: Long?) =
         if (mark != null) (mark and EXPLICIT) == EXPLICIT else false
 
-    override fun LayoutSongBinding.onBindViewHolder(bean: Song, position: Int) {
+    override fun LayoutSongBinding.onBindViewHolder(data: Song, position: Int) {
         root.setOnClickListener {
             musicViewModel.run {
                 if (currentList.isNotEmpty())
                     sendIntent(
                         MusicIntent.SetNewSongList(
                             currentList.toMutableList(),
-                            currentList.indexOf(bean)
+                            currentList.indexOf(data)
                         )
                     )
-                sendIntent(MusicIntent.TryPlaySong(bean.id))
+                sendIntent(MusicIntent.TryPlaySong(data.id))
             }
         }
 
         if (showImage)
-            cover.setRadiusImgView(bean.al.picUrl, enableCache = enableCache)
+            cover.setRadiusImgView(data.al.picUrl, enableCache = enableCache)
         else
             cover.visibility = View.GONE
 
         if (showDetails) {
-            songDetails.formatDetails(bean)
-            if (isExplicit(bean.mark))
+            songDetails.formatDetails(data)
+            if (isExplicit(data.mark))
                 explicit.visibility = View.VISIBLE
         }
 
-        songName.text = bean.name
+        songName.text = data.name
 
         more.setOnClickListener {
             // musicViewModel.addSongToNext(song)
             // TODO a menu!
-            toast(bean.name)
+            toast(data.name)
         }
     }
 

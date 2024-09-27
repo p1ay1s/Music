@@ -7,7 +7,7 @@ import com.niki.music.common.intents.MusicState
 import com.niki.music.dataclasses.Song
 import com.niki.music.my.appCookie
 import com.niki.music.search.SearchModel
-import com.niki.base.util.ON_FAILURE_CODE
+import com.p1ay1s.dev.util.ON_FAILURE_CODE
 
 class MusicViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     companion object {

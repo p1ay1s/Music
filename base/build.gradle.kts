@@ -36,6 +36,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.zephyr)
+
     implementation(libs.github.glide)
 
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

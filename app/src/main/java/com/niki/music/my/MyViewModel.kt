@@ -1,10 +1,6 @@
 package com.niki.music.my
 
 import androidx.lifecycle.viewModelScope
-import com.niki.base.log.logE
-import com.niki.base.util.ON_FAILURE_CODE
-import com.niki.base.util.TAG
-import com.niki.base.util.toast
 import com.niki.music.common.MusicRepository
 import com.niki.music.common.viewModels.BaseViewModel
 import com.niki.music.dataclasses.LoginResponse
@@ -16,6 +12,10 @@ import com.niki.utils.datastore.preferenceCookie
 import com.niki.utils.datastore.preferenceNickname
 import com.niki.utils.datastore.preferenceUid
 import com.niki.utils.datastore.putStringData
+import com.p1ay1s.dev.base.TAG
+import com.p1ay1s.dev.base.toast
+import com.p1ay1s.dev.log.logE
+import com.p1ay1s.dev.util.ON_FAILURE_CODE
 import kotlinx.coroutines.launch
 
 var appCookie = ""

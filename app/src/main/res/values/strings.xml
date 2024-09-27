@@ -7,4 +7,5 @@
     <string name="login">登录</string>
     <string name="captcha">验证码</string>
     <string name="phone">电话</string>
+    <string name="title_activity_crash">CrashActivity</string>
 </resources>

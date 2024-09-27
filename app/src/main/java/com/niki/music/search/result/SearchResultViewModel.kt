@@ -1,11 +1,12 @@
-package com.niki.music.search
+package com.niki.music.search.result
 
-import com.niki.base.log.logE
-import com.niki.base.util.TAG
 import com.niki.music.common.MusicRepository
 import com.niki.music.common.viewModels.BaseViewModel
+import com.niki.music.search.SearchModel
+import com.p1ay1s.dev.base.TAG
+import com.p1ay1s.dev.log.logE
 
-class SearchViewModel : BaseViewModel<SearchIntent, SearchState, SearchEffect>() {
+class SearchResultViewModel : BaseViewModel<SearchIntent, SearchState, SearchEffect>() {
     private val searchModel by lazy { SearchModel() }
 
     companion object {
@@ -41,7 +42,7 @@ class SearchViewModel : BaseViewModel<SearchIntent, SearchState, SearchEffect>()
         }
 
     private fun searchSongs(keywords: String?) = uiStateFlow.value.run {
-        if (keywords.isNullOrBlank() || !searchHasMore) return
+        if (keywords.isNullOrBlank() || !searchHasMore) return@run
 
         searchModel.searchSongs(keywords, SEARCH_LIMIT, searchCurrentPage * SEARCH_LIMIT,
             { data ->

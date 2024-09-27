@@ -1,4 +1,4 @@
-package com.niki.music.listen
+package com.niki.music.listen.base
 
 sealed class ListenIntent {
     class GetTopPlaylists(val resetPage: Boolean = false) :

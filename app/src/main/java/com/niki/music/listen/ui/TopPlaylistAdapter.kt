@@ -4,20 +4,19 @@ import androidx.recyclerview.widget.DiffUtil
 import com.niki.music.databinding.LayoutTopPlaylistBinding
 import com.niki.music.dataclasses.Playlist
 import com.niki.music.dataclasses.Song
-import com.niki.base.util.ImageSetter.setRadiusImgView
-import com.niki.base.view.ui.BaseAdapter
+import com.p1ay1s.dev.util.ImageSetter.setRadiusImgView
+import com.p1ay1s.dev.viewbinding.ui.ViewBindingListAdapter
 
 class TopPlaylistAdapter(
     val callback: (Playlist) -> Unit
-) :
-    BaseAdapter<LayoutTopPlaylistBinding, Playlist, List<Song>>(TopPlaylistCallback()) {
+) : ViewBindingListAdapter<LayoutTopPlaylistBinding, Playlist, List<Song>>(TopPlaylistCallback()) {
 
-    override fun LayoutTopPlaylistBinding.onBindViewHolder(bean: Playlist, position: Int) {
-        playlist = bean
+    override fun LayoutTopPlaylistBinding.onBindViewHolder(data: Playlist, position: Int) {
+        playlist = data
 //        loadContent(bean, collector)
-        cover.setRadiusImgView(bean.coverImgUrl, radius = 55)
+        cover.setRadiusImgView(data.coverImgUrl, radius = 55)
         root.setOnClickListener {
-            callback(bean)
+            callback(data)
         }
     }
 

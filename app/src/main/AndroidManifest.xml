@@ -9,9 +9,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
-
     <application
-        android:name="com.niki.base.BaseApplication"
+        android:name=".MyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -22,27 +21,31 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
-        <!--        <service-->
-        <!--            android:name=".MusicService"-->
-        <!--            android:enabled="true"-->
-        <!--            android:exported="true" />-->
-        <!--        <service-->
-        <!--            android:name=".RemoteService"-->
-        <!--            android:enabled="true"-->
-        <!--            android:exported="true"-->
-        <!--            android:foregroundServiceType="mediaPlayback" />-->
+        <activity
+            android:name=".CrashApp"
+            android:exported="false"
+            android:label="@string/title_activity_crash"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
 
+        <!-- <service -->
+        <!-- android:name=".MusicService" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="true" /> -->
+        <!-- <service -->
+        <!-- android:name=".RemoteService" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="true" -->
+        <!-- android:foregroundServiceType="mediaPlayback" /> -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
+
 </manifest>

@@ -3,15 +3,16 @@ package com.niki.utils
 import android.content.Intent
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.p1ay1s.dev.base.appContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
-
 // 摘自招新系统，略有修改
 
-fun sendBroadcast(msg: String) =
-    LocalBroadcastManager.getInstance(com.niki.base.appContext).sendBroadcast(Intent(msg))
+fun sendBroadcast(msg: String) = appContext?.let {
+    LocalBroadcastManager.getInstance(it).sendBroadcast(Intent(msg))
+}
 
 fun <T> MutableList<T>.updateList(list: List<T>, clean: Boolean = false) {
     val originalSize = this.size

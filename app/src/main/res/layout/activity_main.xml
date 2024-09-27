@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.niki.base.view.ui.FragmentControllerView
+        <com.p1ay1s.dev.ui.FragmentControllerView
             android:id="@+id/fragmentControllerView_Main"
             android:layout_width="match_parent"
             android:layout_height="0dp"

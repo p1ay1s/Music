@@ -2,8 +2,8 @@ package com.niki.music.search
 
 import com.niki.music.dataclasses.SearchApiResponse
 import com.niki.music.services.SearchService
-import com.niki.base.util.ServiceBuilder
-import com.niki.base.util.ServiceBuilder.makeRequest
+import com.p1ay1s.dev.util.ServiceBuilder
+import com.p1ay1s.dev.util.ServiceBuilder.makeRequest
 
 class SearchModel {
     val searchService by lazy {

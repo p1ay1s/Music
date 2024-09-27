@@ -1,11 +1,11 @@
-package com.niki.music.listen
+package com.niki.music.listen.base
 
-import com.niki.base.log.logE
-import com.niki.base.util.TAG
 import com.niki.music.common.MusicRepository
 import com.niki.music.common.viewModels.BaseViewModel
+import com.p1ay1s.dev.base.TAG
+import com.p1ay1s.dev.log.logE
 
-class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>() {
+class ListenBaseViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>() {
     companion object {
         const val TOP_LIMIT = 10
     }
@@ -28,7 +28,8 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
         if (resetPage)
             updateState { copy(topCurrentPage = 0) }
 
-        playlistModel.getTopPlaylists(TOP_LIMIT,
+        playlistModel.getTopPlaylists(
+            TOP_LIMIT,
             "hot",
             topCurrentPage * TOP_LIMIT,
             {

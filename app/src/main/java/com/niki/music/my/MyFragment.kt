@@ -8,10 +8,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.niki.base.log.logE
-import com.niki.base.util.ImageSetter
-import com.niki.base.view.BaseFragment
-import com.niki.base.view.ui.BaseLayoutManager
 import com.niki.music.R
 import com.niki.music.common.MusicRepository
 import com.niki.music.common.ui.SongAdapter
@@ -21,13 +17,18 @@ import com.niki.music.databinding.FragmentMyBinding
 import com.niki.music.dataclasses.Song
 import com.niki.music.my.login.LoginFragment
 import com.niki.utils.takePartOf
+import com.p1ay1s.dev.base.TAG
+import com.p1ay1s.dev.log.logE
+import com.p1ay1s.dev.ui.PreloadLayoutManager
+import com.p1ay1s.dev.util.ImageSetter
+import com.p1ay1s.dev.viewbinding.ViewBindingFragment
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-class MyFragment : BaseFragment<FragmentMyBinding>(), IView {
+class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
     companion object {
         const val CLICK_TO_LOGIN = "点击登录"
@@ -36,7 +37,7 @@ class MyFragment : BaseFragment<FragmentMyBinding>(), IView {
     }
 
     private lateinit var songAdapter: SongAdapter
-    private lateinit var baseLayoutManager: BaseLayoutManager
+    private lateinit var baseLayoutManager: PreloadLayoutManager
 
     private val myViewModel: MyViewModel by activityViewModels<MyViewModel>()
     private val musicViewModel: MusicViewModel by activityViewModels<MusicViewModel>()
@@ -79,6 +80,7 @@ class MyFragment : BaseFragment<FragmentMyBinding>(), IView {
                     }
                 }
         }
+
         observeState {
             lifecycleScope.launch {
                 map { it.loggedInDatas }.distinctUntilChanged().collect {
@@ -155,7 +157,7 @@ class MyFragment : BaseFragment<FragmentMyBinding>(), IView {
             showDetails = true,
             showImage = false
         )
-        baseLayoutManager = BaseLayoutManager(
+        baseLayoutManager = PreloadLayoutManager(
             requireActivity(),
             LinearLayoutManager.VERTICAL,
             4
