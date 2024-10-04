@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mymafuckingstupidshit"
+    app:startDestination="@id/listenBaseFragment">
+    <!--default page ⬆️-->
+    <fragment
+        android:id="@+id/listenBaseFragment"
+        android:name="com.niki.music.listen.base.ListenBaseFragment"
+        android:label="ListenBaseFragment">
+
+        <action
+            android:id="@+id/action_listenBaseFragment_to_myFragment3"
+            app:destination="@id/myFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/myFragment"
+        android:name="com.niki.music.my.MyFragment"
+        android:label="MyFragment">
+
+    </fragment>
+    <activity
+        android:id="@+id/mainActivity"
+        android:name="com.niki.music.MainActivity"
+        android:label="MainActivity" />
+</navigation>

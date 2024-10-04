@@ -33,7 +33,7 @@ android {
 }
 
 dependencies {
-    implementation("com.github.p1ay1s:Zephyr:1.0.5")
+    implementation("com.github.p1ay1s:Zephyr:1.1.5")
     implementation(project(":base"))
 
     implementation(libs.androidx.core.ktx)

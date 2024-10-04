@@ -51,7 +51,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(), OnBackPressList
     private lateinit var map: LinkedHashMap<String, Fragment>
 
     private var currentIndex = index0
-    private lateinit var currentChildIndex: String
 
     override fun ActivityMainBinding.initBinding() {
         val bottomNav = bottomNavMain

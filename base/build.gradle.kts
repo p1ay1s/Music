@@ -37,6 +37,7 @@ android {
 
 dependencies {
     implementation(libs.zephyr)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     implementation(libs.github.glide)
 

@@ -3,10 +3,12 @@ package com.niki.music.search.preview
 import android.os.Build
 import android.widget.SearchView
 import androidx.annotation.RequiresApi
+import com.niki.music.R
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentSearchPreviewBinding
 import com.niki.music.search.SEARCH_RESULT
 import com.niki.music.search.SearchFragment
+import com.p1ay1s.dev.ui.ChangingImageButton
 import com.p1ay1s.extensions.views.ChildFragment
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -20,6 +22,9 @@ class SearchPreviewFragment : ChildFragment<FragmentSearchPreviewBinding>(), IVi
         }
     }
 
+    private var c = false
+    private var a = ChangingImageButton.Status.IMAGE_A
+
     override fun FragmentSearchPreviewBinding.initBinding() {
 //        searchButton.setOnClickListener {
 //            getControllerView()?.switchToFragment(SEARCH_RESULT)
@@ -27,6 +32,13 @@ class SearchPreviewFragment : ChildFragment<FragmentSearchPreviewBinding>(), IVi
 //                this?.isIconified = false
 //            }
 //        }
+
+        b.setImageResources(R.drawable.ic_pause, R.drawable.ic_play)
+        b.setOnClickListener {
+            c = !c
+            if (c) ChangingImageButton.Status.IMAGE_A else ChangingImageButton.Status.IMAGE_B
+        }
+
         searchViewPreview.run {
             (parentFragment as SearchFragment).previewSearchView = this
             setOnSearchClickListener {
