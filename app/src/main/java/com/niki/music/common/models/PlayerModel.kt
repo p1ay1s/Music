@@ -1,11 +1,11 @@
 package com.niki.music.common.models
 
-import com.niki.music.dataclasses.AvailableResponse
-import com.niki.music.dataclasses.GetSongInfoApiResponse
-import com.niki.music.dataclasses.GetSongsFromPlaylistApiResponse
-import com.niki.music.services.PlayerService
+import com.niki.common.repository.dataclasses.AvailableResponse
+import com.niki.common.repository.dataclasses.GetSongInfoApiResponse
+import com.niki.common.repository.dataclasses.GetSongsFromPlaylistApiResponse
+import com.niki.common.services.PlayerService
 import com.p1ay1s.dev.util.ServiceBuilder
-import com.p1ay1s.dev.util.ServiceBuilder.makeRequest
+import com.p1ay1s.dev.util.ServiceBuilder.requestEnqueue
 
 class PlayerModel {
     val playerService by lazy {
@@ -19,7 +19,7 @@ class PlayerModel {
         id: String,
         crossinline onSuccess: (AvailableResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playerService.checkSong(id), onSuccess, onError)
+    ) = requestEnqueue(playerService.checkSong(id), onSuccess, onError)
 
     /**
      * 通过 id 等信息获取播放的必要内容(如歌曲的 url 以及歌名等)
@@ -30,7 +30,7 @@ class PlayerModel {
         cookie: String?,
         crossinline onSuccess: (GetSongInfoApiResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playerService.getSongInfo(id, level, cookie), onSuccess, onError)
+    ) = requestEnqueue(playerService.getSongInfo(id, level, cookie), onSuccess, onError)
 
     /**
      * 从歌单分页获取若干首歌曲
@@ -41,7 +41,7 @@ class PlayerModel {
         offset: Int,
         crossinline onSuccess: (GetSongsFromPlaylistApiResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playerService.getSongsFromPlaylist(id, limit, offset), onSuccess, onError)
+    ) = requestEnqueue(playerService.getSongsFromPlaylist(id, limit, offset), onSuccess, onError)
 
 
     /**
@@ -51,5 +51,5 @@ class PlayerModel {
         ids: String,
         crossinline onSuccess: (GetSongsFromPlaylistApiResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playerService.getSongsWithIds(ids), onSuccess, onError)
+    ) = requestEnqueue(playerService.getSongsWithIds(ids), onSuccess, onError)
 }

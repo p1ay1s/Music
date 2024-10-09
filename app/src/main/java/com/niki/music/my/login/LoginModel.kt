@@ -1,14 +1,14 @@
 package com.niki.music.my.login
 
-import com.niki.music.dataclasses.AnonymousLoginResponse
-import com.niki.music.dataclasses.LoginResponse
-import com.niki.music.dataclasses.LogoutResponse
-import com.niki.music.dataclasses.RefreshCookieResponse
-import com.niki.music.dataclasses.SendCaptchaResponse
-import com.niki.music.dataclasses.UserExistApiResponse
-import com.niki.music.services.LoginService
+import com.niki.common.repository.dataclasses.AnonymousLoginResponse
+import com.niki.common.repository.dataclasses.LoginResponse
+import com.niki.common.repository.dataclasses.LogoutResponse
+import com.niki.common.repository.dataclasses.RefreshCookieResponse
+import com.niki.common.repository.dataclasses.SendCaptchaResponse
+import com.niki.common.repository.dataclasses.UserExistApiResponse
+import com.niki.common.services.LoginService
 import com.p1ay1s.dev.util.ServiceBuilder
-import com.p1ay1s.dev.util.ServiceBuilder.makeRequest
+import com.p1ay1s.dev.util.ServiceBuilder.requestEnqueue
 
 class LoginModel {
     val loginService by lazy {
@@ -19,13 +19,13 @@ class LoginModel {
         cookie: String,
         crossinline onSuccess: (LogoutResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(loginService.logout(cookie), onSuccess, onError)
+    ) = requestEnqueue(loginService.logout(cookie), onSuccess, onError)
 
     inline fun getAvatarUrl(
         phone: String,
         crossinline onSuccess: (UserExistApiResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(loginService.getAvatarUrl(phone), onSuccess, onError)
+    ) = requestEnqueue(loginService.getAvatarUrl(phone), onSuccess, onError)
 
     /**
      * 游客登录
@@ -34,7 +34,7 @@ class LoginModel {
     inline fun anonymousLogin(
         crossinline onSuccess: (AnonymousLoginResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(loginService.anonymousLogin(), onSuccess, onError)
+    ) = requestEnqueue(loginService.anonymousLogin(), onSuccess, onError)
 
     /**
      * 使用手机号码和验证码登录
@@ -45,7 +45,7 @@ class LoginModel {
         captcha: String,
         crossinline onSuccess: (LoginResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(loginService.captchaLogin(phone, captcha), onSuccess, onError)
+    ) = requestEnqueue(loginService.captchaLogin(phone, captcha), onSuccess, onError)
 
     /**
      * 发送验证码到对应的手机号码
@@ -54,7 +54,7 @@ class LoginModel {
         phone: String,
         crossinline onSuccess: (SendCaptchaResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(loginService.sendCaptcha(phone), onSuccess, onError)
+    ) = requestEnqueue(loginService.sendCaptcha(phone), onSuccess, onError)
 
     /**
      * 更新 cookie
@@ -63,5 +63,5 @@ class LoginModel {
         cookie: String,
         crossinline onSuccess: (RefreshCookieResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(loginService.loginRefresh(cookie), onSuccess, onError)
+    ) = requestEnqueue(loginService.loginRefresh(cookie), onSuccess, onError)
 }

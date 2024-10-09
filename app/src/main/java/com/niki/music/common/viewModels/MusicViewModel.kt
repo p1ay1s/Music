@@ -1,12 +1,14 @@
 package com.niki.music.common.viewModels
 
 import androidx.lifecycle.MutableLiveData
+import com.niki.common.repository.dataclasses.Song
+import com.niki.common.values.FragmentTag
 import com.niki.music.common.intents.MusicEffect
 import com.niki.music.common.intents.MusicIntent
 import com.niki.music.common.intents.MusicState
-import com.niki.music.dataclasses.Song
 import com.niki.music.my.appCookie
-import com.niki.music.search.SearchModel
+import com.niki.music.search.result.ResultModel
+import com.p1ay1s.dev.ui.FragmentHost
 import com.p1ay1s.dev.util.ON_FAILURE_CODE
 
 class MusicViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
@@ -16,15 +18,15 @@ class MusicViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
         const val RANDOM = 2
     }
 
-    private val searchModel by lazy { SearchModel() }
+    private val resultModel by lazy { ResultModel() }
 
     // 关于 current
-    var mCurrentPlaylist = mutableListOf<Song>()
-    private var mCurrentSong = MutableLiveData<Song?>(null)
-    private var mCurrentSongIndex = 0
-    var mIsPlaying = MutableLiveData<Boolean>()
-    var mSongPosition = MutableLiveData<Int>()
-    var mPlayMode = MutableLiveData(LOOP)
+    var currentPlaylist = mutableListOf<Song>()
+    private var currentSong = MutableLiveData<Song?>(null)
+    private var currentSongIndex = 0
+    var isPlaying = MutableLiveData<Boolean>()
+    var songPosition = MutableLiveData<Int>()
+    var playMode = MutableLiveData(LOOP)
 
     override fun initUiState() =
         MusicState
@@ -54,9 +56,9 @@ class MusicViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
 //    }
 
     private fun setNewSongList(list: MutableList<Song>, index: Int = 0) {
-        mCurrentPlaylist = list
-        mCurrentSongIndex = index
-        mCurrentSong.value = mCurrentPlaylist[mCurrentSongIndex]
+        currentPlaylist = list
+        currentSongIndex = index
+        currentSong.value = currentPlaylist[currentSongIndex]
     }
 
 //    fun switchMode() {

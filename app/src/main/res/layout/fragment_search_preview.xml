@@ -49,17 +49,11 @@
                 android:orientation="vertical">
 
                 <SearchView
-                    android:id="@+id/searchView_preview"
+                    android:id="@+id/searchView_Preview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="15dp"
                     android:queryHint="输入任意关键字" />
-
-                <com.p1ay1s.dev.ui.ChangingImageButton
-                    android:id="@+id/b"
-                    android:layout_width="30dp"
-                    android:layout_height="200dp"
-                    android:layout_gravity="center" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

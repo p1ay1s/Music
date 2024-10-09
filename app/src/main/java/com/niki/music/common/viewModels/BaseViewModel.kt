@@ -2,7 +2,7 @@ package com.niki.music.common.viewModels
 
 import com.niki.music.common.models.PlayerModel
 import com.niki.music.common.models.PlaylistModel
-import com.niki.music.dataclasses.Song
+import com.niki.common.repository.dataclasses.Song
 import com.p1ay1s.dev.base.MVIViewModel
 
 abstract class BaseViewModel<Intent, State, Effect> : MVIViewModel<Intent, State, Effect>() {

@@ -5,18 +5,17 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DiffUtil
+import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.SongInfo
+import com.niki.music.appMusicViewModel
 import com.niki.music.common.intents.MusicIntent
-import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.databinding.LayoutSongBinding
-import com.niki.music.dataclasses.Song
-import com.niki.music.dataclasses.SongInfo
 import com.p1ay1s.dev.base.toast
 import com.p1ay1s.dev.util.ImageSetter.setRadiusImgView
 import com.p1ay1s.dev.viewbinding.ui.ViewBindingListAdapter
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class SongAdapter(
-    private val musicViewModel: MusicViewModel,
     private val enableCache: Boolean = false,
     private val showDetails: Boolean = true,
     private val showImage: Boolean = true
@@ -36,6 +35,12 @@ class SongAdapter(
                 } else {
                     continue
                 }
+                val index = song.ar.indexOf(artist)
+                when (index) {
+                    song.ar.size -> {}
+                    song.ar.size - 1 -> append(" & ")
+                    else -> append(" , ")
+                }
                 if (song.ar.indexOf(artist) != song.ar.size - 1) {
                     append(" & ")
                 }
@@ -51,7 +56,7 @@ class SongAdapter(
 
     override fun LayoutSongBinding.onBindViewHolder(data: Song, position: Int) {
         root.setOnClickListener {
-            musicViewModel.run {
+            appMusicViewModel?.run {
                 if (currentList.isNotEmpty())
                     sendIntent(
                         MusicIntent.SetNewSongList(

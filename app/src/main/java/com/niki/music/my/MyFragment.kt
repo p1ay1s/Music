@@ -2,26 +2,27 @@ package com.niki.music.my
 
 import android.os.Build
 import android.view.View
+import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.niki.common.repository.MusicRepository
+import com.niki.common.repository.dataclasses.Song
+import com.niki.common.utils.takePartOf
 import com.niki.music.R
-import com.niki.music.common.MusicRepository
 import com.niki.music.common.ui.SongAdapter
-import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
-import com.niki.music.dataclasses.Song
 import com.niki.music.my.login.LoginFragment
-import com.niki.utils.takePartOf
 import com.p1ay1s.dev.base.TAG
 import com.p1ay1s.dev.log.logE
 import com.p1ay1s.dev.ui.PreloadLayoutManager
 import com.p1ay1s.dev.util.ImageSetter
 import com.p1ay1s.dev.viewbinding.ViewBindingFragment
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -38,43 +39,68 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
+    private lateinit var itemAnimation: Animation
 
     private val myViewModel: MyViewModel by activityViewModels<MyViewModel>()
-    private val musicViewModel: MusicViewModel by activityViewModels<MusicViewModel>()
+
+    private var mHandleJob1: Job? = null
+    private var mHandleJob2: Job? = null
 
     override fun FragmentMyBinding.initBinding() {
         initValues()
+        handle()
 
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             toolbar.visibility =
                 if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.GONE
         }
 
-        recyclerView.apply {
-            if (itemDecorationCount == 0) {
-                adapter = songAdapter
-                layoutManager = baseLayoutManager
-                animation = AnimationUtils.loadAnimation(context, R.anim.fade_in_anim)
+        with(recyclerView) {
+            adapter = songAdapter
+            layoutManager = baseLayoutManager
+            animation = itemAnimation
+
+            if (itemDecorationCount != 0)
                 addItemDecoration(
                     DividerItemDecoration(
                         requireActivity(),
                         DividerItemDecoration.VERTICAL
                     )
                 )
-            }
         }
+    }
 
-        handle()
+    override fun onResume() {
+        super.onResume()
+        MusicRepository.run {
+            if (likePlaylist.isEmpty() && myViewModel.uiStateFlow.value.isLoggedIn)
+                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
+        }
+    }
+
+    private fun initValues() {
+        songAdapter = SongAdapter(
+            enableCache = false,
+            showDetails = true,
+            showImage = false
+        )
+        baseLayoutManager = PreloadLayoutManager(
+            requireActivity(),
+            LinearLayoutManager.VERTICAL,
+            4
+        )
+        itemAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_in_anim)
     }
 
     override fun handle() = myViewModel.apply {
-        lifecycleScope.launch {
+        mHandleJob1?.cancel()
+        mHandleJob1 = lifecycleScope.launch {
             uiEffectFlow
                 .collect {
                     logE(TAG, "COLLECTED ${it::class.qualifiedName.toString()}")
                     when (it) {
                         is MyEffect.GetLikePlaylistEffect -> if (it.isSuccess)
-                            songAdapter.submitPartly(MusicRepository.mLikePlaylist)
+                            songAdapter.submitPartly(MusicRepository.likePlaylist)
 
                         else -> {}
                     }
@@ -82,7 +108,8 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
         }
 
         observeState {
-            lifecycleScope.launch {
+            mHandleJob2?.cancel()
+            mHandleJob2 = lifecycleScope.launch {
                 map { it.loggedInDatas }.distinctUntilChanged().collect {
                     if (it == null)
                         setUnLoggedInViews()
@@ -93,13 +120,15 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        MusicRepository.run {
-            if (mLikePlaylist.isEmpty() && myViewModel.uiStateFlow.value.isLoggedIn)
-                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
-        }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mHandleJob1?.cancel()
+        mHandleJob1 = null
+
+        mHandleJob2?.cancel()
+        mHandleJob2 = null
     }
+
 
     private fun SongAdapter.submitPartly(list: List<Song>) = lifecycleScope.launch {
         val newList = takePartOf(list)
@@ -110,7 +139,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
     }
 
     private fun setUnLoggedInViews() {
-        mBinding.apply {
+        binding.apply {
             userAvatar.visibility = View.INVISIBLE
             background.visibility = View.INVISIBLE
             nickname.text = NOT_YET_LOGGED_IN
@@ -121,11 +150,14 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
                     LoginFragment::class.simpleName!!
                 )
             }
+
+            MusicRepository.likePlaylist = emptyList()
+            songAdapter.submitPartly(emptyList())
         }
     }
 
     private fun setLoggedInViews(data: LoggedInDatas) {
-        mBinding.run {
+        binding.run {
             nickname.text = data.nickname
             logout.text = LOGOUT
             logout.setOnClickListener {
@@ -143,26 +175,13 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
                 )
             }
 
-            if (MusicRepository.mLikePlaylist.isEmpty())
+            if (MusicRepository.likePlaylist.isEmpty())
                 myViewModel.sendIntent(MyIntent.GetLikePlaylist)
             else
-                songAdapter.submitPartly(MusicRepository.mLikePlaylist)
+                songAdapter.submitPartly(MusicRepository.likePlaylist)
         }
     }
 
-    private fun initValues() {
-        songAdapter = SongAdapter(
-            musicViewModel,
-            enableCache = false,
-            showDetails = true,
-            showImage = false
-        )
-        baseLayoutManager = PreloadLayoutManager(
-            requireActivity(),
-            LinearLayoutManager.VERTICAL,
-            4
-        )
-    }
 }
 
 

@@ -1,112 +1,122 @@
 package com.niki.music
 
+
+import android.Manifest.permission.POST_NOTIFICATIONS
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.niki.music.common.ui.LoadingDialog
+import com.niki.common.ui.LoadingDialog
+import com.niki.common.values.FragmentTag
+import com.niki.music.browse.TopPlaylistFragment
 import com.niki.music.common.viewModels.MusicViewModel
 import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ListenFragment
 import com.niki.music.my.MyFragment
 import com.niki.music.my.MyViewModel
-import com.niki.music.search.SEARCH_PREVIEW
-import com.niki.music.search.SearchFragment
-import com.niki.music.search.result.SearchResultFragment
+import com.niki.music.my.login.dismissCallback
+import com.niki.music.search.preview.PreviewFragment
+import com.niki.music.search.result.ResultFragment
 import com.p1ay1s.dev.base.ActivityPreferences
 import com.p1ay1s.dev.base.appBaseUrl
 import com.p1ay1s.dev.base.toast
-import com.p1ay1s.dev.ui.FragmentControllerView
+import com.p1ay1s.dev.base.withPermission
+import com.p1ay1s.dev.ui.FragmentHost
 import com.p1ay1s.dev.util.ServiceBuilder.ping
 import com.p1ay1s.dev.viewbinding.ViewBindingActivity
-import com.p1ay1s.extensions.views.ContainerFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-var loadingDialog: LoadingDialog? = null
-var onBackPressListener: OnBackPressListener? = null
+var appLoadingDialog: LoadingDialog? = null
+var appMusicViewModel: MusicViewModel? = null
+var appFragmentHost: FragmentHost? = null
 
-interface OnBackPressListener {
-    fun onBackPress()
+var listenIndex = FragmentTag.LISTEN_FRAGMENT
+var searchIndex = FragmentTag.PREVIEW_FRAGMENT
+
+val map: LinkedHashMap<String, Fragment> by lazy {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        linkedMapOf(
+            FragmentTag.LISTEN_FRAGMENT to ListenFragment(),
+            FragmentTag.MY_FRAGMENT to MyFragment(),
+            FragmentTag.PREVIEW_FRAGMENT to PreviewFragment()
+        )
+    } else {
+        throw Exception("unsupported sdk")
+    }
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-class MainActivity : ViewBindingActivity<ActivityMainBinding>(), OnBackPressListener,
-    FragmentControllerView.OnFragmentIndexChangedListener,
-    ActivityPreferences.TwoBackPressToExitListener {
+class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
+    ActivityPreferences.TwoClicksListener {
+
+    private val fragmentHost: FragmentHost
+        get() = binding.fragmentHostViewMain.fragmentHost
 
     private var backPressTimer: Job? = null
     private var oneMoreToFinish = false
 
-    private lateinit var musicViewModel: MusicViewModel
     private lateinit var myViewModel: MyViewModel
 
-    val index0 = "ListenFragment"
-    val index1 = "MyFragment"
-    val index2 = "SearchFragment"
-
-    private lateinit var map: LinkedHashMap<String, Fragment>
-
-    private var currentIndex = index0
-
     override fun ActivityMainBinding.initBinding() {
-        val bottomNav = bottomNavMain
-        loadingDialog = LoadingDialog(this@MainActivity)
-        map = linkedMapOf(
-            index0 to ListenFragment(),
-            index1 to MyFragment(),
-            index2 to SearchFragment()
-        )
+        appLoadingDialog = LoadingDialog(this@MainActivity)
 
-        fragmentControllerViewMain.run {
-            init(supportFragmentManager, map)
-            setOnFragmentIndexChangeListener(this@MainActivity)
-        }
+        appLoadingDialog?.show()
 
-        bottomNav.setOnItemSelectedListener { item ->
-            fragmentControllerViewMain.switchToFragment(
-                when (item.itemId) {
-                    R.id.menu_my -> index1
-                    R.id.menu_search -> index2
-                    else -> index0
-                }
-            )
-            true
-        }
-
-        musicViewModel = ViewModelProvider(this@MainActivity)[MusicViewModel::class.java]
-        myViewModel = ViewModelProvider(this@MainActivity)[MyViewModel::class.java]
-
-        loadingDialog?.show()
         ping(appBaseUrl) { isSuccess ->
             if (!isSuccess)
                 toast("服务器连接失败")
-            loadingDialog?.hide()
+            appLoadingDialog?.dismiss()
         }
-    }
 
-    override fun onBackPress() {
-        runCatching {
-            val containerFragment = (map[currentIndex] as ContainerFragment)
-            containerFragment.controllerView?.run {
-                when (getCurrentFragment()) {
-                    is SearchResultFragment ->
-                        this.switchToFragment(SEARCH_PREVIEW)
+        withPermission(POST_NOTIFICATIONS) {
+            toast(if (it) "已授权" else "未授权")
+        }
 
-                    else -> twoBackPressToExit()
-                }
+        myViewModel = ViewModelProvider(this@MainActivity)[MyViewModel::class.java]
+        appMusicViewModel = ViewModelProvider(this@MainActivity)[MusicViewModel::class.java]
+
+        appMusicViewModel!!.run {
+
+            if (appFragmentHost == null)
+                appFragmentHost = fragmentHostViewMain.create(
+                    supportFragmentManager, map
+                )
+            else {
+                fragmentHostViewMain.restore(appFragmentHost!!, supportFragmentManager)
+                fragmentHost.addAll()
             }
         }
+
+        bottomNavMain.setOnItemSelectedListener { item ->
+            val tag = when (item.itemId) {
+                R.id.listenFragment -> listenIndex
+
+                R.id.myFragment -> FragmentTag.MY_FRAGMENT
+
+                R.id.previewFragment -> searchIndex
+
+                else -> FragmentTag.LISTEN_FRAGMENT
+            }
+            fragmentHost.navigate(tag)
+            true
+        }
     }
 
-    override fun onFragmentIndexChanged(index: String) {
-        currentIndex = index
+    override fun onResume() {
+        super.onResume()
+        fragmentHost.show() // 必须在此处调用否则启动后不显示
     }
 
-    override fun twoBackPressToExit() {
+    override fun onPause() {
+        super.onPause()
+        fragmentHost.hide()
+    }
+
+    override fun twoClicksToExit() {
         if (oneMoreToFinish) {
             finishAffinity()
         } else {
@@ -123,6 +133,27 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(), OnBackPressList
 
     @SuppressLint("MissingSuperCall")
     override fun onBackPressed() {
-        onBackPress()
+        val fragment = fragmentHost.getCurrentFragment()
+        when (fragment) {
+            is TopPlaylistFragment -> {
+                listenIndex = FragmentTag.LISTEN_FRAGMENT
+                fragmentHost.pop(FragmentTag.TOP_PLAYLIST_FRAGMENT)
+            }
+
+            is ResultFragment -> {
+                searchIndex = FragmentTag.PREVIEW_FRAGMENT
+                fragmentHost.navigate(FragmentTag.PREVIEW_FRAGMENT)
+            }
+
+            is MyFragment -> {
+                dismissCallback?.let {
+                    it.dismissDialog()
+                    return
+                }
+                twoClicksToExit()
+            }
+
+            else -> twoClicksToExit()
+        }
     }
 }

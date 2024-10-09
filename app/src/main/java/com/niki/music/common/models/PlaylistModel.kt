@@ -1,11 +1,11 @@
 package com.niki.music.common.models
 
-import com.niki.music.dataclasses.CatePlaylistResponse
-import com.niki.music.dataclasses.LikePlaylistResponse
-import com.niki.music.dataclasses.TopPlaylistResponse
-import com.niki.music.services.PlaylistService
+import com.niki.common.repository.dataclasses.CatePlaylistResponse
+import com.niki.common.repository.dataclasses.LikePlaylistResponse
+import com.niki.common.repository.dataclasses.TopPlaylistResponse
+import com.niki.common.services.PlaylistService
 import com.p1ay1s.dev.util.ServiceBuilder
-import com.p1ay1s.dev.util.ServiceBuilder.makeRequest
+import com.p1ay1s.dev.util.ServiceBuilder.requestEnqueue
 
 class PlaylistModel {
     val playlistService by lazy {
@@ -18,7 +18,7 @@ class PlaylistModel {
     inline fun getCatePlaylists(
         crossinline onSuccess: (CatePlaylistResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playlistService.getCatePlaylists(), onSuccess, onError)
+    ) = requestEnqueue(playlistService.getCatePlaylists(), onSuccess, onError)
 
     /**
      * 获取最流行的歌单信息
@@ -29,7 +29,7 @@ class PlaylistModel {
         offset: Int,
         crossinline onSuccess: (TopPlaylistResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playlistService.getTopPlaylists(limit, order, offset), onSuccess, onError)
+    ) = requestEnqueue(playlistService.getTopPlaylists(limit, order, offset), onSuccess, onError)
 
     /**
      * 获取(登录后)的用户收藏歌单信息
@@ -39,5 +39,5 @@ class PlaylistModel {
         cookie: String,
         crossinline onSuccess: (LikePlaylistResponse) -> Unit,
         crossinline onError: (Int, String) -> Unit
-    ) = makeRequest(playlistService.getLikePlaylist(uid, cookie), onSuccess, onError)
+    ) = requestEnqueue(playlistService.getLikePlaylist(uid, cookie), onSuccess, onError)
 }

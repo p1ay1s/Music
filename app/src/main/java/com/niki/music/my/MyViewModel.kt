@@ -1,17 +1,17 @@
 package com.niki.music.my
 
 import androidx.lifecycle.viewModelScope
-import com.niki.music.common.MusicRepository
+import com.niki.common.repository.MusicRepository
+import com.niki.common.repository.dataclasses.LoginResponse
+import com.niki.common.utils.getStringData
+import com.niki.common.utils.putStringData
+import com.niki.common.values.preferenceAvatar
+import com.niki.common.values.preferenceBackground
+import com.niki.common.values.preferenceCookie
+import com.niki.common.values.preferenceNickname
+import com.niki.common.values.preferenceUid
 import com.niki.music.common.viewModels.BaseViewModel
-import com.niki.music.dataclasses.LoginResponse
 import com.niki.music.my.login.LoginModel
-import com.niki.utils.datastore.getStringData
-import com.niki.utils.datastore.preferenceAvatar
-import com.niki.utils.datastore.preferenceBackground
-import com.niki.utils.datastore.preferenceCookie
-import com.niki.utils.datastore.preferenceNickname
-import com.niki.utils.datastore.preferenceUid
-import com.niki.utils.datastore.putStringData
 import com.p1ay1s.dev.base.TAG
 import com.p1ay1s.dev.base.toast
 import com.p1ay1s.dev.log.logE
@@ -27,8 +27,10 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
 
     init {
         getLoginDatas {
-            updateState { copy(loggedInDatas = it, isLoggedIn = it != null) }
-            checkCookieAbility()
+            if (it != null) {
+                updateState { copy(loggedInDatas = it, isLoggedIn = true) }
+                checkCookieAbility()
+            }
         }
     }
 
@@ -47,22 +49,20 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
         }
     }
 
-    private fun getAvatarUrl() {
-        uiStateFlow.value.run {
-            logE(TAG, phone.toString())
-            if (phone.isNullOrBlank()) return
+    private fun getAvatarUrl() = uiStateFlow.value.run {
+        logE(TAG, phone.toString())
+        if (phone.isNullOrBlank()) return@run
 
-            loginModel.getAvatarUrl(phone,
-                {
-                    if (it.exist == 1)
-                        sendEffect { MyEffect.GetAvatarUrlOkEffect(it.avatarUrl) }
-                    else
-                        sendEffect { MyEffect.GetAvatarUrlBadEffect }
-                },
-                { _, _ ->
+        loginModel.getAvatarUrl(phone,
+            {
+                if (it.exist == 1)
+                    sendEffect { MyEffect.GetAvatarUrlOkEffect(it.avatarUrl) }
+                else
                     sendEffect { MyEffect.GetAvatarUrlBadEffect }
-                })
-        }
+            },
+            { _, _ ->
+                sendEffect { MyEffect.GetAvatarUrlBadEffect }
+            })
     }
 
     private fun captchaLogin() = uiStateFlow.value.run {
@@ -82,11 +82,13 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                             toast("验证码错误")
                         }
                     }
+                    sendEffect { MyEffect.LoginFinish }
                 },
                 { code, _ ->
                     if (code != ON_FAILURE_CODE)
                         toast("验证码错误")
                     updateState { copy(isLoggedIn = false) }
+                    sendEffect { MyEffect.LoginFinish }
                 })
     }
 
@@ -104,7 +106,9 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     }
 
     /**
-     * login/refresh 接口获取的新 cookie 无论是否加密都是不可用的, 我认为这是服务器的问题, 因此这个接口只用于检测本地存储的 cookie 是否可用
+     * login/refresh 接口获取的新 cookie 无论是否加密都是不可用的,
+     * 我认为这是服务器的问题,
+     * 因此这个接口只用于检测本地存储的 cookie 是否可用
      */
     private fun checkCookieAbility() = uiStateFlow.value.run {
         if (loggedInDatas != null)
@@ -119,23 +123,21 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                 })
     }
 
-    private fun getLikePlaylist() = viewModelScope.launch {
-        uiStateFlow.value.loggedInDatas.run {
-            if (this != null)
-                playlistModel.getLikePlaylist(userId, cookie,
-                    {
-                        getSongsWithIds(it.ids) { list ->
-                            if (!list.isNullOrEmpty()) {
-                                MusicRepository.mLikePlaylist = list
-                                sendEffect { MyEffect.GetLikePlaylistEffect(true) }
-                            } else
-                                sendEffect { MyEffect.GetLikePlaylistEffect() }
-                        }
-                    },
-                    { _, _ ->
-                        sendEffect { MyEffect.GetLikePlaylistEffect() }
-                    })
-        }
+    private fun getLikePlaylist() = uiStateFlow.value.loggedInDatas.run {
+        if (this != null)
+            playlistModel.getLikePlaylist(userId, cookie,
+                {
+                    getSongsWithIds(it.ids) { list ->
+                        if (!list.isNullOrEmpty()) {
+                            MusicRepository.likePlaylist = list
+                            sendEffect { MyEffect.GetLikePlaylistEffect(true) }
+                        } else
+                            sendEffect { MyEffect.GetLikePlaylistEffect() }
+                    }
+                },
+                { _, _ ->
+                    sendEffect { MyEffect.GetLikePlaylistEffect() }
+                })
     }
 
     private fun login(response: LoginResponse) {
@@ -147,7 +149,6 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
         toast(msg)
         removeLoginDatas()
         setNotLoggedIn()
-        MusicRepository.mLikePlaylist = mutableListOf()
     }
 
     private inline fun getLoginDatas(crossinline callback: (LoggedInDatas?) -> Unit) =

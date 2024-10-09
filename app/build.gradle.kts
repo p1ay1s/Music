@@ -8,7 +8,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.niki.music"
+        applicationId = namespace
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -53,14 +53,14 @@ android {
 dependencies {
     implementation(libs.zephyr)
 
-    implementation(project(":utils"))
-    implementation(project(":base"))
+    implementation(project(":common"))
 
     implementation(libs.retrofit)
 
     implementation(libs.github.glide)
 
     implementation(libs.androidx.navigation.fragment.ktx)
+
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.datastore)

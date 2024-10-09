@@ -7,42 +7,54 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import com.niki.base.view.ui.BaseBottomSheetDialogFragment
+import com.niki.common.ui.BaseBottomSheetDialogFragment
 import com.niki.music.R
+import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentLoginBinding
+import com.niki.music.appLoadingDialog
 import com.niki.music.my.MyEffect
 import com.niki.music.my.MyIntent
 import com.niki.music.my.MyViewModel
 import com.p1ay1s.dev.base.TAG
 import com.p1ay1s.dev.log.logE
 import com.p1ay1s.dev.util.ImageSetter.setCircleImgView
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login) {
+fun interface DismissCallback {
+    fun dismissDialog()
+}
+
+var dismissCallback: DismissCallback? = null
+
+class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IView,
+    DismissCallback {
     private val myViewModel: MyViewModel by activityViewModels<MyViewModel>()
 
-    private lateinit var mBinding: FragmentLoginBinding
+    private lateinit var binding: FragmentLoginBinding
+    private var mHandleJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        mBinding = FragmentLoginBinding.inflate(inflater)
-        return mBinding.root
+        binding = FragmentLoginBinding.inflate(inflater)
+        return binding.root
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        handleStates()
+        dismissCallback = this
+        handle()
 
-        mBinding.run {
+        binding.run {
             editPhone.editText?.addTextChangedListener {
                 updatePhone(it.toString())
                 myViewModel.sendIntent(MyIntent.GetAvatarUrl)
+                appLoadingDialog?.show()
             }
             editPassword.editText?.addTextChangedListener { updateCaptcha(it.toString()) }
             getCodeButton.setOnClickListener { myViewModel.sendIntent(MyIntent.SendCaptcha) }
@@ -50,27 +62,30 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login) {
         }
     }
 
-    private fun handleStates() =
+    override fun handle() =
         lifecycleScope.apply {
-            launch {
+            mHandleJob?.cancel()
+            mHandleJob = launch {
                 myViewModel.uiEffectFlow
                     .collect {
                         logE(
                             TAG,
-                            "collected ${it::class.qualifiedName.toString()}"
+                            "COLLECTED ${it::class.qualifiedName.toString()}"
                         )
                         when (it) {
                             is MyEffect.GetAvatarUrlOkEffect -> {
-                                mBinding.userAvatar.setCircleImgView(
+                                binding.userAvatar.setCircleImgView(
                                     it.url,
                                     false
                                 )
                             }
 
                             MyEffect.GetAvatarUrlBadEffect -> {
-                                mBinding.userAvatar.visibility =
+                                binding.userAvatar.visibility =
                                     View.INVISIBLE
                             }
+
+                            MyEffect.LoginFinish -> appLoadingDialog?.dismiss()
 
                             else -> {}
                         }
@@ -89,4 +104,15 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login) {
     private fun updatePhone(phone: String) = myViewModel.sendIntent(MyIntent.UpdatePhone(phone))
     private fun updateCaptcha(captcha: String) =
         myViewModel.sendIntent(MyIntent.UpdateCaptcha(captcha))
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        dismissCallback = null
+        mHandleJob?.cancel()
+        mHandleJob = null
+    }
+
+    override fun dismissDialog() {
+        dismiss()
+    }
 }
