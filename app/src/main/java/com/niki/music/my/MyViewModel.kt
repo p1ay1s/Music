@@ -14,14 +14,20 @@ import com.niki.music.common.viewModels.BaseViewModel
 import com.niki.music.my.login.LoginModel
 import com.p1ay1s.dev.base.TAG
 import com.p1ay1s.dev.base.toast
+import com.p1ay1s.dev.base.toastSuspended
 import com.p1ay1s.dev.log.logE
 import com.p1ay1s.dev.util.ON_FAILURE_CODE
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 var appCookie = ""
 
 class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     private val loginModel by lazy { LoginModel() }
+
+    private var avatarJob: Job? = null
 
     override fun initUiState() = MyState(null, null, false, null)
 
@@ -50,47 +56,46 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     }
 
     private fun getAvatarUrl() = uiStateFlow.value.run {
-        logE(TAG, phone.toString())
         if (phone.isNullOrBlank()) return@run
 
-        loginModel.getAvatarUrl(phone,
-            {
-                if (it.exist == 1)
-                    sendEffect { MyEffect.GetAvatarUrlOkEffect(it.avatarUrl) }
-                else
-                    sendEffect { MyEffect.GetAvatarUrlBadEffect }
-            },
-            { _, _ ->
-                sendEffect { MyEffect.GetAvatarUrlBadEffect }
-            })
+        viewModelScope.launch {
+            avatarJob?.cancel()
+            avatarJob?.join()
+            avatarJob = launch(Dispatchers.IO) {
+                delay(300) // 冷静期
+                loginModel.getAvatarUrl(phone,
+                    {
+                        if (it.exist == 1)
+                            sendEffect { MyEffect.GetAvatarUrlOkEffect(it.avatarUrl) }
+                        else
+                            sendEffect { MyEffect.GetAvatarUrlBadEffect }
+                    },
+                    { _, _ ->
+                        sendEffect { MyEffect.GetAvatarUrlBadEffect }
+                    })
+            }
+        }
     }
 
     private fun captchaLogin() = uiStateFlow.value.run {
         if (phone.isNullOrBlank() || captcha.isNullOrBlank()) {
-            updateState { copy(isLoggedIn = false) }
-            toast("请检查输入")
+            logout("请检查输入")
         } else
             loginModel.captchaLogin(phone, captcha,
                 {
                     it.run {
                         if (code == 200) {
-                            login(it)
-                            updateState { copy(isLoggedIn = true) }
-                            toast("欢迎回来! ${profile.nickname}")
+                            login(it, "欢迎回来! ${profile.nickname}")
                         } else {
-                            updateState { copy(isLoggedIn = false) }
-                            toast("验证码错误")
+                            logout("验证码错误")
                         }
                     }
-                    sendEffect { MyEffect.LoginFinish }
                 },
                 { code, _ ->
-                    if (code != ON_FAILURE_CODE)
-                        toast("验证码错误")
-                    updateState { copy(isLoggedIn = false) }
-                    sendEffect { MyEffect.LoginFinish }
+                    logout(if (code != ON_FAILURE_CODE) "验证码错误" else "网络错误, 请重试")
                 })
     }
+
 
     private fun sendCaptcha() = uiStateFlow.value.run {
         if (phone.isNullOrBlank()) {
@@ -140,13 +145,20 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                 })
     }
 
-    private fun login(response: LoginResponse) {
+    /**
+     * 写入登录信息并且更新 state
+     */
+    private fun login(response: LoginResponse, msg: String) {
+        toast(msg)
         putLoggedInDatasPreference(response)
         updateLoggedInDatasState(response)
     }
 
+    /**
+     * 清除登录信息并且更新 state
+     */
     private fun logout(msg: String = "") = viewModelScope.launch {
-        toast(msg)
+        toastSuspended(msg)
         removeLoginDatas()
         setNotLoggedIn()
     }
@@ -200,7 +212,8 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                         cookie,
                         profile.avatarUrl,
                         profile.backgroundUrl
-                    )
+                    ),
+                    isLoggedIn = true
                 )
             }
         }
@@ -235,5 +248,5 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     }
 
     private fun setNotLoggedIn() =
-        updateState { copy(loggedInDatas = null) }
+        updateState { copy(loggedInDatas = null, isLoggedIn = false) }
 }

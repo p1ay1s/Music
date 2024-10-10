@@ -53,6 +53,8 @@ android {
 dependencies {
     implementation(libs.zephyr)
 
+    debugImplementation(libs.leakcanary.android)
+
     implementation(project(":common"))
 
     implementation(libs.retrofit)

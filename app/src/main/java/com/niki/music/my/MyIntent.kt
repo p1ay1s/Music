@@ -14,7 +14,6 @@ sealed class MyEffect {
     data class GetAvatarUrlOkEffect(val url: String) : MyEffect()
     data object GetAvatarUrlBadEffect : MyEffect()
     data class GetLikePlaylistEffect(val isSuccess: Boolean = false) : MyEffect()
-    data object LoginFinish : MyEffect()
 }
 
 data class LoggedInDatas(

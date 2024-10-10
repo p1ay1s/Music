@@ -9,9 +9,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.niki.common.ui.BaseBottomSheetDialogFragment
 import com.niki.music.R
+import com.niki.music.appLoadingDialog
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentLoginBinding
-import com.niki.music.appLoadingDialog
 import com.niki.music.my.MyEffect
 import com.niki.music.my.MyIntent
 import com.niki.music.my.MyViewModel
@@ -27,6 +27,7 @@ fun interface DismissCallback {
     fun dismissDialog()
 }
 
+// 会被及时释放
 var dismissCallback: DismissCallback? = null
 
 class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IView,
@@ -54,11 +55,13 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
             editPhone.editText?.addTextChangedListener {
                 updatePhone(it.toString())
                 myViewModel.sendIntent(MyIntent.GetAvatarUrl)
-                appLoadingDialog?.show()
             }
             editPassword.editText?.addTextChangedListener { updateCaptcha(it.toString()) }
             getCodeButton.setOnClickListener { myViewModel.sendIntent(MyIntent.SendCaptcha) }
-            loginButton.setOnClickListener { myViewModel.sendIntent(MyIntent.CaptchaLogin) }
+            loginButton.setOnClickListener {
+                appLoadingDialog?.show()
+                myViewModel.sendIntent(MyIntent.CaptchaLogin)
+            }
         }
     }
 
@@ -85,17 +88,18 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
                                     View.INVISIBLE
                             }
 
-                            MyEffect.LoginFinish -> appLoadingDialog?.dismiss()
-
                             else -> {}
                         }
                     }
             }
+
             myViewModel.observeState {
                 launch {
                     map { it.isLoggedIn }.distinctUntilChanged().collect {
-                        if (it)
+                        if (it) {
+                            appLoadingDialog?.dismiss()
                             dismiss()
+                        }
                     }
                 }
             }

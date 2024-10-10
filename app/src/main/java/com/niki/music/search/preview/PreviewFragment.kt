@@ -7,7 +7,6 @@ import com.niki.common.values.FragmentTag
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentSearchPreviewBinding
 import com.niki.music.search.result.ResultFragment
-import com.niki.music.searchIndex
 import com.p1ay1s.dev.base.findFragmentHost
 import com.p1ay1s.dev.viewbinding.ViewBindingFragment
 import kotlinx.coroutines.Job
@@ -25,7 +24,7 @@ class PreviewFragment : ViewBindingFragment<FragmentSearchPreviewBinding>(), IVi
             searchViewPreview.isIconified = true
 
             findFragmentHost()?.let {
-                searchIndex = FragmentTag.RESULT_FRAGMENT
+//                searchIndex = FragmentTag.RESULT_FRAGMENT
                 if (!it.navigate(FragmentTag.RESULT_FRAGMENT))
                     it.add(FragmentTag.RESULT_FRAGMENT, ResultFragment())
                 (it.getCurrentFragment() as ResultFragment).searchView.apply {

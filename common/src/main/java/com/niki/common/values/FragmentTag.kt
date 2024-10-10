@@ -1,11 +1,11 @@
 package com.niki.common.values
 
 object FragmentTag {
-    const val LISTEN_FRAGMENT: String = "1"
-    const val TOP_PLAYLIST_FRAGMENT: String = "2"
+    const val LISTEN_FRAGMENT = 0
+    const val TOP_PLAYLIST_FRAGMENT = 1
 
-    const val MY_FRAGMENT: String = "3"
+    const val MY_FRAGMENT = 10
 
-    const val PREVIEW_FRAGMENT: String = "4"
-    const val RESULT_FRAGMENT: String = "5"
+    const val PREVIEW_FRAGMENT = 100
+    const val RESULT_FRAGMENT = 101
 }

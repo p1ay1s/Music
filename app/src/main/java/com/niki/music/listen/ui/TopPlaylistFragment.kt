@@ -1,14 +1,14 @@
-package com.niki.music.browse
+package com.niki.music.listen.ui
 
 import android.os.Build
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
+import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.niki.common.repository.dataclasses.Playlist
-import com.niki.music.R
+import com.niki.common.utils.addLineDecoration
+import com.niki.common.utils.addOnLoadMoreListener_V
+import com.niki.music.appFadeInAnim
+import com.niki.music.appMainViewModel
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.databinding.FragmentTopPlaylistBinding
 import com.p1ay1s.dev.ui.PreloadLayoutManager
@@ -17,15 +17,12 @@ import com.p1ay1s.dev.viewbinding.ViewBindingFragment
 import kotlin.math.abs
 
 
-var playlist: Playlist? = null
-
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class TopPlaylistFragment :
     ViewBindingFragment<FragmentTopPlaylistBinding>() {
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
-    private lateinit var itemAnimation: Animation
 
     override fun FragmentTopPlaylistBinding.initBinding() {
         initValues()
@@ -35,23 +32,51 @@ class TopPlaylistFragment :
                 if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.GONE
         }
 
-        playlist?.run {
+        toolbar.title = currentTopPlaylist!!.name
 
-            background.setImgView(coverImgUrl)
+        currentTopPlaylist?.run {
+            background.setImgView(coverImgUrl, enableCrossFade = false)
         }
 
-        with(recyclerView) {
+        songAdapter.submitList(currentTopSongs)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        with(binding.recyclerView) {
             adapter = songAdapter
             layoutManager = baseLayoutManager
-            animation = itemAnimation
+            animation = appFadeInAnim
 
-            if (itemDecorationCount != 0)
-                addItemDecoration(
-                    DividerItemDecoration(
-                        requireActivity(),
-                        androidx.recyclerview.widget.DividerItemDecoration.VERTICAL
-                    )
-                )
+            addLineDecoration(requireActivity(), LinearLayout.VERTICAL)
+
+            addOnLoadMoreListener_V(1) { loadMore() }
+        }
+    }
+
+    private fun loadMore() {
+        if (isTopLoading || !currentTopHasMore) return
+        isTopLoading = true
+//        binding.tail.visibility = View.VISIBLE
+//        binding.tail.baselineAlignBottom = true
+        appMainViewModel.getSongsFromPlaylist(
+            currentTopPlaylist!!.id,
+            PLAYLIST_SONGS_LIMIT,
+            currentTopPage * PLAYLIST_SONGS_LIMIT
+        ) { songs ->
+            if (songs != null) {
+                currentTopPage++
+                currentTopHasMore = songs.isNotEmpty()
+                if (currentTopSongs == null) {
+                    currentTopSongs = songs
+                } else {
+                    currentTopSongs = currentTopSongs!!.plus(songs)
+                }
+                songAdapter.submitList(currentTopSongs)
+            }
+            isTopLoading = false
+//            binding.tail.visibility = View.GONE
         }
     }
 
@@ -66,6 +91,5 @@ class TopPlaylistFragment :
             LinearLayoutManager.VERTICAL,
             4
         )
-        itemAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_in_anim)
     }
 }

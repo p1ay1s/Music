@@ -1,21 +1,22 @@
 package com.niki.music.search.result
 
 import android.os.Build
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
+import android.widget.LinearLayout
 import android.widget.SearchView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.niki.common.repository.MusicRepository
+import com.niki.common.utils.addLineDecoration
+import com.niki.common.utils.addOnLoadMoreListener_V
 import com.niki.common.values.FragmentTag
-import com.niki.music.R
+import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentSearchResultBinding
 import com.p1ay1s.dev.base.findFragmentHost
+import com.p1ay1s.dev.log.logE
 import com.p1ay1s.dev.ui.PreloadLayoutManager
 import com.p1ay1s.dev.viewbinding.ViewBindingFragment
 import kotlinx.coroutines.Job
@@ -28,7 +29,6 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
-    private lateinit var itemAnimation: Animation
 
     val searchView: SearchView
         get() = binding.searchViewResult
@@ -43,21 +43,15 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
         with(recyclerViewResult) {
             adapter = songAdapter
             layoutManager = baseLayoutManager
-            animation = itemAnimation
+            animation = appFadeInAnim
 
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    super.onScrollStateChanged(recyclerView, newState)
-                    recyclerView.apply {
-                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                            if (!canScrollVertically(-1) && !mIsLoading) {
-//                                mIsLoading = true
-//                                listenViewModel.sendIntent(ListenIntent.GetTopPlaylists())
-                            }
-                        }
-                    }
-                }
-            })
+            addLineDecoration(requireActivity(), LinearLayout.VERTICAL)
+
+            addOnLoadMoreListener_V(1) {
+                logE("###", "1")
+//                if(!mIsLoading) // <- 移至函数内
+//                    return@setOnLoadMoreListener // TODO
+            }
         }
 
         searchView.apply {
@@ -85,7 +79,6 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
             LinearLayoutManager.VERTICAL,
             4
         )
-        itemAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_in_anim)
     }
 
     override fun handle() = resultViewModel.apply {

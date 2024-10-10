@@ -7,14 +7,14 @@
         android:layout_height="match_parent">
 
         <com.p1ay1s.dev.ui.FragmentHostView
-            android:id="@+id/fragmentHostView_Main"
+            android:id="@+id/fragmentHostView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@id/bottomNav_Main"
+            app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNav_Main"
+            android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="0dp"

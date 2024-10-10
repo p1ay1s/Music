@@ -1,17 +1,22 @@
 package com.niki.music.common.viewModels
 
+import android.os.Build
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.values.FragmentTag
 import com.niki.music.common.intents.MusicEffect
 import com.niki.music.common.intents.MusicIntent
 import com.niki.music.common.intents.MusicState
+import com.niki.music.listen.ListenFragment
+import com.niki.music.my.MyFragment
 import com.niki.music.my.appCookie
+import com.niki.music.search.preview.PreviewFragment
 import com.niki.music.search.result.ResultModel
 import com.p1ay1s.dev.ui.FragmentHost
 import com.p1ay1s.dev.util.ON_FAILURE_CODE
 
-class MusicViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
+class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     companion object {
         const val SINGLE = 0
         const val LOOP = 1
@@ -27,6 +32,19 @@ class MusicViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     var isPlaying = MutableLiveData<Boolean>()
     var songPosition = MutableLiveData<Int>()
     var playMode = MutableLiveData(LOOP)
+
+    var fragmentHost: FragmentHost? = null // 保存 fragment 的状态
+    val fragmentMap: LinkedHashMap<String, Fragment> by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            linkedMapOf(
+                FragmentTag.LISTEN_FRAGMENT to ListenFragment(),
+                FragmentTag.MY_FRAGMENT to MyFragment(),
+                FragmentTag.PREVIEW_FRAGMENT to PreviewFragment()
+            )
+        } else {
+            throw Exception("unsupported android version")
+        }
+    }
 
     override fun initUiState() =
         MusicState

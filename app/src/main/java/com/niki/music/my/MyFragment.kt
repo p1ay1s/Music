@@ -2,8 +2,7 @@ package com.niki.music.my
 
 import android.os.Build
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
+import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -11,8 +10,9 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.MusicRepository
 import com.niki.common.repository.dataclasses.Song
+import com.niki.common.utils.addLineDecoration
 import com.niki.common.utils.takePartOf
-import com.niki.music.R
+import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
@@ -39,7 +39,6 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
-    private lateinit var itemAnimation: Animation
 
     private val myViewModel: MyViewModel by activityViewModels<MyViewModel>()
 
@@ -54,24 +53,19 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
             toolbar.visibility =
                 if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.GONE
         }
-
-        with(recyclerView) {
-            adapter = songAdapter
-            layoutManager = baseLayoutManager
-            animation = itemAnimation
-
-            if (itemDecorationCount != 0)
-                addItemDecoration(
-                    DividerItemDecoration(
-                        requireActivity(),
-                        DividerItemDecoration.VERTICAL
-                    )
-                )
-        }
     }
 
     override fun onResume() {
         super.onResume()
+
+        with(binding.recyclerView) {
+            adapter = songAdapter
+            layoutManager = baseLayoutManager
+            animation = appFadeInAnim
+
+            addLineDecoration(requireActivity(), LinearLayout.VERTICAL)
+        }
+
         MusicRepository.run {
             if (likePlaylist.isEmpty() && myViewModel.uiStateFlow.value.isLoggedIn)
                 myViewModel.sendIntent(MyIntent.GetLikePlaylist)
@@ -89,7 +83,6 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
             LinearLayoutManager.VERTICAL,
             4
         )
-        itemAnimation = AnimationUtils.loadAnimation(context, R.anim.fade_in_anim)
     }
 
     override fun handle() = myViewModel.apply {

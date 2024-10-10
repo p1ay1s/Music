@@ -1,28 +1,33 @@
 package com.niki.music.common.ui
 
-import android.os.Build
 import android.view.View
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.repository.dataclasses.SongInfo
-import com.niki.music.appMusicViewModel
-import com.niki.music.common.intents.MusicIntent
 import com.niki.music.databinding.LayoutSongBinding
-import com.p1ay1s.dev.base.toast
 import com.p1ay1s.dev.util.ImageSetter.setRadiusImgView
 import com.p1ay1s.dev.viewbinding.ui.ViewBindingListAdapter
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+interface SongAdapterListener {
+    fun onPlayMusic(song: Song)
+    fun onMoreClicked(song: Song)
+}
+
 class SongAdapter(
     private val enableCache: Boolean = false,
     private val showDetails: Boolean = true,
     private val showImage: Boolean = true
 ) : ViewBindingListAdapter<LayoutSongBinding, Song, SongInfo>(SongCallback()) {
 
+    private var listener: SongAdapterListener? = null
+
     companion object {
         const val EXPLICIT = 1048576L
+    }
+
+    fun setSongAdapterListener(l: SongAdapterListener) {
+        listener = l
     }
 
     private fun TextView.formatDetails(song: Song) {
@@ -36,17 +41,16 @@ class SongAdapter(
                     continue
                 }
                 val index = song.ar.indexOf(artist)
-                when (index) {
-                    song.ar.size -> {}
-                    song.ar.size - 1 -> append(" & ")
-                    else -> append(" , ")
-                }
-                if (song.ar.indexOf(artist) != song.ar.size - 1) {
-                    append(" & ")
+                when (index) { // 效果: a, b, c & d
+                    song.ar.size - 1 -> {} // the last
+                    song.ar.size - 2 -> append(" & ")
+                    else -> append(", ")
                 }
             }
-            append(" • ")
-            append(song.al.name)
+            if (song.al.name.isNotBlank()) {
+                append(" • ")
+                append(song.al.name)
+            }
         }
         text = builder.toString()
     }
@@ -56,16 +60,17 @@ class SongAdapter(
 
     override fun LayoutSongBinding.onBindViewHolder(data: Song, position: Int) {
         root.setOnClickListener {
-            appMusicViewModel?.run {
-                if (currentList.isNotEmpty())
-                    sendIntent(
-                        MusicIntent.SetNewSongList(
-                            currentList.toMutableList(),
-                            currentList.indexOf(data)
-                        )
-                    )
-                sendIntent(MusicIntent.TryPlaySong(data.id))
-            }
+            listener?.onPlayMusic(data)
+//            appMainViewModel?.run {
+//                if (currentList.isNotEmpty())
+//                    sendIntent(
+//                        MusicIntent.SetNewSongList(
+//                            currentList.toMutableList(),
+//                            currentList.indexOf(data)
+//                        )
+//                    )
+//                sendIntent(MusicIntent.TryPlaySong(data.id))
+//            }
         }
 
         if (showImage)
@@ -82,9 +87,7 @@ class SongAdapter(
         songName.text = data.name
 
         more.setOnClickListener {
-            // musicViewModel.addSongToNext(song)
-            // TODO a menu!
-            toast(data.name)
+            listener?.onMoreClicked(data)
         }
     }
 

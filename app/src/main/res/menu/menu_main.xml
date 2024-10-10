@@ -3,15 +3,15 @@
     <item
         android:id="@+id/listenFragment"
         android:icon="@drawable/ic_listen"
-        android:title="聆听" />
+        android:title="@string/listen" />
 
     <item
         android:id="@+id/myFragment"
         android:icon="@drawable/ic_my"
-        android:title="我的" />
+        android:title="@string/my" />
 
     <item
         android:id="@+id/previewFragment"
         android:icon="@drawable/ic_search"
-        android:title="搜索" />
+        android:title="@string/search" />
 </menu>
