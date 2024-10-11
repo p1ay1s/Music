@@ -1,5 +1,7 @@
 package com.niki.music.my
 
+import com.niki.common.repository.dataclasses.Song
+
 sealed class MyIntent {
     data class UpdatePhone(val phone: String?) : MyIntent()
     data class UpdateCaptcha(val captcha: String?) : MyIntent()
@@ -13,7 +15,6 @@ sealed class MyIntent {
 sealed class MyEffect {
     data class GetAvatarUrlOkEffect(val url: String) : MyEffect()
     data object GetAvatarUrlBadEffect : MyEffect()
-    data class GetLikePlaylistEffect(val isSuccess: Boolean = false) : MyEffect()
 }
 
 data class LoggedInDatas(
@@ -29,4 +30,5 @@ data class MyState(
     val captcha: String?,
     val isLoggedIn: Boolean,
     val loggedInDatas: LoggedInDatas?,
+    val likeList: List<Song>?
 )

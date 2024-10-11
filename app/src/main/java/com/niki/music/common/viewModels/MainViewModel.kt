@@ -5,16 +5,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.values.FragmentTag
-import com.niki.music.common.intents.MusicEffect
-import com.niki.music.common.intents.MusicIntent
-import com.niki.music.common.intents.MusicState
+import com.niki.music.intents.MusicEffect
+import com.niki.music.intents.MusicIntent
+import com.niki.music.intents.MusicState
 import com.niki.music.listen.ListenFragment
 import com.niki.music.my.MyFragment
 import com.niki.music.my.appCookie
 import com.niki.music.search.preview.PreviewFragment
 import com.niki.music.search.result.ResultModel
-import com.p1ay1s.dev.ui.FragmentHost
-import com.p1ay1s.dev.util.ON_FAILURE_CODE
+import com.p1ay1s.base.ui.FragmentHost
+import com.p1ay1s.util.ON_FAILURE_CODE
 
 class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     companion object {
@@ -34,7 +34,7 @@ class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     var playMode = MutableLiveData(LOOP)
 
     var fragmentHost: FragmentHost? = null // 保存 fragment 的状态
-    val fragmentMap: LinkedHashMap<String, Fragment> by lazy {
+    val fragmentMap: LinkedHashMap<Int, Fragment> by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             linkedMapOf(
                 FragmentTag.LISTEN_FRAGMENT to ListenFragment(),

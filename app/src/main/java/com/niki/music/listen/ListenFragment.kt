@@ -5,25 +5,26 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.niki.common.repository.MusicRepository
-import com.niki.common.utils.addOnLoadMoreListener_H
-import com.niki.common.utils.setSnapHelper
 import com.niki.common.values.FragmentTag
 import com.niki.music.R
-import com.niki.music.appFadeInAnim
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentListenBinding
 import com.niki.music.listen.ui.TopPlaylistAdapter
 import com.niki.music.listen.ui.TopPlaylistFragment
-import com.p1ay1s.dev.base.TAG
-import com.p1ay1s.dev.base.findFragmentHost
-import com.p1ay1s.dev.log.logE
-import com.p1ay1s.dev.ui.PreloadLayoutManager
-import com.p1ay1s.dev.viewbinding.ViewBindingFragment
+import com.p1ay1s.base.extension.TAG
+import com.p1ay1s.base.extension.addOnLoadMoreListener_H
+import com.p1ay1s.base.extension.findFragmentHost
+import com.p1ay1s.base.extension.setSnapHelper
+import com.p1ay1s.base.log.logE
+import com.p1ay1s.base.ui.PreloadLayoutManager
+import com.p1ay1s.impl.ViewBindingFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+/**
+ * TODO 需要保存的:
+ */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
     private lateinit var topAdapter: TopPlaylistAdapter
@@ -37,31 +38,22 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
     override fun FragmentListenBinding.initBinding() {
         initValues()
         handle()
-    }
-
-    override fun onResume() {
-        super.onResume()
 
         with(binding.recyclerViewTop) {
             setSnapHelper()
 
             adapter = topAdapter
             layoutManager = topLayoutManager
-            animation = appFadeInAnim
+            animation = com.niki.music.appFadeInAnim
 
             addOnLoadMoreListener_H(1) {
                 topLoadMore()
             }
-//            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-//                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-//                    super.onScrollStateChanged(recyclerView, newState)
-//                    if (newState == RecyclerView.SCROLL_STATE_IDLE && !canScrollHorizontally(1) && !mIsLoading) {
-//                        mIsLoading = true
-//                        listenViewModel.sendIntent(ListenIntent.GetTopPlaylists())
-//                    }
-//                }
-//            })
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         MusicRepository.run {
             when {
@@ -77,9 +69,8 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
             findFragmentHost()?.add(
                 FragmentTag.TOP_PLAYLIST_FRAGMENT,
                 TopPlaylistFragment(),
-                true,
                 R.anim.right_enter,
-                R.anim.right_exit
+                R.anim.fade_out
             )
         }
         topLayoutManager = PreloadLayoutManager(

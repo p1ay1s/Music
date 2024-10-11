@@ -1,11 +1,11 @@
-package com.niki.music.common.models
+package com.niki.music.models
 
 import com.niki.common.repository.dataclasses.CatePlaylistResponse
 import com.niki.common.repository.dataclasses.LikePlaylistResponse
 import com.niki.common.repository.dataclasses.TopPlaylistResponse
 import com.niki.common.services.PlaylistService
-import com.p1ay1s.dev.util.ServiceBuilder
-import com.p1ay1s.dev.util.ServiceBuilder.requestEnqueue
+import com.p1ay1s.util.ServiceBuilder
+import com.p1ay1s.util.ServiceBuilder.requestEnqueue
 
 class PlaylistModel {
     val playlistService by lazy {

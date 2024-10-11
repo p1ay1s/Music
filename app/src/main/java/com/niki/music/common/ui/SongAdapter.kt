@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.repository.dataclasses.SongInfo
 import com.niki.music.databinding.LayoutSongBinding
-import com.p1ay1s.dev.util.ImageSetter.setRadiusImgView
-import com.p1ay1s.dev.viewbinding.ui.ViewBindingListAdapter
+import com.p1ay1s.impl.ui.ViewBindingListAdapter
+import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
 interface SongAdapterListener {
     fun onPlayMusic(song: Song)

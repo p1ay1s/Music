@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.niki.common.ui.BaseBottomSheetDialogFragment
 import com.niki.music.R
@@ -15,9 +16,9 @@ import com.niki.music.databinding.FragmentLoginBinding
 import com.niki.music.my.MyEffect
 import com.niki.music.my.MyIntent
 import com.niki.music.my.MyViewModel
-import com.p1ay1s.dev.base.TAG
-import com.p1ay1s.dev.log.logE
-import com.p1ay1s.dev.util.ImageSetter.setCircleImgView
+import com.p1ay1s.base.extension.TAG
+import com.p1ay1s.base.log.logE
+import com.p1ay1s.util.ImageSetter.setCircleImgView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -32,7 +33,7 @@ var dismissCallback: DismissCallback? = null
 
 class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IView,
     DismissCallback {
-    private val myViewModel: MyViewModel by activityViewModels<MyViewModel>()
+    private lateinit var myViewModel: MyViewModel
 
     private lateinit var binding: FragmentLoginBinding
     private var mHandleJob: Job? = null
@@ -48,6 +49,9 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        myViewModel = ViewModelProvider(requireActivity())[MyViewModel::class.java]
+
         dismissCallback = this
         handle()
 

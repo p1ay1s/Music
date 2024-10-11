@@ -5,11 +5,12 @@ import com.niki.common.repository.dataclasses.Playlist
 import com.niki.common.repository.dataclasses.Song
 import com.niki.music.appLoadingDialog
 import com.niki.music.common.ILoad
-import com.niki.music.common.models.PlayerModel
 import com.niki.music.databinding.LayoutTopPlaylistBinding
-import com.p1ay1s.dev.base.toast
-import com.p1ay1s.dev.util.ImageSetter.setRadiusImgView
-import com.p1ay1s.dev.viewbinding.ui.ViewBindingListAdapter
+import com.niki.music.models.PlayerModel
+import com.p1ay1s.base.extension.toast
+import com.p1ay1s.base.log.logE
+import com.p1ay1s.impl.ui.ViewBindingListAdapter
+import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
 var currentTopPlaylist: Playlist? = null
 var currentTopSongs: List<Song>? = null
@@ -29,6 +30,10 @@ class TopPlaylistAdapter(
 
         cover.setRadiusImgView(data.coverImgUrl, radius = 55)
         root.setOnClickListener {
+            if (currentTopPlaylist?.id == data.id) { // 如果是相同的就直接打开
+                this@TopPlaylistAdapter.callback()
+                return@setOnClickListener
+            }
             currentTopPlaylist = data
             loadFirstPage(data.id)
         }

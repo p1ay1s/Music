@@ -1,4 +1,4 @@
-package com.niki.music.common.intents
+package com.niki.music.intents
 
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.repository.dataclasses.Sub

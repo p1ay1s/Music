@@ -4,9 +4,9 @@ import androidx.lifecycle.viewModelScope
 import com.niki.common.repository.MusicRepository
 import com.niki.common.repository.dataclasses.SearchApiResponse
 import com.niki.music.common.viewModels.BaseViewModel
-import com.p1ay1s.dev.base.TAG
-import com.p1ay1s.dev.base.toast
-import com.p1ay1s.dev.log.logE
+import com.p1ay1s.base.extension.TAG
+import com.p1ay1s.base.extension.toast
+import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

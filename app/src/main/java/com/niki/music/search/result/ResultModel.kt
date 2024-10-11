@@ -2,8 +2,8 @@ package com.niki.music.search.result
 
 import com.niki.common.repository.dataclasses.SearchApiResponse
 import com.niki.common.services.SearchService
-import com.p1ay1s.dev.util.ServiceBuilder
-import com.p1ay1s.dev.util.ServiceBuilder.requestEnqueue
+import com.p1ay1s.util.ServiceBuilder
+import com.p1ay1s.util.ServiceBuilder.requestEnqueue
 
 class ResultModel {
     val searchService by lazy {

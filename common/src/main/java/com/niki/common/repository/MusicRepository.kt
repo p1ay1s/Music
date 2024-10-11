@@ -15,5 +15,5 @@ object MusicRepository {
     var searchPlaylist = listOf<Song>()
 
     // 关于 like
-    var likePlaylist = listOf<Song>()
+   var likePlaylist = listOf<Song>()
 }

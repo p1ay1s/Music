@@ -7,8 +7,8 @@ import com.niki.common.values.FragmentTag
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentSearchPreviewBinding
 import com.niki.music.search.result.ResultFragment
-import com.p1ay1s.dev.base.findFragmentHost
-import com.p1ay1s.dev.viewbinding.ViewBindingFragment
+import com.p1ay1s.base.extension.findFragmentHost
+import com.p1ay1s.impl.ViewBindingFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 

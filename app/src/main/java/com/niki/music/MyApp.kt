@@ -3,21 +3,24 @@ package com.niki.music
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.p1ay1s.dev.base.App
-import com.p1ay1s.dev.base.CrashActivity
-import com.p1ay1s.dev.base.appBaseUrl
-import com.p1ay1s.dev.base.appIpAddress
-import com.p1ay1s.dev.log.INFO
-import com.p1ay1s.dev.log.Logger
-import com.p1ay1s.dev.log.Logger.startLogger
-import com.p1ay1s.dev.log.logI
-import com.p1ay1s.dev.util.IPSetter
-import com.p1ay1s.dev.util.onNetworkConnectChangedCallback
+import com.p1ay1s.base.App
+import com.p1ay1s.base.CrashActivity
+import com.p1ay1s.base.appBaseUrl
+import com.p1ay1s.base.appIpAddress
+import com.p1ay1s.base.log.Logger
+import com.p1ay1s.base.log.Logger.startLogger
+import com.p1ay1s.base.log.VERBOSE
+import com.p1ay1s.base.log.logI
+import com.p1ay1s.util.IPSetter
+import com.p1ay1s.util.ServiceBuilder
+import com.p1ay1s.util.onNetworkConnectChangedCallback
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class MyApp : App() {
 
-    override fun whenOnCreate(appContext: Context) {
+    override fun whenOnCreate(context: Context) {
+        ServiceBuilder.setTimeout(4L)
+
         onNetworkConnectChangedCallback = {
             IPSetter.setIp()
             appBaseUrl = "http://$appIpAddress:3000/"
@@ -25,7 +28,7 @@ class MyApp : App() {
         }
 
         Logger.crashActivity = CrashApp::class.java
-        startLogger(appContext, INFO)
+        startLogger(context, VERBOSE)
         onNetworkConnectChangedCallback()
     }
 }

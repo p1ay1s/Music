@@ -7,8 +7,8 @@ import com.niki.common.repository.dataclasses.RefreshCookieResponse
 import com.niki.common.repository.dataclasses.SendCaptchaResponse
 import com.niki.common.repository.dataclasses.UserExistApiResponse
 import com.niki.common.services.LoginService
-import com.p1ay1s.dev.util.ServiceBuilder
-import com.p1ay1s.dev.util.ServiceBuilder.requestEnqueue
+import com.p1ay1s.util.ServiceBuilder
+import com.p1ay1s.util.ServiceBuilder.requestEnqueue
 
 class LoginModel {
     val loginService by lazy {

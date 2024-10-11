@@ -2,7 +2,7 @@ package com.niki.music.common.ui
 
 import android.content.Context
 import com.niki.music.R
-import com.p1ay1s.dev.ui.ChangingImageButton
+import com.p1ay1s.base.ui.ChangingImageButton
 
 class PlayButton(context: Context) : ChangingImageButton(context) {
     init {

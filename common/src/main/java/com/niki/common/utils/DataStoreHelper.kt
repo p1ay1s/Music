@@ -5,7 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
-import com.p1ay1s.dev.base.appContext
+import com.p1ay1s.base.appContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 

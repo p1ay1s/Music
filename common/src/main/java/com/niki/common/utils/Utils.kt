@@ -7,61 +7,61 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.p1ay1s.dev.base.appContext
+import com.p1ay1s.base.appContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 // 摘自招新系统，略有修改
 
-fun RecyclerView.setSnapHelper() {
-    if (onFlingListener == null)
-        PagerSnapHelper().attachToRecyclerView(this)
-}
-
-fun RecyclerView.addLineDecoration(context: Context, orientation: Int) {
-    if (itemDecorationCount == 0 && layoutManager != null)
-        addItemDecoration(
-            DividerItemDecoration(
-                context,
-                orientation
-            )
-        )
-}
-
-/**
- * @param cannotScrollOrientation 指定的方向
- *  1 -> 无法往下
- *
- * -1 -> 无法往上
- */
-fun RecyclerView.addOnLoadMoreListener_V(cannotScrollOrientation: Int, onLoad: () -> Unit) {
-    addOnScrollListener(object : RecyclerView.OnScrollListener() {
-        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            super.onScrollStateChanged(recyclerView, newState)
-            if (newState == RecyclerView.SCROLL_STATE_IDLE) // 已停止
-                if (!canScrollVertically(cannotScrollOrientation)) // 在到达末尾
-                    onLoad()
-        }
-    })
-}
-
-/**
- * @param cannotScrollOrientation 指定的方向
- *  1 -> 无法往右
- *
- * -1 -> 无法往左
- */
-fun RecyclerView.addOnLoadMoreListener_H(cannotScrollOrientation: Int, onLoad: () -> Unit) {
-    addOnScrollListener(object : RecyclerView.OnScrollListener() {
-        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            super.onScrollStateChanged(recyclerView, newState)
-            if (newState == RecyclerView.SCROLL_STATE_IDLE) // 已停止
-                if (!canScrollHorizontally(cannotScrollOrientation)) // 在到达末尾
-                    onLoad()
-        }
-    })
-}
+//fun RecyclerView.setSnapHelper() {
+//    if (onFlingListener == null)
+//        PagerSnapHelper().attachToRecyclerView(this)
+//}
+//
+//fun RecyclerView.addLineDecoration(context: Context, orientation: Int) {
+//    if (itemDecorationCount == 0 && layoutManager != null)
+//        addItemDecoration(
+//            DividerItemDecoration(
+//                context,
+//                orientation
+//            )
+//        )
+//}
+//
+///**
+// * @param cannotScrollOrientation 指定的方向
+// *  1 -> 无法往下
+// *
+// * -1 -> 无法往上
+// */
+//fun RecyclerView.addOnLoadMoreListener_V(cannotScrollOrientation: Int, onLoad: () -> Unit) {
+//    addOnScrollListener(object : RecyclerView.OnScrollListener() {
+//        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+//            super.onScrollStateChanged(recyclerView, newState)
+//            if (newState == RecyclerView.SCROLL_STATE_IDLE) // 已停止
+//                if (!canScrollVertically(cannotScrollOrientation)) // 在到达末尾
+//                    onLoad()
+//        }
+//    })
+//}
+//
+///**
+// * @param cannotScrollOrientation 指定的方向
+// *  1 -> 无法往右
+// *
+// * -1 -> 无法往左
+// */
+//fun RecyclerView.addOnLoadMoreListener_H(cannotScrollOrientation: Int, onLoad: () -> Unit) {
+//    addOnScrollListener(object : RecyclerView.OnScrollListener() {
+//        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+//            super.onScrollStateChanged(recyclerView, newState)
+//            if (newState == RecyclerView.SCROLL_STATE_IDLE) // 已停止
+//                if (!canScrollHorizontally(cannotScrollOrientation)) // 在到达末尾
+//                    onLoad()
+//        }
+//    })
+//}
 
 fun sendBroadcast(msg: String) = appContext?.let {
     LocalBroadcastManager.getInstance(it).sendBroadcast(Intent(msg))

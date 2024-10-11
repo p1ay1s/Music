@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/listenFragment"
+        android:id="@+id/index_listen"
         android:icon="@drawable/ic_listen"
         android:title="@string/listen" />
 
     <item
-        android:id="@+id/myFragment"
+        android:id="@+id/index_my"
         android:icon="@drawable/ic_my"
         android:title="@string/my" />
 
     <item
-        android:id="@+id/previewFragment"
+        android:id="@+id/index_search"
         android:icon="@drawable/ic_search"
         android:title="@string/search" />
 </menu>

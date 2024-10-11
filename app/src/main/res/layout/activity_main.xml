@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.p1ay1s.dev.ui.FragmentHostView
+        <com.p1ay1s.base.ui.FragmentHostView
             android:id="@+id/fragmentHostView"
             android:layout_width="match_parent"
             android:layout_height="0dp"

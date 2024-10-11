@@ -3,8 +3,8 @@ package com.niki.music.listen
 import androidx.lifecycle.viewModelScope
 import com.niki.common.repository.MusicRepository
 import com.niki.music.common.viewModels.BaseViewModel
-import com.p1ay1s.dev.base.TAG
-import com.p1ay1s.dev.log.logE
+import com.p1ay1s.base.extension.TAG
+import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

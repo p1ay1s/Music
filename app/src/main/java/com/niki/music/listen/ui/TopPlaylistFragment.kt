@@ -4,22 +4,28 @@ import android.os.Build
 import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.niki.common.utils.addLineDecoration
-import com.niki.common.utils.addOnLoadMoreListener_V
 import com.niki.music.appFadeInAnim
-import com.niki.music.appMainViewModel
 import com.niki.music.common.ui.SongAdapter
+import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.databinding.FragmentTopPlaylistBinding
-import com.p1ay1s.dev.ui.PreloadLayoutManager
-import com.p1ay1s.dev.util.ImageSetter.setImgView
-import com.p1ay1s.dev.viewbinding.ViewBindingFragment
+import com.p1ay1s.base.extension.addLineDecoration
+import com.p1ay1s.base.extension.addOnLoadMoreListener_V
+import com.p1ay1s.base.ui.PreloadLayoutManager
+import com.p1ay1s.impl.ViewBindingFragment
+import com.p1ay1s.util.ImageSetter.setImgView
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class TopPlaylistFragment :
     ViewBindingFragment<FragmentTopPlaylistBinding>() {
+
+    private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
@@ -35,14 +41,8 @@ class TopPlaylistFragment :
         toolbar.title = currentTopPlaylist!!.name
 
         currentTopPlaylist?.run {
-            background.setImgView(coverImgUrl, enableCrossFade = false)
+            background.setImgView(coverImgUrl)
         }
-
-        songAdapter.submitList(currentTopSongs)
-    }
-
-    override fun onResume() {
-        super.onResume()
 
         with(binding.recyclerView) {
             adapter = songAdapter
@@ -55,12 +55,20 @@ class TopPlaylistFragment :
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch() {
+            delay(250)
+            songAdapter.submitList(currentTopSongs)
+        }
+    }
+
     private fun loadMore() {
         if (isTopLoading || !currentTopHasMore) return
         isTopLoading = true
 //        binding.tail.visibility = View.VISIBLE
 //        binding.tail.baselineAlignBottom = true
-        appMainViewModel.getSongsFromPlaylist(
+        mainViewModel.getSongsFromPlaylist(
             currentTopPlaylist!!.id,
             PLAYLIST_SONGS_LIMIT,
             currentTopPage * PLAYLIST_SONGS_LIMIT

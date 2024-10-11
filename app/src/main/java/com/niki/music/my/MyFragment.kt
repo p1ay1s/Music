@@ -4,25 +4,26 @@ import android.os.Build
 import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
-import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.MusicRepository
 import com.niki.common.repository.dataclasses.Song
-import com.niki.common.utils.addLineDecoration
 import com.niki.common.utils.takePartOf
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
 import com.niki.music.my.login.LoginFragment
-import com.p1ay1s.dev.base.TAG
-import com.p1ay1s.dev.log.logE
-import com.p1ay1s.dev.ui.PreloadLayoutManager
-import com.p1ay1s.dev.util.ImageSetter
-import com.p1ay1s.dev.viewbinding.ViewBindingFragment
+import com.p1ay1s.base.extension.TAG
+import com.p1ay1s.base.extension.addLineDecoration
+import com.p1ay1s.base.log.logE
+import com.p1ay1s.base.ui.PreloadLayoutManager
+import com.p1ay1s.impl.ViewBindingFragment
+import com.p1ay1s.util.ImageSetter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -40,23 +41,27 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
 
-    private val myViewModel: MyViewModel by activityViewModels<MyViewModel>()
+    private lateinit var myViewModel: MyViewModel
 
     private var mHandleJob1: Job? = null
     private var mHandleJob2: Job? = null
 
     override fun FragmentMyBinding.initBinding() {
+        // 如果 activity 中没有创建 vm 而使用 activityViewModels 就会是不同的实例
+        myViewModel = ViewModelProvider(requireActivity())[MyViewModel::class.java]
+
         initValues()
         handle()
+
+        MusicRepository.run {
+            if (likePlaylist.isEmpty() && myViewModel.uiStateFlow.value.isLoggedIn)
+                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
+        }
 
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             toolbar.visibility =
                 if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.GONE
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
 
         with(binding.recyclerView) {
             adapter = songAdapter
@@ -65,10 +70,17 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
             addLineDecoration(requireActivity(), LinearLayout.VERTICAL)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         MusicRepository.run {
-            if (likePlaylist.isEmpty() && myViewModel.uiStateFlow.value.isLoggedIn)
-                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
+            if (likePlaylist.isNotEmpty())
+                lifecycleScope.launch(Dispatchers.IO) {
+                    delay(200)
+                    songAdapter.submitPartly(likePlaylist)
+                }
         }
     }
 
@@ -92,8 +104,8 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
                 .collect {
                     logE(TAG, "COLLECTED ${it::class.qualifiedName.toString()}")
                     when (it) {
-                        is MyEffect.GetLikePlaylistEffect -> if (it.isSuccess)
-                            songAdapter.submitPartly(MusicRepository.likePlaylist)
+//                        is MyEffect.GetLikePlaylistEffect -> if (it.isSuccess)
+//                            songAdapter.submitPartly(MusicRepository.likePlaylist)
 
                         else -> {}
                     }
@@ -170,8 +182,8 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
             if (MusicRepository.likePlaylist.isEmpty())
                 myViewModel.sendIntent(MyIntent.GetLikePlaylist)
-            else
-                songAdapter.submitPartly(MusicRepository.likePlaylist)
+//            else
+//                songAdapter.submitPartly(MusicRepository.likePlaylist)
         }
     }
 
