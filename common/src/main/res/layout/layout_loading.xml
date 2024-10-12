@@ -11,6 +11,6 @@
             style="?android:attr/progressBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:indeterminateTint="#fa3f57" />
+            android:indeterminateTint="@color/dark_red" />
     </LinearLayout>
 </layout>
