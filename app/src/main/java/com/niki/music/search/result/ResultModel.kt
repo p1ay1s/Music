@@ -18,6 +18,6 @@ class ResultModel {
         limit: Int,
         offset: Int,
         crossinline onSuccess: (SearchApiResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(searchService.searchSongs(keywords, limit, offset), onSuccess, onError)
 }

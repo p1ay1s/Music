@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.repository.dataclasses.SongInfo
 import com.niki.music.databinding.LayoutSongBinding
+import com.p1ay1s.base.extension.toast
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
@@ -21,6 +22,7 @@ class SongAdapter(
 ) : ViewBindingListAdapter<LayoutSongBinding, Song, SongInfo>(SongCallback()) {
 
     private var listener: SongAdapterListener? = null
+    private val rect = android.graphics.Rect()
 
     companion object {
         const val EXPLICIT = 1048576L
@@ -28,6 +30,10 @@ class SongAdapter(
 
     fun setSongAdapterListener(l: SongAdapterListener) {
         listener = l
+    }
+
+    fun removeSongAdapterListener() {
+        listener = null
     }
 
     private fun TextView.formatDetails(song: Song) {
@@ -78,13 +84,14 @@ class SongAdapter(
         else
             cover.visibility = View.GONE
 
+        songName.text = data.name
+
         if (showDetails) {
             songDetails.formatDetails(data)
-            if (isExplicit(data.mark))
+            if (isExplicit(data.mark)) {
                 explicit.visibility = View.VISIBLE
+            }
         }
-
-        songName.text = data.name
 
         more.setOnClickListener {
             listener?.onMoreClicked(data)

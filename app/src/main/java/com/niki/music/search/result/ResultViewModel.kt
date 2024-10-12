@@ -1,7 +1,6 @@
 package com.niki.music.search.result
 
 import androidx.lifecycle.viewModelScope
-import com.niki.common.repository.MusicRepository
 import com.niki.common.repository.dataclasses.SearchApiResponse
 import com.niki.music.common.viewModels.BaseViewModel
 import com.p1ay1s.base.extension.TAG
@@ -9,7 +8,6 @@ import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>() {
@@ -21,29 +19,26 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
 
     private var job: Job? = null
 
-    private var shouldClean = false
-
-    override fun initUiState() = ResultState("", true, 0)
+    override fun initUiState() = ResultState("", true, 0, null)
 
     override fun handleIntent(intent: ResultIntent) =
         intent.run {
             logE(TAG, "RECEIVED " + this::class.simpleName.toString())
             when (this) {
-                is ResultIntent.SearchSongs -> {
-                    uiStateFlow.value.run {
-                        searchSongs(searchContent)
-                    }
-                }
+                is ResultIntent.SearchSongs -> searchSongs(uiStateFlow.value.searchContent)
 
-                is ResultIntent.KeywordsChanged -> {
-                    MusicRepository.searchPlaylist = emptyList()
-                    shouldClean = true
-                    updateState { copy(searchContent = keywords) }
-                }
+                is ResultIntent.KeywordsChanged ->
+                    if (uiStateFlow.value.searchContent != keywords)
+                        updateState {
+                            copy(
+                                searchContent = keywords,
+                                songList = null
+                            )
+                        }
             }
-            Unit
         }
 
+    // State-only
     private fun searchSongs(keywords: String?) = uiStateFlow.value.run {
         if (keywords.isNullOrBlank() || !searchHasMore) return@run
 
@@ -51,7 +46,7 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
             job?.cancel()
             job?.join()
             job = launch(Dispatchers.IO) Job@{ // 加标签解决 scope 重名冲突问题
-                delay(200) // 冷静期
+//                delay(200) // 冷静期
                 resultModel.searchSongs(keywords,
                     SEARCH_LIMIT,
                     searchCurrentPage * SEARCH_LIMIT,
@@ -62,14 +57,13 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
                                 list.add(song.id!!)
 
                             getSongs(data, list)
-                        } ?: sendEffect {
-                            ResultEffect.SearchSongsState()
                         }
                     },
-                    { _, msg ->
-                        toast(msg)
-                        sendEffect {
-                            ResultEffect.SearchSongsState()
+                    { code, _ ->
+                        if (code == null)
+                            toast("网络错误")
+                        else {
+                            if (code == 405) "操作过于频繁, 请稍后再试".toast()
                         }
                     })
             }
@@ -79,25 +73,14 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
     private fun getSongs(data: SearchApiResponse, list: List<String>) {
         getSongsWithIds(list) { songList ->
             if (!songList.isNullOrEmpty()) {
-                if (shouldClean) {
-                    MusicRepository.searchPlaylist = emptyList()
-                    shouldClean = false
-                }
-
-                MusicRepository.searchPlaylist =
-                    MusicRepository.searchPlaylist.plus(songList)
-
                 updateState {
                     copy(
                         searchHasMore = data.result!!.hasMore,
                         searchCurrentPage = searchCurrentPage + 1,
+                        songList = songList
                     )
                 }
-                sendEffect { ResultEffect.SearchSongsState(true) }
-            } else
-                sendEffect {
-                    ResultEffect.SearchSongsState()
-                }
+            }
         }
     }
 }

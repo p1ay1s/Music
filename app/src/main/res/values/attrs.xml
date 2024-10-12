@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <attr name="color_background" format="color" />
+    <attr name="color_contrast" format="color" />
+    <attr name="color_bar" format="color" />
+    <attr name="color_unselected" format="color" />
+
     <declare-styleable name="CustomViewGroup">
         <!-- 字符串属性 -->
         <attr name="customText" format="string" />

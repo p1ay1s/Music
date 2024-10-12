@@ -1,7 +1,6 @@
 package com.niki.music.listen.ui
 
 import android.os.Build
-import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
@@ -15,10 +14,10 @@ import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
+import com.p1ay1s.util.ImageSetter
 import com.p1ay1s.util.ImageSetter.setImgView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -34,8 +33,10 @@ class TopPlaylistFragment :
         initValues()
 
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
-            toolbar.visibility =
-                if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.GONE
+            val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
+            background.alpha = 1 - alpha
+//            toolbar.visibility =
+//                if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.INVISIBLE
         }
 
         toolbar.title = currentTopPlaylist!!.name
@@ -57,7 +58,7 @@ class TopPlaylistFragment :
 
     override fun onResume() {
         super.onResume()
-        lifecycleScope.launch() {
+        lifecycleScope.launch {
             delay(250)
             songAdapter.submitList(currentTopSongs)
         }

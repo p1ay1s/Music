@@ -7,6 +7,7 @@
         android:layout_height="60dp"
         android:background="@android:color/transparent"
         android:clickable="true"
+        android:clipChildren="false"
         android:focusable="true"
         android:foreground="?selectableItemBackground"
         android:padding="7dp">
@@ -22,48 +23,23 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/black" />
-
-        <ImageView
-            android:id="@+id/explicit"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:padding="3dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_letter_e"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="@id/songName"
-            app:layout_constraintStart_toEndOf="@id/songName"
-            app:layout_constraintTop_toTopOf="@id/songName"
-            app:tint="@android:color/darker_gray" />
-
-        <TextView
-            android:id="@+id/songName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="7dp"
-            android:maxLines="1"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toTopOf="@id/songDetails"
-            app:layout_constraintStart_toEndOf="@id/cover"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_max="wrap"
-            app:layout_constraintWidth_percent="0.7" />
+            app:tint="@color/unselected" />
 
         <TextView
             android:id="@+id/songDetails"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_marginHorizontal="7dp"
+            android:ellipsize="end"
             android:maxLines="1"
+            android:textColor="@color/unselected"
             android:textSize="12sp"
             android:visibility="gone"
+
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/cover"
-            app:layout_constraintTop_toBottomOf="@id/songName"
-            app:layout_constraintWidth_max="wrap"
-            app:layout_constraintWidth_percent="0.7" />
+            app:layout_constraintTop_toBottomOf="@id/structure"
+            app:layout_constraintWidth_percent="0.8" />
 
         <ImageView
             android:id="@+id/cover"
@@ -74,5 +50,42 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/structure"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="7dp"
+            app:layout_constraintBottom_toTopOf="@id/songDetails"
+            app:layout_constraintStart_toEndOf="@id/cover"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.7">
+
+            <TextView
+                android:id="@+id/songName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text=""
+                android:textColor="?attr/color_contrast"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/explicit"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/explicit"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:padding="3dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_letter_e"
+                android:visibility="invisible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/songName"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/unselected" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

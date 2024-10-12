@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import com.niki.common.values.FragmentTag
+import com.niki.music.R
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentSearchPreviewBinding
 import com.niki.music.search.result.ResultFragment
@@ -24,9 +25,13 @@ class PreviewFragment : ViewBindingFragment<FragmentSearchPreviewBinding>(), IVi
             searchViewPreview.isIconified = true
 
             findFragmentHost()?.let {
-//                searchIndex = FragmentTag.RESULT_FRAGMENT
                 if (!it.navigate(FragmentTag.RESULT_FRAGMENT))
-                    it.add(FragmentTag.RESULT_FRAGMENT, ResultFragment())
+                    it.add(
+                        FragmentTag.RESULT_FRAGMENT,
+                        ResultFragment::class.java,
+                        R.anim.fade_in,
+                        R.anim.fade_out
+                    )
                 (it.getCurrentFragment() as ResultFragment).searchView.apply {
                     isIconified = false
                     requestFocus()

@@ -6,20 +6,20 @@
         android:id="@+id/coordinator"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white">
+        android:background="?attr/color_background">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="?attr/color_background"
             android:fitsSystemWindows="true">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:id="@+id/collapsingToolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
+                android:background="?attr/color_background"
                 android:fitsSystemWindows="true"
                 app:collapsedTitleGravity="start"
                 app:expandedTitleGravity="start"
@@ -32,8 +32,8 @@
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:background="@color/white"
+                    android:layout_height="?android:actionBarSize"
+                    android:background="@android:color/transparent"
                     app:layout_collapseMode="parallax"
                     app:title="我的" />
 
@@ -44,8 +44,11 @@
                     <ImageView
                         android:id="@+id/background"
                         android:layout_width="match_parent"
-                        android:layout_height="0dp"
+                        android:layout_height="wrap_content"
                         android:minHeight="200dp"
+                        android:scaleType="centerCrop"
+                        app:layout_collapseMode="parallax"
+                        app:layout_collapseParallaxMultiplier="0.75"
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <ImageView
@@ -64,7 +67,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:textColor="@color/black"
+                        android:textColor="?attr/color_contrast"
                         android:textSize="18sp"
                         android:translationY="-20dp"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -78,12 +81,13 @@
                         android:layout_marginTop="10dp"
                         android:layout_marginEnd="20dp"
                         android:clickable="true"
+                        android:textColor="@color/unselected"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/background" />
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="40dp"
                         app:layout_constraintTop_toBottomOf="@id/nickname" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

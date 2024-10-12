@@ -4,10 +4,9 @@ import android.os.Build
 import android.widget.LinearLayout
 import android.widget.SearchView
 import androidx.annotation.RequiresApi
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.niki.common.repository.MusicRepository
 import com.niki.common.values.FragmentTag
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
@@ -16,16 +15,17 @@ import com.niki.music.databinding.FragmentSearchResultBinding
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
 import com.p1ay1s.base.extension.findFragmentHost
-import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView,
     SearchView.OnQueryTextListener {
-    private val resultViewModel: ResultViewModel by viewModels<ResultViewModel>()
+    private lateinit var resultViewModel: ResultViewModel
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
@@ -34,9 +34,11 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
         get() = binding.searchViewResult
 
     private var mIsLoading = false
-    private var mHandleJob: Job? = null
+    private var searchSongsJob: Job? = null
 
     override fun FragmentSearchResultBinding.initBinding() {
+        resultViewModel = ViewModelProvider(requireActivity())[ResultViewModel::class.java]
+
         initValues()
         handle()
 
@@ -48,7 +50,6 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
             addLineDecoration(requireActivity(), LinearLayout.VERTICAL)
 
             addOnLoadMoreListener_V(1) {
-                logE("###", "1")
 //                if(!mIsLoading) // <- 移至函数内
 //                    return@setOnLoadMoreListener // TODO
             }
@@ -66,10 +67,10 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
 
     override fun onResume() {
         super.onResume()
-        MusicRepository.run {
-            if (searchPlaylist.isNotEmpty() && songAdapter.currentList.isEmpty())
-                songAdapter.submitList(searchPlaylist)
-        }
+//        MusicRepository.run {
+//            if (searchPlaylist.isNotEmpty() && songAdapter.currentList.isEmpty())
+//                songAdapter.submitList(searchPlaylist)
+//        }
     }
 
     private fun initValues() {
@@ -81,25 +82,21 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
         )
     }
 
-    override fun handle() = resultViewModel.apply {
-        mHandleJob?.cancel()
-        mHandleJob = lifecycleScope.launch {
-            uiEffectFlow
-                .collect {
-                    when (it) {
-                        is ResultEffect.SearchSongsState -> {
-                            if (it.isSuccess)
-                                songAdapter.submitList(MusicRepository.searchPlaylist)
-                        }
-                    }
-                }
+    override fun handle() = resultViewModel.observeState {
+        lifecycleScope.launch {
+            map { it.songList }.distinctUntilChanged().collect {
+                if (it == null)
+                    songAdapter.submitList(emptyList())
+                else
+                    songAdapter.submitList(it)
+            }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        mHandleJob?.cancel()
-        mHandleJob = null
+        searchSongsJob?.cancel()
+        searchSongsJob = null
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {

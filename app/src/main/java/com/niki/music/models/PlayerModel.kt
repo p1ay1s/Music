@@ -18,7 +18,7 @@ class PlayerModel {
     inline fun checkSongAbility(
         id: String,
         crossinline onSuccess: (AvailableResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.checkSong(id), onSuccess, onError)
 
     /**
@@ -29,7 +29,7 @@ class PlayerModel {
         level: String,
         cookie: String?,
         crossinline onSuccess: (GetSongInfoApiResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.getSongInfo(id, level, cookie), onSuccess, onError)
 
     /**
@@ -40,7 +40,7 @@ class PlayerModel {
         limit: Int,
         offset: Int,
         crossinline onSuccess: (GetSongsFromPlaylistApiResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.getSongsFromPlaylist(id, limit, offset), onSuccess, onError)
 
 
@@ -50,6 +50,6 @@ class PlayerModel {
     inline fun getSongsWithIds(
         ids: String,
         crossinline onSuccess: (GetSongsFromPlaylistApiResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.getSongsWithIds(ids), onSuccess, onError)
 }

@@ -15,7 +15,6 @@ import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.toastSuspended
 import com.p1ay1s.base.log.logE
-import com.p1ay1s.util.ON_FAILURE_CODE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -31,12 +30,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     override fun initUiState() = MyState(null, null, false, null, null)
 
     init {
-        getLoginDatas {
-            if (it != null) {
-                updateState { copy(loggedInDatas = it, isLoggedIn = true) }
-                checkCookieAbility()
-            }
-        }
+        initLoginState()
     }
 
     override fun handleIntent(intent: MyIntent) {
@@ -93,7 +87,10 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                     }
                 },
                 { code, _ ->
-                    logout(if (code != ON_FAILURE_CODE) "验证码错误" else "网络错误, 请重试")
+                    code?.let {
+                        logE("###", it.toString())
+                        logout("验证码错误")
+                    } ?: logout("网络错误")
                 })
     }
 
@@ -177,16 +174,16 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
      * 我认为这是服务器的问题,
      * 因此这个接口只用于检测本地存储的 cookie 是否可用
      */
-    private fun checkCookieAbility() = uiStateFlow.value.run {
-        if (loggedInDatas != null)
-            loginModel.loginRefresh(loggedInDatas.cookie, // 状态码不为 200 且没有网络问题时登出
-                {
-                    if (it.code != 200)
-                        logout("身份验证失败! 请重新登录")
-                },
+    private fun checkCookieAbility() {
+        if (appCookie.isNotBlank())
+            loginModel.loginRefresh(
+                appCookie, // 状态码不为 2xx 且没有网络问题时登出
+                {},
                 { code, _ ->
-                    if (code != ON_FAILURE_CODE)
+                    code?.let {
+                        logE("###", it.toString())
                         logout("身份验证失败! 请重新登录")
+                    }
                 })
     }
 
@@ -204,55 +201,29 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                 })
     }
 
-
-    private inline fun getLoginDatas(crossinline callback: (LoggedInDatas?) -> Unit) =
+    private fun initLoginState() =
         viewModelScope.launch {
-            val uid = getStringData(preferenceUid)
+            val userId = getStringData(preferenceUid)
             val nickname = getStringData(preferenceNickname)
             val cookie = getStringData(preferenceCookie)
             val avatarUrl = getStringData(preferenceAvatar)
             val backgroundUrl = getStringData(preferenceBackground)
 
-            logE(TAG, if (cookie.isBlank()) "未登录" else "已经登录")
             appCookie = cookie
 
-            when (cookie) {
-                "" -> callback(null)
-                else -> callback(
-                    LoggedInDatas(
-                        uid,
-                        nickname,
-                        cookie,
-                        avatarUrl,
-                        backgroundUrl
+            if (cookie.isNotBlank()) {
+                updateState {
+                    copy(
+                        loggedInDatas = LoggedInDatas(
+                            userId,
+                            nickname,
+                            cookie,
+                            avatarUrl,
+                            backgroundUrl
+                        ), isLoggedIn = true
                     )
-                )
+                }
+                checkCookieAbility()
             }
         }
-
-    private fun putCookiePreference(cookie: String) = viewModelScope.launch {
-        putStringData(preferenceCookie, cookie)
-    }
-
-
-    private fun stateLogin(
-        userId: String,
-        nickname: String,
-        cookie: String,
-        avatarUrl: String,
-        backgroundUrl: String
-    ) {
-        updateState {
-            copy(
-                loggedInDatas = LoggedInDatas(
-                    userId,
-                    nickname,
-                    cookie,
-                    avatarUrl,
-                    backgroundUrl
-                )
-            )
-        }
-    }
-
 }

@@ -15,9 +15,7 @@ import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
 import com.niki.music.my.login.LoginFragment
-import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.extension.addLineDecoration
-import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import com.p1ay1s.util.ImageSetter
@@ -25,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -43,25 +42,26 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
     private lateinit var myViewModel: MyViewModel
 
-    private var mHandleJob1: Job? = null
-    private var mHandleJob2: Job? = null
+    private var loginStateJob: Job? = null
+    private var likeListJob: Job? = null
 
     override fun FragmentMyBinding.initBinding() {
+        appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
+            val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
+            background.alpha = 1 - alpha
+
+            val visibility =
+                if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.INVISIBLE else View.VISIBLE
+            userAvatar.visibility = visibility
+            nickname.visibility = visibility
+            logout.visibility = visibility
+        }
+
         // 如果 activity 中没有创建 vm 而使用 activityViewModels 就会是不同的实例
         myViewModel = ViewModelProvider(requireActivity())[MyViewModel::class.java]
 
         initValues()
         handle()
-
-        MusicRepository.run {
-            if (likePlaylist.isEmpty() && myViewModel.uiStateFlow.value.isLoggedIn)
-                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
-        }
-
-        appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
-            toolbar.visibility =
-                if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.GONE
-        }
 
         with(binding.recyclerView) {
             adapter = songAdapter
@@ -75,12 +75,9 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
     override fun onResume() {
         super.onResume()
 
-        MusicRepository.run {
-            if (likePlaylist.isNotEmpty())
-                lifecycleScope.launch(Dispatchers.IO) {
-                    delay(200)
-                    songAdapter.submitPartly(likePlaylist)
-                }
+        myViewModel.uiStateFlow.value.run {
+            if (likeList == null && myViewModel.uiStateFlow.value.isLoggedIn)
+                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
         }
     }
 
@@ -97,41 +94,32 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
         )
     }
 
-    override fun handle() = myViewModel.apply {
-        mHandleJob1?.cancel()
-        mHandleJob1 = lifecycleScope.launch {
-            uiEffectFlow
-                .collect {
-                    logE(TAG, "COLLECTED ${it::class.qualifiedName.toString()}")
-                    when (it) {
-//                        is MyEffect.GetLikePlaylistEffect -> if (it.isSuccess)
-//                            songAdapter.submitPartly(MusicRepository.likePlaylist)
-
-                        else -> {}
-                    }
-                }
+    override fun handle() = myViewModel.observeState {
+        loginStateJob?.cancel()
+        loginStateJob = lifecycleScope.launch {
+            map { it.loggedInDatas }.distinctUntilChanged().collect {
+                if (it == null)
+                    setUnLoggedInViews()
+                else
+                    setLoggedInViews(it)
+            }
         }
 
-        observeState {
-            mHandleJob2?.cancel()
-            mHandleJob2 = lifecycleScope.launch {
-                map { it.loggedInDatas }.distinctUntilChanged().collect {
-                    if (it == null)
-                        setUnLoggedInViews()
-                    else
-                        setLoggedInViews(it)
-                }
+        likeListJob?.cancel()
+        likeListJob = lifecycleScope.launch {
+            map { it.likeList }.distinctUntilChanged().filterNotNull().collect {
+                songAdapter.submitList(it)
             }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        mHandleJob1?.cancel()
-        mHandleJob1 = null
 
-        mHandleJob2?.cancel()
-        mHandleJob2 = null
+        loginStateJob?.cancel()
+        loginStateJob = null
+        likeListJob?.cancel()
+        likeListJob = null
     }
 
 
@@ -156,7 +144,6 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
                 )
             }
 
-            MusicRepository.likePlaylist = emptyList()
             songAdapter.submitPartly(emptyList())
         }
     }
@@ -180,10 +167,10 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
                 )
             }
 
-            if (MusicRepository.likePlaylist.isEmpty())
-                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
-//            else
-//                songAdapter.submitPartly(MusicRepository.likePlaylist)
+            myViewModel.uiStateFlow.value.apply {
+                if (isLoggedIn && likeList == null)
+                    myViewModel.sendIntent(MyIntent.GetLikePlaylist)
+            }
         }
     }
 

@@ -17,7 +17,7 @@ class PlaylistModel {
      */
     inline fun getCatePlaylists(
         crossinline onSuccess: (CatePlaylistResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playlistService.getCatePlaylists(), onSuccess, onError)
 
     /**
@@ -28,7 +28,7 @@ class PlaylistModel {
         order: String,
         offset: Int,
         crossinline onSuccess: (TopPlaylistResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playlistService.getTopPlaylists(limit, order, offset), onSuccess, onError)
 
     /**
@@ -38,6 +38,6 @@ class PlaylistModel {
         uid: String,
         cookie: String,
         crossinline onSuccess: (LikePlaylistResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playlistService.getLikePlaylist(uid, cookie), onSuccess, onError)
 }

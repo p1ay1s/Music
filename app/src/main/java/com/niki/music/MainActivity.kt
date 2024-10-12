@@ -3,8 +3,11 @@ package com.niki.music
 
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import androidx.annotation.RequiresApi
@@ -17,14 +20,12 @@ import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ui.TopPlaylistFragment
 import com.niki.music.my.MyFragment
-import com.niki.music.my.MyViewModel
 import com.niki.music.my.login.dismissCallback
 import com.niki.music.search.result.ResultFragment
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
-import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.impl.ViewBindingActivity
 import com.p1ay1s.util.IPSetter
@@ -32,6 +33,7 @@ import com.p1ay1s.util.ServiceBuilder.ping
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 
 var appLoadingDialog: LoadingDialog? = null
 var appFadeInAnim: Animation? = null
@@ -56,7 +58,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var exitJob: Job? = null
     private var oneMoreClickToExit = false
 
-//    private lateinit var myViewModel: MyViewModel // 由于 loginFragment 和 myFragment 共享此 viewmodel
+    //    private lateinit var myViewModel: MyViewModel // 由于 loginFragment 和 myFragment 共享此 viewmodel
     private lateinit var mainViewModel: MainViewModel
 
     /**
@@ -91,6 +93,14 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     override fun ActivityMainBinding.initBinding() {
+        // https://www.jianshu.com/p/76d55b6e02d1
+//        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+//        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+//        val option = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//        val vis = window.decorView.systemUiVisibility
+//        window.decorView.systemUiVisibility = option or vis
+//        window.statusBarColor = Color.TRANSPARENT
+
         // 非得要 activity 的上下文
         appLoadingDialog = LoadingDialog(this@MainActivity)
 
@@ -108,13 +118,16 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             if (fragmentHost == null) {
                 fragmentHost =
                     fragmentHostView.create(supportFragmentManager, mainViewModel.fragmentMap)
-                fragmentHost?.setOnFragmentIndexChangeListener(this@MainActivity)
+                fragmentHost?.setOnIndexChangeListener(this@MainActivity)
             } else {
                 fragmentHostView.restore(fragmentHost!!, supportFragmentManager)
+                fragmentHost?.setOnIndexChangeListener(this@MainActivity)
             }
         }
 
         bottomNavigation.setSwitchHandler()
+
+        mainViewModel.fragmentHost!!.show()
     }
 
     /**
@@ -137,7 +150,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     private fun initViewModels() {
-//        myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
         mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
     }
 
@@ -179,21 +191,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    // 为避免混乱的情况最好在适当时机显示和隐藏
-    override fun onResume() {
-        super.onResume()
-        mainViewModel.fragmentHost!!.show()
-    }
-
-    // 为避免混乱的情况最好在适当时机显示和隐藏
-    override fun onPause() {
-        super.onPause()
-        mainViewModel.fragmentHost!!.hide()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-//        mainViewModel.fragmentHost?.setOnFragmentIndexChangeListener(null)
+        mainViewModel.fragmentHost?.removeOnIndexChangeListener()
     }
 
     @SuppressLint("MissingSuperCall")
@@ -202,7 +202,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     private fun handleBackPress(enableTwoClickToExit: Boolean = true) {
-        logE("###", "ding")
         mainViewModel.run {
             val fragment = fragmentHost!!.getCurrentFragment()
             FragmentTag.apply {
@@ -216,7 +215,11 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         )
                     }
 
-                    is ResultFragment -> fragmentHost!!.navigate(PREVIEW_FRAGMENT)
+                    is ResultFragment -> fragmentHost!!.navigate(
+                        PREVIEW_FRAGMENT,
+                        R.anim.fade_in,
+                        R.anim.fade_out
+                    )
 
                     is MyFragment -> dismissCallback?.dismissDialog() ?: {
                         if (enableTwoClickToExit) twoClicksToExit()

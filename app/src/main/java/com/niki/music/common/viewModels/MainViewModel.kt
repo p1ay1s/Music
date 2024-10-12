@@ -34,12 +34,12 @@ class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     var playMode = MutableLiveData(LOOP)
 
     var fragmentHost: FragmentHost? = null // 保存 fragment 的状态
-    val fragmentMap: LinkedHashMap<Int, Fragment> by lazy {
+    val fragmentMap: LinkedHashMap<Int, Class<out Fragment>> by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             linkedMapOf(
-                FragmentTag.LISTEN_FRAGMENT to ListenFragment(),
-                FragmentTag.MY_FRAGMENT to MyFragment(),
-                FragmentTag.PREVIEW_FRAGMENT to PreviewFragment()
+                FragmentTag.LISTEN_FRAGMENT to ListenFragment::class.java,
+                FragmentTag.MY_FRAGMENT to MyFragment::class.java,
+                FragmentTag.PREVIEW_FRAGMENT to PreviewFragment::class.java
             )
         } else {
             throw Exception("unsupported android version")

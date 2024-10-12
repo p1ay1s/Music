@@ -18,13 +18,13 @@ class LoginModel {
     inline fun logout(
         cookie: String,
         crossinline onSuccess: (LogoutResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(loginService.logout(cookie), onSuccess, onError)
 
     inline fun getAvatarUrl(
         phone: String,
         crossinline onSuccess: (UserExistApiResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(loginService.getAvatarUrl(phone), onSuccess, onError)
 
     /**
@@ -33,7 +33,7 @@ class LoginModel {
      */
     inline fun anonymousLogin(
         crossinline onSuccess: (AnonymousLoginResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(loginService.anonymousLogin(), onSuccess, onError)
 
     /**
@@ -44,7 +44,7 @@ class LoginModel {
         phone: String,
         captcha: String,
         crossinline onSuccess: (LoginResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(loginService.captchaLogin(phone, captcha), onSuccess, onError)
 
     /**
@@ -53,7 +53,7 @@ class LoginModel {
     inline fun sendCaptcha(
         phone: String,
         crossinline onSuccess: (SendCaptchaResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(loginService.sendCaptcha(phone), onSuccess, onError)
 
     /**
@@ -62,6 +62,6 @@ class LoginModel {
     inline fun loginRefresh(
         cookie: String,
         crossinline onSuccess: (RefreshCookieResponse) -> Unit,
-        crossinline onError: (Int, String) -> Unit
+        crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(loginService.loginRefresh(cookie), onSuccess, onError)
 }

@@ -1,12 +1,8 @@
 package com.niki.common.utils
 
-import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.PagerSnapHelper
-import androidx.recyclerview.widget.RecyclerView
 import com.p1ay1s.base.appContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

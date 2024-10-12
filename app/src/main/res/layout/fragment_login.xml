@@ -4,7 +4,8 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="?attr/color_background">
 
         <TextView
             android:id="@+id/loginText"
@@ -13,14 +14,14 @@
             android:layout_height="wrap_content"
             android:paddingTop="50dp"
             android:text="@string/login"
-            android:textColor="@color/black"
+            android:textColor="?attr/color_contrast"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/blackRound"
+            android:id="@+id/avatarPlaceholder"
             android:layout_width="0dp"
             android:layout_height="150dp"
             android:layout_marginTop="30dp"
@@ -30,21 +31,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/loginText"
-            app:layout_constraintWidth_percent="0.4"
-            app:tint="@color/black" />
-
-        <ImageView
-            android:id="@+id/whiteRound"
-            android:layout_width="0dp"
-            android:layout_height="149dp"
-            android:padding="5dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_round"
-            app:layout_constraintBottom_toBottomOf="@id/blackRound"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/blackRound"
-            app:layout_constraintWidth_percent="0.37" />
+            app:layout_constraintWidth_percent="0.4" />
 
         <ImageView
             android:id="@+id/userAvatar"
@@ -52,34 +39,35 @@
             android:layout_height="145dp"
             android:padding="5dp"
             android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="@id/blackRound"
+            app:layout_constraintBottom_toBottomOf="@id/avatarPlaceholder"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/blackRound"
+            app:layout_constraintTop_toTopOf="@id/avatarPlaceholder"
             app:layout_constraintWidth_percent="0.38" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/editPhone"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
             android:hint="@string/phone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/blackRound"
+            app:layout_constraintTop_toBottomOf="@id/avatarPlaceholder"
             app:layout_constraintWidth_percent="0.85">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="phone"
-                android:maxLines="1" />
+                android:maxLines="1"
+                android:textColor="?attr/color_contrast" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/editPassword"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
@@ -92,7 +80,8 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="1" />
+                android:maxLines="1"
+                android:textColor="?attr/color_contrast" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
@@ -100,9 +89,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:backgroundTint="@color/black"
+            android:backgroundTint="?attr/color_contrast"
             android:text="@string/login"
-            android:textColor="@color/white"
+            android:textColor="?attr/color_background"
             android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -117,7 +106,7 @@
             android:gravity="center"
             android:padding="50dp"
             android:text="@string/getCaptcha"
-            android:textColor="@color/black"
+            android:textColor="?attr/color_contrast"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>

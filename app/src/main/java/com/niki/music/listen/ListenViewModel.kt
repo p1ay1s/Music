@@ -1,7 +1,6 @@
 package com.niki.music.listen
 
 import androidx.lifecycle.viewModelScope
-import com.niki.common.repository.MusicRepository
 import com.niki.music.common.viewModels.BaseViewModel
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.log.logE
@@ -14,7 +13,9 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
         const val TOP_LIMIT = 10
     }
 
-    override fun initUiState() = ListenState(true, 0)
+    var position = 0
+
+    override fun initUiState() = ListenState(hasMore = true, isLoading = false, 0, null)
 
     override fun handleIntent(intent: ListenIntent): Unit =
         intent.run {
@@ -28,27 +29,32 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
         resetPage: Boolean = false,
     ) = viewModelScope.launch(Dispatchers.IO) {
         uiStateFlow.value.run {
-            if (!topHasMore) return@run
+            if (!hasMore || isLoading) return@run
+            updateState { copy(isLoading = true) }
 
             if (resetPage)
-                updateState { copy(topCurrentPage = 0) }
+                updateState { copy(currentPage = 0) }
 
             playlistModel.getTopPlaylists(
                 TOP_LIMIT,
                 "hot",
-                topCurrentPage * TOP_LIMIT,
+                currentPage * TOP_LIMIT,
                 {
-                    MusicRepository.topPlaylists =
-                        MusicRepository.topPlaylists.plus(it.playlists)
+                    val currentList = uiStateFlow.value.playlists ?: emptyList()
+
                     updateState {
                         copy(
-                            topHasMore = it.more,
-                            topCurrentPage = topCurrentPage + 1,
+                            hasMore = it.more,
+                            isLoading = false,
+                            currentPage = currentPage + 1,
+                            playlists = currentList + it.playlists
                         )
                     }
-                    sendEffect { ListenEffect.GetTopPlaylistsEffect(true) }
                 },
-                { _, _ -> sendEffect { ListenEffect.GetTopPlaylistsEffect() } })
+                { code, msg ->
+                    updateState { copy(isLoading = false) }
+                    if (code != null) logE("###", msg)
+                })
         }
     }
 }

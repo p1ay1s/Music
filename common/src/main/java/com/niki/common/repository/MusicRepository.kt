@@ -6,14 +6,14 @@ import com.niki.common.repository.dataclasses.Tag
 
 object MusicRepository {
     // 关于 top
-    var topPlaylists = listOf<Playlist>()
+//    var topPlaylists = listOf<Playlist>()
 
     // 关于 hot
-    var hotPlaylists = listOf<Tag>()
+//    var hotPlaylists = listOf<Tag>()
 
     // 关于 search
-    var searchPlaylist = listOf<Song>()
+//    var searchPlaylist = listOf<Song>()
 
     // 关于 like
-   var likePlaylist = listOf<Song>()
+//   var likePlaylist = listOf<Song>()
 }

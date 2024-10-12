@@ -12,6 +12,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
         android:clickable="true"
         android:focusable="true"
         android:padding="12dp">
@@ -19,11 +20,11 @@
         <ImageView
             android:id="@+id/cover"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="240dp"
             android:layout_margin="5dp"
             android:layout_marginBottom="20dp"
             android:foreground="?selectableItemBackground"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/playlistName" />
 
@@ -33,6 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="7dp"
             android:text="@string/playlist"
+            android:textColor="@color/unselected"
             android:textSize="13sp"
             app:layout_constraintStart_toStartOf="@id/cover"
             app:layout_constraintTop_toTopOf="parent" />
@@ -44,7 +46,7 @@
             android:layout_marginEnd="10dp"
             android:maxLines="1"
             android:text="@={playlist.name}"
-            android:textColor="@color/black"
+            android:textColor="?attr/color_contrast"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/smallTitle"
@@ -59,7 +61,7 @@
             android:layout_marginBottom="5dp"
             android:maxLines="2"
             android:text="@={playlist.description}"
-            android:textColor="@color/white"
+            android:textColor="@color/unselected"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@id/cover"
             app:layout_constraintEnd_toEndOf="@id/cover"
