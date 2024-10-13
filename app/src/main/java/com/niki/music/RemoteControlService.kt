@@ -20,7 +20,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.values.BroadCastMsg
 
 

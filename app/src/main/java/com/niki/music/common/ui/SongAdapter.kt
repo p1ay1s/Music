@@ -3,10 +3,9 @@ package com.niki.music.common.ui
 import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
-import com.niki.common.repository.dataclasses.Song
-import com.niki.common.repository.dataclasses.SongInfo
+import com.niki.common.repository.dataclasses.song.Song
+import com.niki.common.repository.dataclasses.song.SongInfo
 import com.niki.music.databinding.LayoutSongBinding
-import com.p1ay1s.base.extension.toast
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
 

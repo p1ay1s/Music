@@ -3,7 +3,7 @@ package com.niki.music.common.viewModels
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.values.FragmentTag
 import com.niki.music.RemoteControlService
 import com.niki.music.intents.MainEffect
@@ -52,7 +52,10 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
     override fun handleIntent(intent: MainIntent) {
         intent.run {
             when (this) {
-                is MainIntent.GetCatePlaylists -> getCatePlaylists()
+                is MainIntent.GetCatePlaylists -> {
+
+                }
+
                 is MainIntent.GetSongsFromPlaylist -> getSongsFromPlaylist(
                     id,
                     limit,
@@ -85,19 +88,6 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
 //            else -> playMode.value = playMode.value?.plus(1)
 //        }
 //    }
-
-
-    /**
-     * 之前写了没用过
-     */
-    private fun getCatePlaylists() =
-        playlistModel.getCatePlaylists(
-            {
-                sendEffect { MainEffect.GetCatePlaylistsOkEffect(it.sub) }
-            },
-            { _, _ ->
-                sendEffect { MainEffect.GetCatePlaylistsBadEffect }
-            })
 
     private fun getSongsFromPlaylist(
         id: String,

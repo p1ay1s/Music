@@ -1,16 +1,13 @@
 package com.niki.common.services
 
-import com.niki.common.repository.dataclasses.CatePlaylistResponse
-import com.niki.common.repository.dataclasses.LikePlaylistResponse
-import com.niki.common.repository.dataclasses.TopPlaylistResponse
+import com.niki.common.repository.dataclasses.playlist.topPlaylistApi.TopPlaylistResponse
+import com.niki.common.repository.dataclasses.song.likeListApi.LikePlaylistResponse
 import com.niki.common.values.WebConstant
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface PlaylistService {
-    @GET(WebConstant.PLAYLIST_CATE)
-    fun getCatePlaylists(): Call<CatePlaylistResponse>
 
     @GET(WebConstant.PLAYLIST_TOP)
     fun getTopPlaylists(

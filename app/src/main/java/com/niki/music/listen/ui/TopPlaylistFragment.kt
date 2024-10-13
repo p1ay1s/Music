@@ -4,7 +4,7 @@ import android.widget.LinearLayout
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener

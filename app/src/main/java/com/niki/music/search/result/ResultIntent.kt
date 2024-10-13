@@ -1,6 +1,6 @@
 package com.niki.music.search.result
 
-import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.song.Song
 
 sealed class ResultIntent {
     data class KeywordsChanged(val keywords: String) : ResultIntent()

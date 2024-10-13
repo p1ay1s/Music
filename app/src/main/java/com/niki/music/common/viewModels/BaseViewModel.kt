@@ -1,6 +1,6 @@
 package com.niki.music.common.viewModels
 
-import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.models.PlayerModel
 import com.niki.music.models.PlaylistModel
 import com.p1ay1s.base.MVIViewModel

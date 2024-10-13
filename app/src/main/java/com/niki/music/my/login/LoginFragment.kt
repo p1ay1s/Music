@@ -61,11 +61,26 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
             }
             editPassword.editText?.addTextChangedListener { updateCaptcha(it.toString()) }
             getCodeButton.setOnClickListener { myViewModel.sendIntent(MyIntent.SendCaptcha) }
+            switchMethod.setOnClickListener {
+                myViewModel.sendIntent(MyIntent.SwitchMethod)
+            }
             loginButton.setOnClickListener {
-                appLoadingDialog?.show()
-                myViewModel.sendIntent(MyIntent.CaptchaLogin)
+                if (myViewModel.uiStateFlow.value.useCaptcha)
+                    captchaLogin()
+                else
+                    passwordLogin()
             }
         }
+    }
+
+    private fun captchaLogin() {
+        appLoadingDialog?.show()
+        myViewModel.sendIntent(MyIntent.CaptchaLogin)
+    }
+
+    private fun passwordLogin() {
+        appLoadingDialog?.show()
+        myViewModel.sendIntent(MyIntent.PasswordLogin)
     }
 
     override fun handle() =
@@ -90,8 +105,6 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
                                 binding.userAvatar.visibility =
                                     View.INVISIBLE
                             }
-
-                            else -> {}
                         }
                     }
             }
@@ -99,9 +112,23 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
             myViewModel.observeState {
                 launch {
                     map { it.isLoggedIn }.distinctUntilChanged().collect {
-                        appLoadingDialog?.dismiss()
                         if (it) {
                             dismiss()
+                        }
+                    }
+                }
+                launch {
+                    map { it.useCaptcha }.distinctUntilChanged().collect {
+                        binding.apply {
+                            if (it) {
+                                getCodeButton.visibility = View.VISIBLE
+                                switchMethod.text = "密码登录"
+                                editPassword.hint = "验证码"
+                            } else {
+                                getCodeButton.visibility = View.INVISIBLE
+                                switchMethod.text = "验证码登录"
+                                editPassword.hint = "密码"
+                            }
                         }
                     }
                 }

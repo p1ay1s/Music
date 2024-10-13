@@ -99,6 +99,18 @@
             app:layout_constraintWidth_percent="0.7" />
 
         <TextView
+            android:id="@+id/switchMethod"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:gravity="center"
+            android:padding="50dp"
+            android:text="@string/use_password"
+            android:textColor="?attr/color_contrast"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
             android:id="@+id/getCodeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -1,14 +1,12 @@
 package com.niki.music.my
 
-import android.os.Build
 import android.view.View
 import android.widget.LinearLayout
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.takePartOf
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
@@ -28,7 +26,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterListener {
 
@@ -50,13 +47,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterL
     override fun FragmentMyBinding.initBinding() {
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
-            background.alpha = 1 - alpha * alpha
-
-            val visibility =
-                if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.INVISIBLE else View.VISIBLE
-            userAvatar.visibility = visibility
-            nickname.visibility = visibility
-            logout.visibility = visibility
+            structure.alpha = 1 - alpha * alpha
         }
 
         // 如果 activity 中没有创建 vm 而使用 activityViewModels 就会是不同的实例

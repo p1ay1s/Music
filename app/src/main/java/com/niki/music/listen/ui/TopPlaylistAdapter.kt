@@ -1,11 +1,9 @@
 package com.niki.music.listen.ui
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
-import com.niki.common.repository.dataclasses.Playlist
-import com.niki.common.repository.dataclasses.Song
+import com.niki.common.repository.dataclasses.playlist.Playlist
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.appLoadingDialog
 import com.niki.music.common.ILoad
 import com.niki.music.databinding.LayoutTopPlaylistBinding

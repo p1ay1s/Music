@@ -1,8 +1,8 @@
 package com.niki.common.services
 
-import com.niki.common.repository.dataclasses.AvailablityResponse
-import com.niki.common.repository.dataclasses.GetSongInfoApiResponse
-import com.niki.common.repository.dataclasses.GetSongsFromPlaylistApiResponse
+import com.niki.common.repository.dataclasses.song.availabilityApi.AvailabilityResponse
+import com.niki.common.repository.dataclasses.song.getSongInfoApi.GetSongInfoApiResponse
+import com.niki.common.repository.dataclasses.song.getSongsFromPlaylistApi.GetSongsFromPlaylistApiResponse
 import com.niki.common.values.WebConstant
 import retrofit2.Call
 import retrofit2.http.GET
@@ -12,7 +12,7 @@ interface PlayerService {
     @GET(WebConstant.SONG_AVAILABILITY)
     fun checkSong(
         @Query("id") id: String
-    ): Call<AvailablityResponse>
+    ): Call<AvailabilityResponse>
 
     @GET(WebConstant.SONG_INFO)
     fun getSongInfo(

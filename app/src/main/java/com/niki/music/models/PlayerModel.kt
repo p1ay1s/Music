@@ -1,8 +1,8 @@
 package com.niki.music.models
 
-import com.niki.common.repository.dataclasses.AvailablityResponse
-import com.niki.common.repository.dataclasses.GetSongInfoApiResponse
-import com.niki.common.repository.dataclasses.GetSongsFromPlaylistApiResponse
+import com.niki.common.repository.dataclasses.song.availabilityApi.AvailabilityResponse
+import com.niki.common.repository.dataclasses.song.getSongInfoApi.GetSongInfoApiResponse
+import com.niki.common.repository.dataclasses.song.getSongsFromPlaylistApi.GetSongsFromPlaylistApiResponse
 import com.niki.common.services.PlayerService
 import com.p1ay1s.util.ServiceBuilder
 import com.p1ay1s.util.ServiceBuilder.requestEnqueue
@@ -17,7 +17,7 @@ class PlayerModel {
      */
     inline fun checkSongAbility(
         id: String,
-        crossinline onSuccess: (AvailablityResponse) -> Unit,
+        crossinline onSuccess: (AvailabilityResponse) -> Unit,
         crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.checkSong(id), onSuccess, onError)
 

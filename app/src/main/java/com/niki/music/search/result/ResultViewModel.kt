@@ -56,7 +56,7 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
                     data.result.songs.let { songs ->
                         val list = uiStateFlow.value.idList?.toMutableList() ?: mutableListOf()
                         for (song in songs)
-                            list.add(song.id!!)
+                            list.add(song.id)
                         updateState { copy(idList = list) }
 
                         getSongs(data, list)
@@ -65,7 +65,7 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
                             resetResult()
                             searchSongs()
                         }
-                    } ?: toast("操作过于频繁, 请稍候重试")
+                    }
                 },
                 { code, _ ->
                     if (code == null)
@@ -82,7 +82,7 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
             if (!songList.isNullOrEmpty()) {
                 updateState {
                     copy(
-                        searchHasMore = data.result!!.hasMore,
+                        searchHasMore = data.result.hasMore,
                         searchCurrentPage = searchCurrentPage + 1,
                         songList = songList
                     )

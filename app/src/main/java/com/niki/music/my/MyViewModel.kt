@@ -9,6 +9,7 @@ import com.niki.common.values.preferenceBackground
 import com.niki.common.values.preferenceCookie
 import com.niki.common.values.preferenceNickname
 import com.niki.common.values.preferenceUid
+import com.niki.music.appLoadingDialog
 import com.niki.music.common.viewModels.BaseViewModel
 import com.niki.music.my.login.LoginModel
 import com.p1ay1s.base.extension.TAG
@@ -27,7 +28,8 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
 
     private var avatarJob: Job? = null
 
-    override fun initUiState() = MyState(null, null, false, null, null)
+    override fun initUiState() =
+        MyState(null, null, isLoggedIn = false, useCaptcha = true, null, null)
 
     init {
         initLoginState()
@@ -44,6 +46,10 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                 MyIntent.GetLikePlaylist -> getLikePlaylist()
                 MyIntent.SendCaptcha -> sendCaptcha()
                 MyIntent.Logout -> logout()
+                MyIntent.PasswordLogin -> passwordLogin()
+                MyIntent.SwitchMethod -> updateState {
+                    copy(useCaptcha = !useCaptcha)
+                }
             }
         }
     }
@@ -78,17 +84,41 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
         } else
             loginModel.captchaLogin(phone, captcha,
                 {
+                    appLoadingDialog?.dismiss()
                     it.run {
                         if (code == 200) {
                             login(it, "欢迎回来! ${profile.nickname}")
                         } else {
-                            logout("验证码错误")
+                            logout("验证码错误 - $code")
                         }
                     }
                 },
                 { code, _ ->
+                    appLoadingDialog?.dismiss()
                     code?.let {
-                        logE("###", it.toString())
+                        logout(code.toString())
+                    } ?: logout("网络错误")
+                })
+    }
+
+    private fun passwordLogin() = uiStateFlow.value.run {
+        if (phone.isNullOrBlank() || captcha.isNullOrBlank()) {
+            logout("请检查输入")
+        } else
+            loginModel.passwordLogin(phone, captcha,
+                {
+                    appLoadingDialog?.dismiss()
+                    it.run {
+                        if (code == 200) {
+                            login(it, "欢迎回来! ${profile.nickname}")
+                        } else {
+                            logout("密码错误 - $code")
+                        }
+                    }
+                },
+                { code, _ ->
+                    appLoadingDialog?.dismiss()
+                    code?.let {
                         logout(code.toString())
                     } ?: logout("网络错误")
                 })

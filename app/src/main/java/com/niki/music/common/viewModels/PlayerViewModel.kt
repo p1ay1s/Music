@@ -8,7 +8,7 @@
 //import androidx.annotation.RequiresApi
 //import androidx.lifecycle.MutableLiveData
 //import androidx.lifecycle.ViewModel
-//import com.niki.common.repository.dataclasses.Song
+//import com.niki.common.repository.dataclasses.song.Song
 //import com.niki.common.values.BroadCastMsg
 //import com.niki.music.common.viewModels.MainViewModel.Companion.LOOP
 //import com.niki.music.models.PlayerModel
