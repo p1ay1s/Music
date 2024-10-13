@@ -35,9 +35,10 @@ data class SongInfo(
     var url: String = ""
 )
 
-data class AvailableResponse(
+data class AvailablityResponse(
+    var code: Int,
     var success: Boolean = false,
-    var code: Int
+    var message: String = ""
 )
 
 data class Author(

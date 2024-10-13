@@ -1,4 +1,4 @@
-//package com.niki.music.common
+//package com.niki.music.common.viewModels
 //
 //import android.content.BroadcastReceiver
 //import android.content.Context
@@ -8,16 +8,12 @@
 //import androidx.annotation.RequiresApi
 //import androidx.lifecycle.MutableLiveData
 //import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-//import com.niki.music.common.BroadCastContents
-//import com.niki.music.model.Song
-//import com.niki.music.model.SongInfo
-//import com.niki.utils.base.BaseApplication
-//import com.niki.utils.datastore.getStringData
-//import com.niki.utils.datastore.preferenceCookie
-//import com.niki.utils.debug
-//import com.niki.utils.toast
-//import kotlinx.coroutines.launch
+//import com.niki.common.repository.dataclasses.Song
+//import com.niki.common.values.BroadCastMsg
+//import com.niki.music.common.viewModels.MainViewModel.Companion.LOOP
+//import com.niki.music.models.PlayerModel
+//import com.p1ay1s.base.appContext
+//
 //
 ///**
 // * TODO 不需要广播接受！！此处也进行广播发送，全部交给音乐服务！！！
@@ -44,15 +40,15 @@
 //    var playMode = MutableLiveData<Int>()
 //
 //    init {
-//        with(BroadCastContents) {
-//            filter.addAction(NEW_STATE)
-//            filter.addAction(NEW_PROGRESS)
-//            filter.addAction(NEXT_ONE)
-//            filter.addAction(PREVIOUS_ONE)
-//        }
-//
-//        receiver = MusicReceiver()
-//        BaseApplication.appContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+////        with(BroadCastMsg) {
+////            filter.addAction(NEW_STATE)
+////            filter.addAction(NEW_PROGRESS)
+////            filter.addAction(NEXT)
+////            filter.addAction(PREVIOUS)
+////        }
+////
+////        receiver = MusicReceiver()
+////        appContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
 //
 //        /**
 //         * TODO 从pref中获取
@@ -64,40 +60,39 @@
 //
 //
 //    fun checkSongAbility(song: Song) {
-//        playerModel.checkSongAbility(song.id!!) { r ->
-//            debug(r)
-//            if (r.data!!.code == 200) {
+//        playerModel.checkSongAbility(song.id,{ data->
+//            if (data.code == 200) {
 //                getSongInfo(song.id!!) {
 //                    // TODO 播放
 //                }
 //            }
-//        }
+//        },{_,_->})
 //    }
 //
-//
-//    inner class MusicReceiver : BroadcastReceiver() {
-//        override fun onReceive(context: Context?, intent: Intent?) {
-//            with(BroadCastContents) {
-//                when (intent?.action) {
-//                    NEW_STATE -> {
-//                        val status = intent.getBooleanExtra("status", false)
-//                        if (isPlaying.value != status)
-//                            isPlaying.value = status
-//                    }
-//
-//                    NEW_PROGRESS -> {
-//                        val progress = intent.getIntExtra("progress", 0)
-//                        songPosition.value = progress
-//                    }
-//
-//                    NEXT_ONE -> {
-//                    }
-//
-//                    PREVIOUS_ONE -> {
-//                    }
-//                }
-//
-//            }
-//        }
-//    }
+////
+////    inner class MusicReceiver : BroadcastReceiver() {
+////        override fun onReceive(context: Context?, intent: Intent?) {
+////            with(BroadCastContents) {
+////                when (intent?.action) {
+////                    NEW_STATE -> {
+////                        val status = intent.getBooleanExtra("status", false)
+////                        if (isPlaying.value != status)
+////                            isPlaying.value = status
+////                    }
+////
+////                    NEW_PROGRESS -> {
+////                        val progress = intent.getIntExtra("progress", 0)
+////                        songPosition.value = progress
+////                    }
+////
+////                    NEXT_ONE -> {
+////                    }
+////
+////                    PREVIOUS_ONE -> {
+////                    }
+////                }
+////
+////            }
+////        }
+////    }
 //}

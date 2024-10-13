@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/remoteRoot"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:theme="@style/Theme.Music">
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.6">
+
+        <ImageView
+            android:id="@+id/ivCover"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_centerVertical="true" />
+
+        <TextView
+            android:id="@+id/tvSongName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/ivCover"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginTop="2dp"
+            android:layout_toEndOf="@id/ivCover"
+            android:ellipsize="marquee"
+            android:gravity="start"
+            android:maxLines="1"
+            android:textColor="?attr/color_contrast"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvSinger"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/ivCover"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="3dp"
+            android:layout_toEndOf="@id/ivCover"
+            android:ellipsize="marquee"
+            android:gravity="start"
+            android:maxLines="1"
+            android:textColor="@color/unselected"
+            android:textSize="13sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.4">
+
+        <ImageView
+            android:id="@+id/ivPrevious"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignTop="@id/ivSwitch"
+            android:layout_alignBottom="@id/ivSwitch"
+            android:layout_toStartOf="@id/ivSwitch"
+            android:src="@drawable/ic_previous" />
+
+        <ImageView
+            android:id="@+id/ivSwitch"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerInParent="true"
+            android:layout_marginHorizontal="10dp"
+            android:src="@drawable/ic_play" />
+
+        <ImageView
+            android:id="@+id/ivNext"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignTop="@id/ivSwitch"
+            android:layout_alignBottom="@id/ivSwitch"
+            android:layout_toEndOf="@id/ivSwitch"
+            android:src="@drawable/ic_next" />
+    </RelativeLayout>
+</LinearLayout>

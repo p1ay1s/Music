@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.niki.common.ui.BaseBottomSheetDialogFragment
@@ -36,7 +35,7 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
     private lateinit var myViewModel: MyViewModel
 
     private lateinit var binding: FragmentLoginBinding
-    private var mHandleJob: Job? = null
+    private var effectJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -71,8 +70,8 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
 
     override fun handle() =
         lifecycleScope.apply {
-            mHandleJob?.cancel()
-            mHandleJob = launch {
+            effectJob?.cancel()
+            effectJob = launch {
                 myViewModel.uiEffectFlow
                     .collect {
                         logE(
@@ -116,8 +115,8 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
     override fun onDestroyView() {
         super.onDestroyView()
         dismissCallback = null
-        mHandleJob?.cancel()
-        mHandleJob = null
+        effectJob?.cancel()
+        effectJob = null
     }
 
     override fun dismissDialog() {

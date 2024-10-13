@@ -4,32 +4,33 @@ import android.os.Build
 import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.niki.common.repository.MusicRepository
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.utils.takePartOf
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
+import com.niki.music.common.ui.SongAdapterListener
+import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
+import com.niki.music.intents.MainIntent
 import com.niki.music.my.login.LoginFragment
 import com.p1ay1s.base.extension.addLineDecoration
+import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import com.p1ay1s.util.ImageSetter
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
+class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterListener {
 
     companion object {
         const val CLICK_TO_LOGIN = "点击登录"
@@ -41,6 +42,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
     private lateinit var baseLayoutManager: PreloadLayoutManager
 
     private lateinit var myViewModel: MyViewModel
+    private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
     private var loginStateJob: Job? = null
     private var likeListJob: Job? = null
@@ -48,7 +50,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
     override fun FragmentMyBinding.initBinding() {
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
-            background.alpha = 1 - alpha
+            background.alpha = 1 - alpha * alpha
 
             val visibility =
                 if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.INVISIBLE else View.VISIBLE
@@ -87,6 +89,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
             showDetails = true,
             showImage = false
         )
+        songAdapter.setSongAdapterListener(this)
         baseLayoutManager = PreloadLayoutManager(
             requireActivity(),
             LinearLayoutManager.VERTICAL,
@@ -115,7 +118,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
     override fun onDestroyView() {
         super.onDestroyView()
-
+        songAdapter.removeSongAdapterListener()
         loginStateJob?.cancel()
         loginStateJob = null
         likeListJob?.cancel()
@@ -144,7 +147,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
                 )
             }
 
-            songAdapter.submitPartly(emptyList())
+            songAdapter.submitList(emptyList())
         }
     }
 
@@ -174,6 +177,14 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
         }
     }
 
+
+    override fun onPlayMusic(song: Song) {
+        mainViewModel.sendIntent(MainIntent.TryPlaySong(song))
+    }
+
+    override fun onMoreClicked(song: Song) {
+        toast("more -> ${song.name}")
+    }
 }
 
 

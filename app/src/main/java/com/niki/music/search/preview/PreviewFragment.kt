@@ -13,7 +13,6 @@ import com.p1ay1s.impl.ViewBindingFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class PreviewFragment : ViewBindingFragment<FragmentSearchPreviewBinding>(), IView {
 
     private var mHandleJob: Job? = null

@@ -1,6 +1,6 @@
 package com.niki.common.services
 
-import com.niki.common.repository.dataclasses.AvailableResponse
+import com.niki.common.repository.dataclasses.AvailablityResponse
 import com.niki.common.repository.dataclasses.GetSongInfoApiResponse
 import com.niki.common.repository.dataclasses.GetSongsFromPlaylistApiResponse
 import com.niki.common.values.WebConstant
@@ -12,7 +12,7 @@ interface PlayerService {
     @GET(WebConstant.SONG_AVAILABILITY)
     fun checkSong(
         @Query("id") id: String
-    ): Call<AvailableResponse>
+    ): Call<AvailablityResponse>
 
     @GET(WebConstant.SONG_INFO)
     fun getSongInfo(

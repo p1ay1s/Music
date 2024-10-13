@@ -37,7 +37,6 @@ interface TopPlaylistAdapterListener {
     fun onReady()
 }
 
-@RequiresApi(Build.VERSION_CODES.R)
 class TopPlaylistAdapter :
     ViewBindingListAdapter<LayoutTopPlaylistBinding, Playlist, List<Song>>(TopPlaylistCallback()),
     ILoad {

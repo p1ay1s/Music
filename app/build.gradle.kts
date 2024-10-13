@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = namespace
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -53,13 +53,14 @@ android {
 dependencies {
     implementation(libs.zephyr)
 
-    debugImplementation(libs.leakcanary.android)
+//    debugImplementation(libs.leakcanary.android)
 
     implementation(project(":common"))
 
     implementation(libs.retrofit)
 
     implementation(libs.github.glide)
+    implementation(libs.picasso)
 
     implementation(libs.androidx.navigation.fragment.ktx)
 

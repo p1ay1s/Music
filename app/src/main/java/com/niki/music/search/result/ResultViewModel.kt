@@ -8,6 +8,7 @@ import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>() {
@@ -46,7 +47,7 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
             job?.cancel()
             job?.join()
             job = launch(Dispatchers.IO) Job@{ // 加标签解决 scope 重名冲突问题
-//                delay(200) // 冷静期
+                delay(200) // 冷静期
                 resultModel.searchSongs(keywords,
                     SEARCH_LIMIT,
                     searchCurrentPage * SEARCH_LIMIT,

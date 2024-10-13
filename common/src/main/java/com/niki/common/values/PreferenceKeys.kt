@@ -1,5 +1,3 @@
-@file:JvmName("CommonValuesKt")
-
 package com.niki.common.values
 
 import androidx.datastore.preferences.core.stringPreferencesKey

@@ -1,29 +1,33 @@
 package com.niki.music.common.viewModels
 
-import android.os.Build
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.niki.common.repository.dataclasses.Song
 import com.niki.common.values.FragmentTag
-import com.niki.music.intents.MusicEffect
-import com.niki.music.intents.MusicIntent
-import com.niki.music.intents.MusicState
+import com.niki.music.RemoteControlService
+import com.niki.music.intents.MainEffect
+import com.niki.music.intents.MainIntent
+import com.niki.music.intents.MainState
 import com.niki.music.listen.ListenFragment
 import com.niki.music.my.MyFragment
 import com.niki.music.my.appCookie
 import com.niki.music.search.preview.PreviewFragment
-import com.niki.music.search.result.ResultModel
 import com.p1ay1s.base.ui.FragmentHost
-import com.p1ay1s.util.ON_FAILURE_CODE
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
-class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
+class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
     companion object {
         const val SINGLE = 0
         const val LOOP = 1
         const val RANDOM = 2
     }
 
-    private val resultModel by lazy { ResultModel() }
+    private var job: Job? = null
+
+    var binder: RemoteControlService.RemoteControlBinder? = null
 
     // 关于 current
     var currentPlaylist = mutableListOf<Song>()
@@ -35,32 +39,28 @@ class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
 
     var fragmentHost: FragmentHost? = null // 保存 fragment 的状态
     val fragmentMap: LinkedHashMap<Int, Class<out Fragment>> by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            linkedMapOf(
-                FragmentTag.LISTEN_FRAGMENT to ListenFragment::class.java,
-                FragmentTag.MY_FRAGMENT to MyFragment::class.java,
-                FragmentTag.PREVIEW_FRAGMENT to PreviewFragment::class.java
-            )
-        } else {
-            throw Exception("unsupported android version")
-        }
+        linkedMapOf(
+            FragmentTag.LISTEN_FRAGMENT to ListenFragment::class.java,
+            FragmentTag.MY_FRAGMENT to MyFragment::class.java,
+            FragmentTag.PREVIEW_FRAGMENT to PreviewFragment::class.java
+        )
     }
 
     override fun initUiState() =
-        MusicState
+        MainState
 
-    override fun handleIntent(intent: MusicIntent) {
+    override fun handleIntent(intent: MainIntent) {
         intent.run {
             when (this) {
-                is MusicIntent.GetCatePlaylists -> getCatePlaylists()
-                is MusicIntent.GetSongsFromPlaylist -> getSongsFromPlaylist(
+                is MainIntent.GetCatePlaylists -> getCatePlaylists()
+                is MainIntent.GetSongsFromPlaylist -> getSongsFromPlaylist(
                     id,
                     limit,
                     page,
                 )
 
-                is MusicIntent.SetNewSongList -> setNewSongList(list, index)
-                is MusicIntent.TryPlaySong -> tryPlaySong(songId)
+                is MainIntent.SetNewSongList -> setNewSongList(list, index)
+                is MainIntent.TryPlaySong -> tryGetSongUrl(song)
             }
         }
     }
@@ -93,10 +93,10 @@ class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
     private fun getCatePlaylists() =
         playlistModel.getCatePlaylists(
             {
-                sendEffect { MusicEffect.GetCatePlaylistsOkEffect(it.sub) }
+                sendEffect { MainEffect.GetCatePlaylistsOkEffect(it.sub) }
             },
             { _, _ ->
-                sendEffect { MusicEffect.GetCatePlaylistsBadEffect }
+                sendEffect { MainEffect.GetCatePlaylistsBadEffect }
             })
 
     private fun getSongsFromPlaylist(
@@ -104,8 +104,8 @@ class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
         limit: Int,
         page: Int,
     ) = playerModel.getSongsFromPlaylist(id, limit, page,
-        { sendEffect { MusicEffect.GetSongsFromPlaylistOkEffect(it.songs) } },
-        { _, _ -> sendEffect { MusicEffect.GetSongsFromPlaylistBadEffect } })
+        { sendEffect { MainEffect.GetSongsFromPlaylistOkEffect(it.songs) } },
+        { _, _ -> sendEffect { MainEffect.GetSongsFromPlaylistBadEffect } })
 
     fun getSongsFromPlaylist(
         id: String,
@@ -120,25 +120,31 @@ class MainViewModel : BaseViewModel<MusicIntent, MusicState, MusicEffect>() {
         { _, _ -> callback(null) })
 
     /**
-     * TODO
+     * Effect-only
      */
-    private fun tryPlaySong(songId: String) {
-        playerModel.checkSongAbility(songId,
-            {
-                if (it.success) {
-                    val cookie = appCookie
+    private fun tryGetSongUrl(song: Song) = viewModelScope.launch {
+        job?.cancel()
+        job?.join()
+        job = launch(Dispatchers.IO) Job@{ // 加标签解决 scope 重名冲突问题
+//            playerModel.checkSongAbility(song.id,
+//                {
+//                    if (it.success) { // 呃呃呃 不知道为啥不同的机子会请求到不同的结果 干脆如果是 200 不检查了
+            val cookie = appCookie
 
-                    playerModel.getSongInfo(songId, "jymaster", cookie,
-                        {
-                            sendEffect { MusicEffect.TryPlaySongOkEffect(it.data[0].url) }
-                        },
-                        { code, _ ->
-                            sendEffect { MusicEffect.TryPlaySongBadEffect(if (code == ON_FAILURE_CODE) "" else "无法播放") }
-                        })
-                }
-            },
-            { code, _ ->
-                sendEffect { MusicEffect.TryPlaySongBadEffect(if (code == ON_FAILURE_CODE) "" else "无法播放") }
-            })
+            playerModel.getSongInfo(song.id, "jymaster", cookie,
+                {
+                    sendEffect { MainEffect.TryPlaySongOkEffect(it.data[0].url, song) }
+                },
+                { _, _ ->
+                    sendEffect { MainEffect.TryPlaySongBadEffect("无法播放") }
+                })
+//                    } else {
+//                        sendEffect { MainEffect.TryPlaySongBadEffect(it.message) }
+//                    }
+//                },
+//                { _, _ ->
+//                    sendEffect { MainEffect.TryPlaySongBadEffect("无法播放") }
+//                })
+        }
     }
 }

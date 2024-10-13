@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView,
     TopPlaylistAdapterListener {
     private lateinit var topAdapter: TopPlaylistAdapter
@@ -72,14 +71,18 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView,
             if (playlists == null)
                 listenViewModel.sendIntent(ListenIntent.GetTopPlaylists(true))
             else {
-                topLayoutManager.scrollToPosition(listenViewModel.position)
-                requireScroll()
+                tryScrollBack()
             }
         }
     }
 
     private fun getItemRealPosition(): Int {
         return topLayoutManager.findFirstCompletelyVisibleItemPosition()
+    }
+
+    private fun tryScrollBack() = runCatching {
+        topLayoutManager.scrollToPosition(listenViewModel.position)
+        requireScroll()
     }
 
     private fun requireScroll(position: Int = listenViewModel.position) {

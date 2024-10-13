@@ -1,28 +1,28 @@
 package com.niki.music.listen.ui
 
-import android.os.Build
 import android.widget.LinearLayout
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.niki.common.repository.dataclasses.Song
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
+import com.niki.music.common.ui.SongAdapterListener
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.databinding.FragmentTopPlaylistBinding
+import com.niki.music.intents.MainIntent
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
+import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
-import com.p1ay1s.util.ImageSetter
 import com.p1ay1s.util.ImageSetter.setImgView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class TopPlaylistFragment :
-    ViewBindingFragment<FragmentTopPlaylistBinding>() {
+    ViewBindingFragment<FragmentTopPlaylistBinding>(), SongAdapterListener {
 
     private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
@@ -34,7 +34,7 @@ class TopPlaylistFragment :
 
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
-            background.alpha = 1 - alpha
+            background.alpha = 1 - alpha * alpha
 //            toolbar.visibility =
 //                if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.INVISIBLE
         }
@@ -67,8 +67,6 @@ class TopPlaylistFragment :
     private fun loadMore() {
         if (isTopLoading || !currentTopHasMore) return
         isTopLoading = true
-//        binding.tail.visibility = View.VISIBLE
-//        binding.tail.baselineAlignBottom = true
         mainViewModel.getSongsFromPlaylist(
             currentTopPlaylist!!.id,
             PLAYLIST_SONGS_LIMIT,
@@ -85,7 +83,6 @@ class TopPlaylistFragment :
                 songAdapter.submitList(currentTopSongs)
             }
             isTopLoading = false
-//            binding.tail.visibility = View.GONE
         }
     }
 
@@ -95,10 +92,24 @@ class TopPlaylistFragment :
             showDetails = true,
             showImage = false
         )
+        songAdapter.setSongAdapterListener(this)
         baseLayoutManager = PreloadLayoutManager(
             requireActivity(),
             LinearLayoutManager.VERTICAL,
             4
         )
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        songAdapter.removeSongAdapterListener()
+    }
+
+    override fun onPlayMusic(song: Song) {
+        mainViewModel.sendIntent(MainIntent.TryPlaySong(song))
+    }
+
+    override fun onMoreClicked(song: Song) {
+        toast("more -> ${song.name}")
     }
 }

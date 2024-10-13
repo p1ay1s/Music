@@ -22,7 +22,6 @@ class SongAdapter(
 ) : ViewBindingListAdapter<LayoutSongBinding, Song, SongInfo>(SongCallback()) {
 
     private var listener: SongAdapterListener? = null
-    private val rect = android.graphics.Rect()
 
     companion object {
         const val EXPLICIT = 1048576L
@@ -67,16 +66,6 @@ class SongAdapter(
     override fun LayoutSongBinding.onBindViewHolder(data: Song, position: Int) {
         root.setOnClickListener {
             listener?.onPlayMusic(data)
-//            appMainViewModel?.run {
-//                if (currentList.isNotEmpty())
-//                    sendIntent(
-//                        MusicIntent.SetNewSongList(
-//                            currentList.toMutableList(),
-//                            currentList.indexOf(data)
-//                        )
-//                    )
-//                sendIntent(MusicIntent.TryPlaySong(data.id))
-//            }
         }
 
         if (showImage)
