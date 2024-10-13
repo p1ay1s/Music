@@ -99,8 +99,8 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
             myViewModel.observeState {
                 launch {
                     map { it.isLoggedIn }.distinctUntilChanged().collect {
+                        appLoadingDialog?.dismiss()
                         if (it) {
-                            appLoadingDialog?.dismiss()
                             dismiss()
                         }
                     }

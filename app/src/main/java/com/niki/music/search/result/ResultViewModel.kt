@@ -1,15 +1,10 @@
 package com.niki.music.search.result
 
-import androidx.lifecycle.viewModelScope
-import com.niki.common.repository.dataclasses.SearchApiResponse
+import com.niki.common.repository.dataclasses.search.searchApi.SearchResponse
 import com.niki.music.common.viewModels.BaseViewModel
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.log.logE
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>() {
     private val resultModel by lazy { ResultModel() }
@@ -18,60 +13,71 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
         const val SEARCH_LIMIT = 20
     }
 
-    private var job: Job? = null
+    private var isLoading = false
 
-    override fun initUiState() = ResultState("", true, 0, null)
+    override fun initUiState() = ResultState("", true, 0, null, null)
 
     override fun handleIntent(intent: ResultIntent) =
         intent.run {
             logE(TAG, "RECEIVED " + this::class.simpleName.toString())
             when (this) {
-                is ResultIntent.SearchSongs -> searchSongs(uiStateFlow.value.searchContent)
+                is ResultIntent.SearchSongs -> searchSongs()
 
                 is ResultIntent.KeywordsChanged ->
-                    if (uiStateFlow.value.searchContent != keywords)
-                        updateState {
-                            copy(
-                                searchContent = keywords,
-                                songList = null
-                            )
-                        }
+                    if (uiStateFlow.value.searchContent != keywords) {
+                        updateState { copy(searchContent = keywords) }
+                        resetResult()
+                    }
             }
         }
 
-    // State-only
-    private fun searchSongs(keywords: String?) = uiStateFlow.value.run {
-        if (keywords.isNullOrBlank() || !searchHasMore) return@run
-
-        viewModelScope.launch {
-            job?.cancel()
-            job?.join()
-            job = launch(Dispatchers.IO) Job@{ // 加标签解决 scope 重名冲突问题
-                delay(200) // 冷静期
-                resultModel.searchSongs(keywords,
-                    SEARCH_LIMIT,
-                    searchCurrentPage * SEARCH_LIMIT,
-                    { data ->
-                        data.result?.songs?.let { songs ->
-                            val list = mutableListOf<String>()
-                            for (song in songs)
-                                list.add(song.id!!)
-
-                            getSongs(data, list)
-                        }
-                    },
-                    { code, _ ->
-                        if (code == null)
-                            toast("网络错误")
-                        else {
-                            if (code == 405) "操作过于频繁, 请稍后再试".toast()
-                        }
-                    })
-            }
+    private fun resetResult() {
+        updateState {
+            copy(
+                searchCurrentPage = 0,
+                searchHasMore = true,
+                songList = null,
+                idList = null
+            )
         }
     }
 
-    private fun getSongs(data: SearchApiResponse, list: List<String>) {
+    // State-only
+    private fun searchSongs(keywords: String = uiStateFlow.value.searchContent) {
+        uiStateFlow.value.run {
+            if (keywords.isBlank() || !searchHasMore || isLoading) return@run
+            isLoading = true
+
+            resultModel.searchSongs(keywords,
+                SEARCH_LIMIT,
+                searchCurrentPage * SEARCH_LIMIT,
+                { data ->
+                    isLoading = false
+                    data.result.songs.let { songs ->
+                        val list = uiStateFlow.value.idList?.toMutableList() ?: mutableListOf()
+                        for (song in songs)
+                            list.add(song.id!!)
+                        updateState { copy(idList = list) }
+
+                        getSongs(data, list)
+
+                        if (keywords != uiStateFlow.value.searchContent) {
+                            resetResult()
+                            searchSongs()
+                        }
+                    } ?: toast("操作过于频繁, 请稍候重试")
+                },
+                { code, _ ->
+                    if (code == null)
+                        toast("网络错误")
+                    else
+                        toast("操作过于频繁, 请稍候重试")
+                    isLoading = false
+                })
+        }
+    }
+
+    private fun getSongs(data: SearchResponse, list: List<String>) {
         getSongsWithIds(list) { songList ->
             if (!songList.isNullOrEmpty()) {
                 updateState {

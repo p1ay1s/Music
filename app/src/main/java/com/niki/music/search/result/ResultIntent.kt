@@ -14,5 +14,6 @@ data class ResultState(
     val searchContent: String,
     val searchHasMore: Boolean,
     val searchCurrentPage: Int,
-    val songList: List<Song>?
+    val songList: List<Song>?,
+    val idList: List<String>?
 )

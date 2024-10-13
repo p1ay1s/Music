@@ -1,7 +1,7 @@
 package com.niki.music.my
 
 import androidx.lifecycle.viewModelScope
-import com.niki.common.repository.dataclasses.LoginResponse
+import com.niki.common.repository.dataclasses.login.loginApi.LoginResponse
 import com.niki.common.utils.getStringData
 import com.niki.common.utils.putStringData
 import com.niki.common.values.preferenceAvatar
@@ -89,7 +89,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                 { code, _ ->
                     code?.let {
                         logE("###", it.toString())
-                        logout("验证码错误")
+                        logout(code.toString())
                     } ?: logout("网络错误")
                 })
     }

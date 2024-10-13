@@ -1,12 +1,11 @@
 package com.niki.common.services
 
-import com.niki.common.repository.dataclasses.AnonymousLoginResponse
-import com.niki.common.repository.dataclasses.LoginResponse
-import com.niki.common.repository.dataclasses.LoginStateApiResponse
-import com.niki.common.repository.dataclasses.LogoutResponse
-import com.niki.common.repository.dataclasses.RefreshCookieResponse
-import com.niki.common.repository.dataclasses.SendCaptchaResponse
-import com.niki.common.repository.dataclasses.UserExistApiResponse
+import com.niki.common.repository.dataclasses.login.loginApi.AnonymousLoginResponse
+import com.niki.common.repository.dataclasses.login.loginApi.LoginResponse
+import com.niki.common.repository.dataclasses.login.loginApi.LogoutResponse
+import com.niki.common.repository.dataclasses.login.loginApi.RefreshCookieResponse
+import com.niki.common.repository.dataclasses.login.loginApi.SendCaptchaResponse
+import com.niki.common.repository.dataclasses.login.loginApi.UserExistApiResponse
 import com.niki.common.values.WebConstant
 import retrofit2.Call
 import retrofit2.http.GET
@@ -31,11 +30,6 @@ interface LoginService {
     fun getAvatarUrl(
         @Query("phone") phone: String,
     ): Call<UserExistApiResponse>
-
-    @GET(WebConstant.USER_LOGIN_STATUS)
-    fun loginState(
-        @Query("cookie") cookie: String? = null
-    ): Call<LoginStateApiResponse>
 
     @GET(WebConstant.USER_LOGIN_REFRESH)
     fun loginRefresh(

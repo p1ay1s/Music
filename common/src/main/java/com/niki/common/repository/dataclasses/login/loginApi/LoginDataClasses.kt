@@ -1,4 +1,4 @@
-package com.niki.common.repository.dataclasses
+package com.niki.common.repository.dataclasses.login.loginApi
 
 data class AnonymousLoginResponse(
     var code: Int,
@@ -32,31 +32,24 @@ data class UserExistApiResponse(
     var avatarUrl: String = ""
 )
 
-/**
- * 登录状态
- */
-data class LoginStateApiResponse(
-    var data: LoginResponse = LoginResponse(-1, Account(), Profile())
-)
-
-data class LoginResponse(
-    var code: Int,
-    var account: Account,
-    var profile: Profile,
-    var cookie: String = ""
-)
-
-data class Account(
-    var anonimousUser: Boolean = true,
-    var id: String = ""
-)
-
-/**
- * 包含用户的基本资料
- */
-data class Profile(
-    var userId: String = "",
-    var avatarUrl: String = "",
-    var backgroundUrl: String = "",
-    var nickname: String = ""
-)
+//data class LoginResponse(
+//    var code: Int,
+//    var account: Account,
+//    var profile: Profile,
+//    var cookie: String = ""
+//)
+//
+//data class Account(
+//    var anonimousUser: Boolean = true,
+//    var id: String = ""
+//)
+//
+///**
+// * 包含用户的基本资料
+// */
+//data class Profile(
+//    var userId: String = "",
+//    var avatarUrl: String = "",
+//    var backgroundUrl: String = "",
+//    var nickname: String = ""
+//)

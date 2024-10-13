@@ -1,6 +1,6 @@
 package com.niki.music.search.result
 
-import com.niki.common.repository.dataclasses.SearchApiResponse
+import com.niki.common.repository.dataclasses.search.searchApi.SearchResponse
 import com.niki.common.services.SearchService
 import com.p1ay1s.util.ServiceBuilder
 import com.p1ay1s.util.ServiceBuilder.requestEnqueue
@@ -17,7 +17,7 @@ class ResultModel {
         keywords: String,
         limit: Int,
         offset: Int,
-        crossinline onSuccess: (SearchApiResponse) -> Unit,
+        crossinline onSuccess: (SearchResponse) -> Unit,
         crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(searchService.searchSongs(keywords, limit, offset), onSuccess, onError)
 }
