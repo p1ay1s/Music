@@ -1,20 +1,14 @@
 package com.niki.music.search.result
 
-import android.R
-import android.app.SearchManager
-import android.database.MatrixCursor
-import android.provider.BaseColumns
-import android.widget.CursorAdapter
 import android.widget.LinearLayout
-import android.widget.SearchView
-import android.widget.SimpleCursorAdapter
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
-import com.niki.common.values.FragmentTag
 import com.niki.music.appFadeInAnim
+import com.niki.music.common.ui.SearchBar
+import com.niki.music.common.ui.SearchBarListener
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener
 import com.niki.music.common.viewModels.MainViewModel
@@ -23,7 +17,6 @@ import com.niki.music.databinding.FragmentSearchResultBinding
 import com.niki.music.intents.MainIntent
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
-import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.PreloadLayoutManager
@@ -35,31 +28,33 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView,
-    SearchView.OnQueryTextListener, SongAdapterListener {
+    SongAdapterListener, SearchBarListener {
     private lateinit var resultViewModel: ResultViewModel
     private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
 
-    val searchView: SearchView
-        get() = binding.searchViewResult
+//    val searchView: SearchView
+//        get() = binding.searchViewResult
+
+    private val searchBar: SearchBar
+        get() = binding.searchBar
 
     override fun FragmentSearchResultBinding.initBinding() {
         resultViewModel = ViewModelProvider(requireActivity())[ResultViewModel::class.java]
 
+        initValues()
+        handle()
+
         lifecycleScope.launch {
             while (true) {
                 delay(1000)
-                if (searchView.suggestionsAdapter == null)
-                    logE("####", "null")
-                else
-                    logE("####", searchView.suggestionsAdapter.cursor.count.toString())
+                resultViewModel.state.suggestKeywords?.let {
+                    logE("####", it[0])
+                }
             }
         }
-
-        initValues()
-        handle()
 
         with(recyclerViewResult) {
             adapter = songAdapter
@@ -67,19 +62,22 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
             animation = appFadeInAnim
 
             addLineDecoration(requireActivity(), LinearLayout.VERTICAL)
-
             addOnLoadMoreListener_V(1) {
                 resultViewModel.sendIntent(ResultIntent.SearchSongs)
             }
         }
 
-        searchViewResult.apply {
-            setOnQueryTextListener(this@ResultFragment)
-
-            setOnCloseListener {
-                findFragmentHost()?.navigate(FragmentTag.PREVIEW_FRAGMENT)
-                false
-            }
+        searchBar.init()
+        searchBar.listener = this@ResultFragment
+//        searchViewResult.apply {
+//            setOnQueryTextListener(this@ResultFragment)
+//
+//            setOnSuggestionListener(this@ResultFragment)
+//
+//            setOnCloseListener {
+//                findFragmentHost()?.navigate(FragmentTag.PREVIEW_FRAGMENT)
+//                false
+//            }
 
 //            setOnFocusChangeListener { _, h ->
 //                if (h) {
@@ -88,7 +86,7 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
 //                    suggestionsAdapter = null
 //                }
 //            }
-        }
+//        }
     }
 
     private fun initValues() {
@@ -101,29 +99,36 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
         )
     }
 
-    override fun handle() = resultViewModel.observeState {
+    override fun handle() = resultViewModel.apply {
         lifecycleScope.apply {
-            launch {
-                map { it.songList }.distinctUntilChanged().collect {
-                    if (it == null)
-                        songAdapter.submitList(emptyList())
-                    else
-                        songAdapter.submitList(it)
+            observeState {
+                launch {
+                    map { it.songList }.distinctUntilChanged().collect {
+                        if (it == null)
+                            songAdapter.submitList(emptyList())
+                        else
+                            songAdapter.submitList(it)
+                    }
                 }
-            }
-            launch {
-                map { it.hotKeywords }.distinctUntilChanged().filterNotNull().collect {
-                    showSuggest(resultViewModel.state.hotKeywords)
+                launch {
+                    map { it.hotKeywords }.distinctUntilChanged().filterNotNull().collect {
+                        searchBar.showDefaultList(it)
+//                        showSuggest(state.hotKeywords)
+                    }
                 }
-            }
-            launch {
-                resultViewModel.run {
+                launch {
                     uiEffectFlow
                         .collect {
                             when (it) {
-                                is ResultEffect.KeywordSuccessEffect -> showSuggest(state.suggestKeywords)
+                                is ResultEffect.KeywordSuccessEffect -> {
+                                    searchBar.setSuggestions(
+                                        state.suggestKeywords
+                                    )
+                                }
+//                                    showSuggest(state.suggestKeywords)
 
-                                is ResultEffect.KeywordsFailedEffect -> showSuggest(state.hotKeywords)
+                                is ResultEffect.KeywordsFailedEffect -> searchBar.showDefaultList()
+//                                    showSuggest(state.hotKeywords)
                             }
                         }
                 }
@@ -131,48 +136,49 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
         }
     }
 
-    private fun showSuggest(list: List<String>?) {
-        if (list == null) {
-//            searchView.suggestionsAdapter = null
-            return
-        }
-        val cursor = MatrixCursor(
-            arrayOf(
-                BaseColumns._ID,
-                SearchManager.SUGGEST_COLUMN_TEXT_1
-            )
-        )
-
-        list.forEachIndexed { index, suggestion ->
-            cursor.addRow(arrayOf(index, suggestion))
-        }
-
-        val from = arrayOf(SearchManager.SUGGEST_COLUMN_TEXT_1)
-        val to = intArrayOf(R.id.text1)
-        searchView.suggestionsAdapter = SimpleCursorAdapter(
-            requireContext(),
-            R.layout.simple_dropdown_item_1line,
-            cursor,
-            from,
-            to,
-            CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
-        )
-    }
+//    private fun showSuggest(list: List<String>?) {
+//        if (list == null) {
+////            searchView.suggestionsAdapter = null
+//            return
+//        }
+//        val cursor = MatrixCursor(
+//            arrayOf(
+//                BaseColumns._ID,
+//                SearchManager.SUGGEST_COLUMN_TEXT_1
+//            )
+//        )
+//
+//        list.forEachIndexed { index, suggestion ->
+//            cursor.addRow(arrayOf(index, suggestion))
+//        }
+//
+//        val from = arrayOf(SearchManager.SUGGEST_COLUMN_TEXT_1)
+//        val to = intArrayOf(R.id.text1)
+//        searchView.suggestionsAdapter = SimpleCursorAdapter(
+//            requireContext(),
+//            R.layout.simple_dropdown_item_1line,
+//            cursor,
+//            from,
+//            to,
+//            CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+//        )
+//    }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        searchBar.listener = null
         songAdapter.removeSongAdapterListener()
     }
 
-    override fun onQueryTextSubmit(query: String?): Boolean {
-        searchAction(query)
-        return true
-    }
-
-    override fun onQueryTextChange(newText: String?): Boolean {
-        resultViewModel.sendIntent(ResultIntent.KeywordsChanged(newText ?: " "))
-        return true
-    }
+//    override fun onQueryTextSubmit(query: String?): Boolean {
+//        searchAction(query)
+//        return true
+//    }
+//
+//    override fun onQueryTextChange(newText: String?): Boolean {
+//        resultViewModel.sendIntent(ResultIntent.KeywordsChanged(newText ?: " "))
+//        return true
+//    }
 
     private fun searchAction(str: String?) {
         resultViewModel.sendIntent(ResultIntent.KeywordsChanged(str ?: " "))
@@ -186,4 +192,30 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
     override fun onMoreClicked(song: Song) {
         toast("more -> ${song.name}")
     }
+
+    override fun onContentChanged(keywords: String) {
+        logE("####", "666")
+        resultViewModel.sendIntent(ResultIntent.KeywordsChanged(keywords))
+    }
+
+    override fun onSubmit(keywords: String) {
+        logE("####", "666")
+        resultViewModel.sendIntent(ResultIntent.KeywordsChanged(keywords))
+        resultViewModel.sendIntent(ResultIntent.SearchSongs)
+    }
+
+//    override fun onSuggestionSelect(position: Int): Boolean {
+//        val str = searchView.suggestionsAdapter.cursor.getString(position)
+//        searchView.setQuery(str, false)
+//        resultViewModel.sendIntent(ResultIntent.KeywordsChanged(str))
+//        return true
+//    }
+//
+//    override fun onSuggestionClick(position: Int): Boolean {
+//        val str = searchView.suggestionsAdapter.cursor.getString(position)
+//        searchView.setQuery(str, false)
+//        resultViewModel.sendIntent(ResultIntent.KeywordsChanged(str))
+//        return true
+//    }
+
 }

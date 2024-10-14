@@ -65,7 +65,7 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
                 myViewModel.sendIntent(MyIntent.SwitchMethod)
             }
             loginButton.setOnClickListener {
-                if (myViewModel.uiStateFlow.value.useCaptcha)
+                if (myViewModel.state.useCaptcha)
                     captchaLogin()
                 else
                     passwordLogin()

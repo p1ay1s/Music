@@ -78,12 +78,12 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
                 for (match in it.result.allMatch) {
                     list.add(match.keyword)
                 }
-                updateState { copy(hotKeywords = list.toList()) }
+                updateState { copy(suggestKeywords = list.toList()) }
                 sendEffect { ResultEffect.KeywordSuccessEffect }
             }
             suggestIsLoading = false
         }, { _, _ ->
-            updateState { copy(hotKeywords = null) }
+            updateState { copy(suggestKeywords = null) }
             sendEffect { ResultEffect.KeywordsFailedEffect }
             suggestIsLoading = false
         })

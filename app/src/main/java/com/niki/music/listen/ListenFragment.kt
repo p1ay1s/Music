@@ -67,7 +67,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView,
     override fun onResume() {
         super.onResume()
 
-        listenViewModel.uiStateFlow.value.apply {
+        listenViewModel.state.apply {
             if (playlists == null)
                 listenViewModel.sendIntent(ListenIntent.GetTopPlaylists(true))
             else {

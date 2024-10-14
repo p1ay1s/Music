@@ -68,8 +68,8 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterL
     override fun onResume() {
         super.onResume()
 
-        myViewModel.uiStateFlow.value.run {
-            if (likeList == null && myViewModel.uiStateFlow.value.isLoggedIn)
+        myViewModel.state.run {
+            if (likeList == null && isLoggedIn)
                 myViewModel.sendIntent(MyIntent.GetLikePlaylist)
         }
     }
@@ -161,7 +161,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterL
                 )
             }
 
-            myViewModel.uiStateFlow.value.apply {
+            myViewModel.state.apply {
                 if (isLoggedIn && likeList == null)
                     myViewModel.sendIntent(MyIntent.GetLikePlaylist)
             }
@@ -177,163 +177,3 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterL
         toast("more -> ${song.name}")
     }
 }
-
-
-//
-//class CustomLayoutParams : ViewGroup.LayoutParams {
-//    var gravity: Int = 0
-//
-//    constructor(c: Context, attrs: AttributeSet?) : super(c, attrs) {
-//        val a = c.obtainStyledAttributes(attrs, R.styleable.CustomLayout)
-//        gravity = a.getInteger(R.styleable.CustomLayout_gravity, 0)
-//        a.recycle()
-//    }
-//
-//    constructor(width: Int, height: Int) : super(width, height)
-//
-//    constructor(source: ViewGroup.LayoutParams?) : super(source)
-//}
-//
-//class CustomLayout : ViewGroup {
-//    constructor(context: Context?) : super(context)
-//
-//    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-//
-//    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-//        context,
-//        attrs,
-//        defStyleAttr
-//    )
-//
-//    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-//        val childCount = childCount
-//        for (i in 0 until childCount) {
-//            val child = getChildAt(i)
-//            val layoutParams = child.layoutParams as CustomLayoutParams
-//            val childWidth = child.measuredWidth
-//            val childHeight = child.measuredHeight
-//
-//            var left = 0
-//            var top = 0
-//            when (layoutParams.gravity) {
-//                0 -> {
-//                    left = (r - l - childWidth) / 2
-//                    top = (b - t - childHeight) / 2
-//                }
-//
-//                1 -> {
-//                    left = l
-//                    top = (b - t - childHeight) / 2
-//                }
-//
-//                2 -> {
-//                    left = r - l - childWidth
-//                    top = (b - t - childHeight) / 2
-//                }
-//            }
-//            child.layout(left, top, left + childWidth, top + childHeight)
-//        }
-//    }
-//
-//    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-//        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-//        val childCount = childCount
-//        for (i in 0 until childCount) {
-//            val child = getChildAt(i)
-//            measureChild(child, widthMeasureSpec, heightMeasureSpec)
-//        }
-//    }
-//
-//    override fun generateLayoutParams(attrs: AttributeSet): LayoutParams {
-//        return CustomLayoutParams(context, attrs)
-//    }
-//
-//    override fun generateDefaultLayoutParams(): LayoutParams {
-//        return CustomLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-//    }
-//
-//    override fun checkLayoutParams(p: LayoutParams): Boolean {
-//        return p is CustomLayoutParams
-//    }
-//}
-//class FlowLayout(context: Context?, attrs: AttributeSet) :
-//    ViewGroup(context, attrs) {
-//    private var attributeSet: AttributeSet
-//    private var colorSet: Int = Random().nextInt(4)
-//    private var marginLayoutParams: MarginLayoutParams =
-//        MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-//
-//    init {
-//        marginLayoutParams.setMargins(5, 5, 5, 5)
-//        this.attributeSet = attrs
-//    }
-//
-//    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-//        val maxWidth = r - l
-//        var lineHeight = 0
-//        var lineWidth = 0
-//        var left = 0
-//        var top = 0
-//
-//        for (i in 0 until childCount) {
-//            val child = getChildAt(i)
-//            val lp = child.layoutParams as MarginLayoutParams
-//            val childWidth = child.measuredWidth + lp.leftMargin + lp.rightMargin
-//            val childHeight = child.measuredHeight + lp.topMargin + lp.bottomMargin
-//
-//            // 判断是否需要换行
-//            if (lineWidth + childWidth > maxWidth) {
-//                top += lineHeight
-//                lineHeight = childHeight
-//                lineWidth = childWidth
-//                left = 0
-//            } else {
-//                lineWidth += childWidth
-//                lineHeight = max(lineHeight.toDouble(), childHeight.toDouble()).toInt()
-//            }
-//
-//            val lc = left + lp.leftMargin
-//            val tc = top + lp.topMargin
-//            val rc = lc + child.measuredWidth
-//            val bc = tc + child.measuredHeight
-//            child.layout(lc, tc, rc, bc)
-//
-//            left += childWidth
-//        }
-//    }
-//
-//    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-//        val maxWidth = MeasureSpec.getSize(widthMeasureSpec)
-//        var totalHeight = 0
-//        var lineWidth = 0
-//        var lineHeight = 0
-//
-//        for (i in 0 until childCount) {
-//            val child = getChildAt(i)
-//            val lp = child.layoutParams as MarginLayoutParams
-//            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)
-//            val childWidth = child.measuredWidth + lp.leftMargin + lp.rightMargin
-//            val childHeight = child.measuredHeight + lp.topMargin + lp.bottomMargin
-//
-//            if (lineWidth + childWidth > maxWidth) {
-//                totalHeight += lineHeight
-//                lineHeight = childHeight
-//                lineWidth = childWidth
-//            } else {
-//                lineWidth += childWidth
-//                lineHeight = max(lineHeight.toDouble(), childHeight.toDouble()).toInt()
-//            }
-//        }
-//
-//        totalHeight += lineHeight
-//        setMeasuredDimension(maxWidth, totalHeight)
-//    }
-//
-//    fun addLabel(label: String?) {
-//        val myTextView = MyTextView(context, attributeSet)
-//        myTextView.setText(label)
-//        myTextView.setLayoutParams(marginLayoutParams)
-//        myTextView.setOnClickListener(this)
-//        addView(myTextView)
-//    }
-//}

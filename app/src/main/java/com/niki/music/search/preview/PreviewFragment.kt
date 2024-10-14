@@ -31,10 +31,10 @@ class PreviewFragment : ViewBindingFragment<FragmentSearchPreviewBinding>(), IVi
                         R.anim.fade_in,
                         R.anim.fade_out
                     )
-                (it.getCurrentFragment() as ResultFragment).searchView.apply {
-                    isIconified = false
-                    requestFocus()
-                }
+//                (it.getCurrentFragment() as ResultFragment).searchView.apply {
+//                    isIconified = false
+//                    requestFocus()
+//                }
             }
         }
     }
