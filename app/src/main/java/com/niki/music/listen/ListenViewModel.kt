@@ -28,7 +28,7 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
     private fun getTopPlaylists(
         resetPage: Boolean = false,
     ) = viewModelScope.launch(Dispatchers.IO) {
-        uiStateFlow.value.run {
+        state.run {
             if (!hasMore || isLoading) return@run
             updateState { copy(isLoading = true) }
 
@@ -40,7 +40,7 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
                 "hot",
                 currentPage * TOP_LIMIT,
                 {
-                    val currentList = uiStateFlow.value.playlists ?: emptyList()
+                    val currentList = playlists ?: emptyList()
 
                     updateState {
                         copy(

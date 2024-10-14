@@ -9,5 +9,6 @@ data class LoginResponse(
     val effectTime: Int,
     val loginType: Int,
     val profile: Profile,
-    val token: String
+    val token: String,
+    val message: String?
 )

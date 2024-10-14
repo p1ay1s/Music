@@ -55,7 +55,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     }
 
     // Effect-only
-    private fun getAvatarUrl() = uiStateFlow.value.run {
+    private fun getAvatarUrl() = state.run {
         if (phone.isNullOrBlank()) return@run
 
         viewModelScope.launch {
@@ -78,7 +78,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     }
 
     // State-only
-    private fun captchaLogin() = uiStateFlow.value.run {
+    private fun captchaLogin() = state.run {
         if (phone.isNullOrBlank() || captcha.isNullOrBlank()) {
             logout("请检查输入")
         } else
@@ -89,7 +89,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                         if (code == 200) {
                             login(it, "欢迎回来! ${profile.nickname}")
                         } else {
-                            logout("验证码错误 - $code")
+                            if (message != null) logout(message!!) else logout()
                         }
                     }
                 },
@@ -101,7 +101,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                 })
     }
 
-    private fun passwordLogin() = uiStateFlow.value.run {
+    private fun passwordLogin() = state.run {
         if (phone.isNullOrBlank() || captcha.isNullOrBlank()) {
             logout("请检查输入")
         } else
@@ -112,7 +112,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                         if (code == 200) {
                             login(it, "欢迎回来! ${profile.nickname}")
                         } else {
-                            logout("密码错误 - $code")
+                            if (message != null) logout(message!!) else logout()
                         }
                     }
                 },
@@ -186,7 +186,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     private fun stateLogout() =
         updateState { copy(loggedInDatas = null, isLoggedIn = false, likeList = null) }
 
-    private fun sendCaptcha() = uiStateFlow.value.run {
+    private fun sendCaptcha() = state.run {
         if (phone.isNullOrBlank()) {
             toast("请检查输入")
         } else
@@ -218,7 +218,7 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
     }
 
     // State-only
-    private fun getLikePlaylist() = uiStateFlow.value.loggedInDatas.run {
+    private fun getLikePlaylist() = state.loggedInDatas.run {
         if (this != null)
             playlistModel.getLikePlaylist(userId, cookie,
                 {

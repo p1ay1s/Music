@@ -13,9 +13,15 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
         const val SEARCH_LIMIT = 20
     }
 
-    private var isLoading = false
+    private var isSearching = false
+    private var hotIsLoading = false
+    private var suggestIsLoading = false
 
-    override fun initUiState() = ResultState("", true, 0, null, null)
+    override fun initUiState() = ResultState("", true, 0, null, null, null, null)
+
+    init {
+        getHotSuggest()
+    }
 
     override fun handleIntent(intent: ResultIntent) =
         intent.run {
@@ -24,9 +30,10 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
                 is ResultIntent.SearchSongs -> searchSongs()
 
                 is ResultIntent.KeywordsChanged ->
-                    if (uiStateFlow.value.searchContent != keywords) {
+                    if (state.searchContent != keywords) {
                         updateState { copy(searchContent = keywords) }
                         resetResult()
+                        getRelativeSuggest()
                     }
             }
         }
@@ -37,42 +44,86 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
                 searchCurrentPage = 0,
                 searchHasMore = true,
                 songList = null,
-                idList = null
+                idList = null,
+                suggestKeywords = null
             )
         }
     }
 
+    private fun getHotSuggest() {
+        if (hotIsLoading) return
+        hotIsLoading = true
+
+        resultModel.hotSuggest({
+            runCatching {
+                val list = mutableListOf<String>()
+                for (hot in it.result.hots) {
+                    list.add(hot.first)
+                }
+                updateState { copy(hotKeywords = list.toList()) }
+            }
+            isSearching = false
+        }, { _, _ ->
+            isSearching = false
+        })
+    }
+
+    private fun getRelativeSuggest(keywords: String = state.searchContent) {
+        if (keywords.isBlank()) updateState { copy(suggestKeywords = null) }
+        if (suggestIsLoading) return
+        suggestIsLoading = true
+        resultModel.relativeSuggest(keywords, {
+            runCatching {
+                val list = mutableListOf<String>()
+                for (match in it.result.allMatch) {
+                    list.add(match.keyword)
+                }
+                updateState { copy(hotKeywords = list.toList()) }
+                sendEffect { ResultEffect.KeywordSuccessEffect }
+            }
+            suggestIsLoading = false
+        }, { _, _ ->
+            updateState { copy(hotKeywords = null) }
+            sendEffect { ResultEffect.KeywordsFailedEffect }
+            suggestIsLoading = false
+        })
+    }
+
     // State-only
-    private fun searchSongs(keywords: String = uiStateFlow.value.searchContent) {
-        uiStateFlow.value.run {
-            if (keywords.isBlank() || !searchHasMore || isLoading) return@run
-            isLoading = true
+    private fun searchSongs(keywords: String = state.searchContent) {
+        state.run {
+            if (keywords.isBlank() || !searchHasMore || isSearching) return@run
+            isSearching = true
 
             resultModel.searchSongs(keywords,
                 SEARCH_LIMIT,
                 searchCurrentPage * SEARCH_LIMIT,
                 { data ->
-                    isLoading = false
-                    data.result.songs.let { songs ->
-                        val list = uiStateFlow.value.idList?.toMutableList() ?: mutableListOf()
-                        for (song in songs)
-                            list.add(song.id)
-                        updateState { copy(idList = list) }
+                    runCatching {
+                        data.result.songs.let { songs ->
+                            val list = idList?.toMutableList() ?: mutableListOf()
+                            for (song in songs)
+                                list.add(song.id)
+                            updateState { copy(idList = list) }
 
-                        getSongs(data, list)
+                            getSongs(data, list)
 
-                        if (keywords != uiStateFlow.value.searchContent) {
-                            resetResult()
-                            searchSongs()
+                            if (keywords != searchContent) {
+                                resetResult()
+                                searchSongs()
+                            }
                         }
+                    }.onFailure {
+                        resetResult()
                     }
+                    isSearching = false
                 },
                 { code, _ ->
                     if (code == null)
                         toast("网络错误")
                     else
                         toast("操作过于频繁, 请稍候重试")
-                    isLoading = false
+                    isSearching = false
                 })
         }
     }

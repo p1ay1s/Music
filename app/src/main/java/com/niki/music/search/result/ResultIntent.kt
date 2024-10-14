@@ -8,6 +8,8 @@ sealed class ResultIntent {
 }
 
 sealed class ResultEffect {
+    data object KeywordsFailedEffect : ResultEffect()
+    data object KeywordSuccessEffect : ResultEffect()
 }
 
 data class ResultState(
@@ -15,5 +17,7 @@ data class ResultState(
     val searchHasMore: Boolean,
     val searchCurrentPage: Int,
     val songList: List<Song>?,
-    val idList: List<String>?
+    val idList: List<String>?,
+    val hotKeywords: List<String>?,
+    val suggestKeywords: List<String>?
 )

@@ -19,7 +19,7 @@ object WebConstant {
     // 搜索
     const val SEARCH = "search"
     const val SEARCH_HOT = "search/hot"
-    const val SEARCH_RELATIVE = "search/suggest?keywords=海阔天空&type=mobile"
+    const val SEARCH_RELATIVE = "search/suggest"
 
     // 歌曲详情
     const val SEARCH_SONGS_DETAIL = "song/detail"

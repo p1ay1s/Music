@@ -1,7 +1,13 @@
 package com.niki.music.search.result
 
+import android.R
+import android.app.SearchManager
+import android.database.MatrixCursor
+import android.provider.BaseColumns
+import android.widget.CursorAdapter
 import android.widget.LinearLayout
 import android.widget.SearchView
+import android.widget.SimpleCursorAdapter
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -19,9 +25,12 @@ import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
 import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.extension.toast
+import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -38,6 +47,16 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
 
     override fun FragmentSearchResultBinding.initBinding() {
         resultViewModel = ViewModelProvider(requireActivity())[ResultViewModel::class.java]
+
+        lifecycleScope.launch {
+            while (true) {
+                delay(1000)
+                if (searchView.suggestionsAdapter == null)
+                    logE("####", "null")
+                else
+                    logE("####", searchView.suggestionsAdapter.cursor.count.toString())
+            }
+        }
 
         initValues()
         handle()
@@ -61,6 +80,14 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
                 findFragmentHost()?.navigate(FragmentTag.PREVIEW_FRAGMENT)
                 false
             }
+
+//            setOnFocusChangeListener { _, h ->
+//                if (h) {
+//                    tryShowSuggest()
+//                } else {
+//                    suggestionsAdapter = null
+//                }
+//            }
         }
     }
 
@@ -75,14 +102,61 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
     }
 
     override fun handle() = resultViewModel.observeState {
-        lifecycleScope.launch {
-            map { it.songList }.distinctUntilChanged().collect {
-                if (it == null)
-                    songAdapter.submitList(emptyList())
-                else
-                    songAdapter.submitList(it)
+        lifecycleScope.apply {
+            launch {
+                map { it.songList }.distinctUntilChanged().collect {
+                    if (it == null)
+                        songAdapter.submitList(emptyList())
+                    else
+                        songAdapter.submitList(it)
+                }
+            }
+            launch {
+                map { it.hotKeywords }.distinctUntilChanged().filterNotNull().collect {
+                    showSuggest(resultViewModel.state.hotKeywords)
+                }
+            }
+            launch {
+                resultViewModel.run {
+                    uiEffectFlow
+                        .collect {
+                            when (it) {
+                                is ResultEffect.KeywordSuccessEffect -> showSuggest(state.suggestKeywords)
+
+                                is ResultEffect.KeywordsFailedEffect -> showSuggest(state.hotKeywords)
+                            }
+                        }
+                }
             }
         }
+    }
+
+    private fun showSuggest(list: List<String>?) {
+        if (list == null) {
+//            searchView.suggestionsAdapter = null
+            return
+        }
+        val cursor = MatrixCursor(
+            arrayOf(
+                BaseColumns._ID,
+                SearchManager.SUGGEST_COLUMN_TEXT_1
+            )
+        )
+
+        list.forEachIndexed { index, suggestion ->
+            cursor.addRow(arrayOf(index, suggestion))
+        }
+
+        val from = arrayOf(SearchManager.SUGGEST_COLUMN_TEXT_1)
+        val to = intArrayOf(R.id.text1)
+        searchView.suggestionsAdapter = SimpleCursorAdapter(
+            requireContext(),
+            R.layout.simple_dropdown_item_1line,
+            cursor,
+            from,
+            to,
+            CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        )
     }
 
     override fun onDestroyView() {
@@ -96,13 +170,13 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        searchAction(newText)
+        resultViewModel.sendIntent(ResultIntent.KeywordsChanged(newText ?: " "))
         return true
     }
 
     private fun searchAction(str: String?) {
         resultViewModel.sendIntent(ResultIntent.KeywordsChanged(str ?: " "))
-                resultViewModel.sendIntent(ResultIntent.SearchSongs)
+        resultViewModel.sendIntent(ResultIntent.SearchSongs)
     }
 
     override fun onPlayMusic(song: Song) {
