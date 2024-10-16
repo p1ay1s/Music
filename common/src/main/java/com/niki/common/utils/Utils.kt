@@ -4,7 +4,9 @@ import android.content.Intent
 import android.util.Log
 import android.view.View
 import android.view.Window
+import android.widget.TextView
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.values.FragmentTag
 import com.p1ay1s.base.appContext
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +24,32 @@ fun getNewTag(index: Int): Int {
 
         return MY_FRAGMENT
     }
+}
+
+
+fun TextView.formatDetails(song: Song) {
+    visibility = View.VISIBLE
+    val builder = StringBuilder()
+    builder.apply {
+        for (artist in song.ar) {
+            if (artist.name.isNotBlank()) {
+                append(artist.name)
+            } else {
+                continue
+            }
+            val index = song.ar.indexOf(artist)
+            when (index) { // 效果: a, b, c & d
+                song.ar.size - 1 -> {} // the last
+                song.ar.size - 2 -> append(" & ")
+                else -> append(", ")
+            }
+        }
+        if (song.al.name.isNotBlank()) {
+            append(" • ")
+            append(song.al.name)
+        }
+    }
+    text = builder.toString()
 }
 
 /**
