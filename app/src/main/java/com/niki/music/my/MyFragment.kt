@@ -8,13 +8,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.takePartOf
+import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
-import com.niki.music.intents.MainIntent
 import com.niki.music.my.login.LoginFragment
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.toast
@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterListener {
+class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
 
     companion object {
         const val CLICK_TO_LOGIN = "点击登录"
@@ -80,7 +80,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterL
             showDetails = true,
             showImage = false
         )
-        songAdapter.setSongAdapterListener(this)
+        songAdapter.setSongAdapterListener(SongAdapterListenerImpl())
         baseLayoutManager = PreloadLayoutManager(
             requireActivity(),
             LinearLayoutManager.VERTICAL,
@@ -168,12 +168,14 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView, SongAdapterL
         }
     }
 
+    inner class SongAdapterListenerImpl : SongAdapterListener {
+        override fun onPlayMusic(list: List<Song>) {
+            (activity as MainActivity).onSongPass(list)
+//            mainViewModel.sendIntent(MainIntent.TryPlaySong(song))
+        }
 
-    override fun onPlayMusic(song: Song) {
-        mainViewModel.sendIntent(MainIntent.TryPlaySong(song))
-    }
-
-    override fun onMoreClicked(song: Song) {
-        toast("more -> ${song.name}")
+        override fun onMoreClicked(song: Song) {
+            toast("more -> ${song.name}")
+        }
     }
 }

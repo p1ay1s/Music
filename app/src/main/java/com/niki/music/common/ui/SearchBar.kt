@@ -5,11 +5,15 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.niki.music.databinding.LayoutSearchBarBinding
-import com.p1ay1s.base.log.logE
+import com.p1ay1s.base.extension.addLineDecoration
+import com.p1ay1s.base.ui.PreloadLayoutManager
 
 interface SearchBarListener {
     fun onContentChanged(keywords: String)
@@ -21,41 +25,56 @@ class SearchBar(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
         LayoutSearchBarBinding.inflate(LayoutInflater.from(context), this, true)
 
     private var defaultList: List<String> = emptyList()
+    private var shouldShowLiveData = MutableLiveData(true)
 
     var listener: SearchBarListener? = null
+    private var enableSet = true
 
-    private lateinit var adapter: SuggestionAdapter
-    private var manager = LinearLayoutManager(context)
+    private lateinit var suggestionAdapter: SuggestionAdapter
+
+    private var preloadLayoutManager = PreloadLayoutManager(
+        context,
+        LinearLayoutManager.VERTICAL,
+        3
+    )
 
     fun init() {
         binding.run {
-            searchEdit.editText?.addTextChangedListener(EditListener())
-            searchEdit.editText?.setOnEditorActionListener { textView, actionId, _ ->
-                textView.text?.let {
-                    listener?.onSubmit(it.toString())
+            searchEdit.editText?.run {
+                addTextChangedListener(TextWatcherImpl())
+
+                /**
+                 * 搜索事件: 隐藏建议 & 回调 on submit 事件
+                 *
+                 * 要想不输入回车要在 edit text 设置 single line 属性
+                 */
+                setOnEditorActionListener { textView, actionId, event ->
+                    textView.text?.let {
+                        listener?.onSubmit(it.toString())
+                    }
+                    if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                        shouldShowLiveData.value = false
+                    }
+                    true
                 }
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    hideList()
+
+                suggestionAdapter = SuggestionAdapter {
+                    this.setText(it)
+                    this.onEditorAction(EditorInfo.IME_ACTION_SEARCH) // 点击 item 时触发搜索事件
                 }
-                false
             }
-            adapter = SuggestionAdapter {
-                searchEdit.editText?.setText(it)
+
+            shouldShowLiveData.observeForever { should ->
+                recyclerView.visibility = if (should) View.VISIBLE else View.GONE
             }
+
+
             with(recyclerView) {
-                adapter = adapter
-                manager.orientation = LinearLayoutManager.VERTICAL
-                layoutManager = manager
+                adapter = suggestionAdapter
+                layoutManager = preloadLayoutManager
+                addLineDecoration(context, RecyclerView.VERTICAL)
             }
         }
-    }
-
-    private fun hideList() {
-//        binding.recyclerView.visibility = View.GONE
-    }
-
-    private fun showList() {
-//        binding.recyclerView.visibility = View.VISIBLE
     }
 
     fun showDefaultList(newList: List<String>? = null) {
@@ -64,21 +83,23 @@ class SearchBar(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     }
 
     fun setSuggestions(list: List<String>?) {
-        list?.let { logE("####", it.toString()) }
-        showList()
-        adapter.submitList(list)
+        if (enableSet)
+            suggestionAdapter.submitList(list)
     }
 
-    inner class EditListener : TextWatcher {
+    inner class TextWatcherImpl : TextWatcher {
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
         }
 
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
             val keywords = s?.toString()
-            if (keywords != null) {
+            shouldShowLiveData.value = true
+            enableSet = true
+            if (!keywords.isNullOrBlank()) {
                 listener?.onContentChanged(keywords)
             } else {
                 showDefaultList()
+                enableSet = false
             }
         }
 

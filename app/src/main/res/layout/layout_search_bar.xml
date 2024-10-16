@@ -12,7 +12,7 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="20dp"
+            android:layout_marginHorizontal="20dp"
             android:paddingVertical="5dp"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -22,16 +22,17 @@
                 android:hint="@string/enter_anything"
                 android:imeOptions="actionSearch"
                 android:maxLines="1"
+                android:singleLine="true"
                 android:textColor="?attr/color_contrast" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:minHeight="200dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:background="?attr/color_background"
-            android:padding="7dp"
+            app:layout_constraintEnd_toEndOf="@id/searchEdit"
+            app:layout_constraintStart_toStartOf="@id/searchEdit"
             app:layout_constraintTop_toBottomOf="@id/searchEdit" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

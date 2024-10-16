@@ -12,6 +12,7 @@ import com.p1ay1s.base.extension.toast
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
+// 比较耦合
 var currentTopPlaylist: Playlist? = null
 var currentTopSongs: List<Song>? = null
 var currentTopHasMore = true

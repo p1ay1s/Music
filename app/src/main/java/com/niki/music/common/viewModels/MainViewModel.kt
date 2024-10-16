@@ -27,8 +27,6 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
 
     private var job: Job? = null
 
-    var binder: RemoteControlService.RemoteControlBinder? = null
-
     // 关于 current
     var currentPlaylist = mutableListOf<Song>()
     private var currentSong = MutableLiveData<Song?>(null)
@@ -63,7 +61,7 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
                 )
 
                 is MainIntent.SetNewSongList -> setNewSongList(list, index)
-                is MainIntent.TryPlaySong -> tryGetSongUrl(song)
+//                is MainIntent.TryPlaySong -> tryGetSongUrl(song)
             }
         }
     }
@@ -109,32 +107,22 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
         { callback(it.songs) },
         { _, _ -> callback(null) })
 
-    /**
-     * Effect-only
-     */
-    private fun tryGetSongUrl(song: Song) = viewModelScope.launch {
-        job?.cancel()
-        job?.join()
-        job = launch(Dispatchers.IO) Job@{ // 加标签解决 scope 重名冲突问题
-//            playerModel.checkSongAbility(song.id,
+//    /**
+//     * Effect-only
+//     */
+//    private fun tryGetSongUrl(song: Song) = viewModelScope.launch {
+//        job?.cancel()
+//        job?.join()
+//        job = launch(Dispatchers.IO) Job@{ // 加标签解决 scope 重名冲突问题
+//            val cookie = appCookie
+//
+//            playerModel.getSongInfo(song.id, "jymaster", cookie,
 //                {
-//                    if (it.success) { // 呃呃呃 不知道为啥不同的机子会请求到不同的结果 干脆如果是 200 不检查了
-            val cookie = appCookie
-
-            playerModel.getSongInfo(song.id, "jymaster", cookie,
-                {
-                    sendEffect { MainEffect.TryPlaySongOkEffect(it.data[0].url, song) }
-                },
-                { _, _ ->
-                    sendEffect { MainEffect.TryPlaySongBadEffect("无法播放") }
-                })
-//                    } else {
-//                        sendEffect { MainEffect.TryPlaySongBadEffect(it.message) }
-//                    }
+//                    sendEffect { MainEffect.TryPlaySongOkEffect(it.data[0].url, song) }
 //                },
 //                { _, _ ->
 //                    sendEffect { MainEffect.TryPlaySongBadEffect("无法播放") }
 //                })
-        }
-    }
+//        }
+//    }
 }

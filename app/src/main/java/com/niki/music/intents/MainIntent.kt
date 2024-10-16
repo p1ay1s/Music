@@ -11,14 +11,16 @@ sealed class MainIntent {
         val page: Int,
     ) : MainIntent()
 
-    class TryPlaySong(val song: Song) : MainIntent()
+//    class TryPlaySong(val song: Song) : MainIntent()
 }
 
 sealed class MainEffect {
     data class GetSongsFromPlaylistOkEffect(val songList: List<Song>) : MainEffect()
     data object GetSongsFromPlaylistBadEffect : MainEffect()
-    data class TryPlaySongOkEffect(val url: String, val song: Song) : MainEffect()
-    data class TryPlaySongBadEffect(val msg: String) : MainEffect()
+//    data class TryPlaySongOkEffect(val url: String, val song: Song, val playlist: List<Song>) :
+//        MainEffect()
+
+//    data class TryPlaySongBadEffect(val msg: String) : MainEffect()
 }
 
 data object MainState

@@ -10,7 +10,7 @@ import com.p1ay1s.impl.ui.ViewBindingListAdapter
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
 interface SongAdapterListener {
-    fun onPlayMusic(song: Song)
+    fun onPlayMusic(list: List<Song>)
     fun onMoreClicked(song: Song)
 }
 
@@ -24,7 +24,14 @@ class SongAdapter(
 
     companion object {
         const val EXPLICIT = 1048576L
+
+
     }
+
+//    override fun getItemViewType(position: Int): Int {
+//        listener // TODO
+//        return super.getItemViewType(position)
+//    }
 
     fun setSongAdapterListener(l: SongAdapterListener) {
         listener = l
@@ -64,7 +71,7 @@ class SongAdapter(
 
     override fun LayoutSongBinding.onBindViewHolder(data: Song, position: Int) {
         root.setOnClickListener {
-            listener?.onPlayMusic(data)
+            listener?.onPlayMusic(getRelocatedList(data))
         }
 
         if (showImage)
@@ -84,6 +91,18 @@ class SongAdapter(
         more.setOnClickListener {
             listener?.onMoreClicked(data)
         }
+    }
+
+    private fun getRelocatedList(startSong: Song): List<Song> {
+        val list = mutableListOf<Song>()
+        currentList.apply {
+            if (isEmpty()) return emptyList()
+
+            val index = indexOf(startSong)
+            list.addAll(subList(index, size)) // 不用减一
+            list.addAll(subList(0, index))
+        }
+        return list.toList()
     }
 
     class SongCallback : DiffUtil.ItemCallback<Song>() {

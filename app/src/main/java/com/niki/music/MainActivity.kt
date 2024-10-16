@@ -6,13 +6,20 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.view.View
+import android.view.animation.AccelerateInterpolator
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.animation.DecelerateInterpolator
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
 import com.niki.common.utils.getNewTag
 import com.niki.common.values.FragmentTag
@@ -21,7 +28,6 @@ import com.niki.music.MusicController.releaseMusicController
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.ActivityMainBinding
-import com.niki.music.intents.MainEffect
 import com.niki.music.listen.ui.TopPlaylistFragment
 import com.niki.music.my.MyFragment
 import com.niki.music.my.login.dismissCallback
@@ -31,19 +37,23 @@ import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.appContext
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
+import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.impl.ViewBindingActivity
 import com.p1ay1s.util.ServiceBuilder.ping
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 var appLoadingDialog: LoadingDialog? = null
 var appFadeInAnim: Animation? = null
 
 class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
-    ActivityPreferences.TwoClicksListener, FragmentHost.OnIndexChangeListener,
-    MusicControllerListener, IView {
+    ActivityPreferences.TwoClicksListener, IView {
+
+    var binder: RemoteControlService.RemoteControlBinder? = null
 
     companion object {
         const val LISTEN_KEY = "LISTEN"
@@ -78,34 +88,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var currentTag = FragmentTag.LISTEN_FRAGMENT
     private var previousTag = FragmentTag.LISTEN_FRAGMENT
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.run {
-            putInt(LISTEN_KEY, listenIndex)
-            putInt(MY_KEY, myIndex)
-            putInt(SEARCH_KEY, searchIndex)
-
-            putInt(CURRENT, currentTag)
-            putInt(PREVIOUS, previousTag)
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState) // 包含 initBinding 的调用
-        savedInstanceState?.run {
-            listenIndex = getInt(LISTEN_KEY)
-            myIndex = getInt(MY_KEY)
-            searchIndex = getInt(SEARCH_KEY)
-
-            currentTag = getInt(CURRENT)
-            previousTag = getInt(PREVIOUS)
-        }
-    }
-
     override fun ActivityMainBinding.initBinding() {
         // 非得要 activity 的上下文
         appLoadingDialog = LoadingDialog(this@MainActivity)
-        MusicController.setListener(this@MainActivity)
+        MusicController.listener = (MusicControllerListenerImpl())
         mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
         appFadeInAnim = AnimationUtils.loadAnimation(this@MainActivity, R.anim.fade_in)
         registerMusicReceiver()
@@ -115,18 +101,44 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
         checkServerAbility()
 
+        val parentHeight = root.resources.displayMetrics.heightPixels
+        fragmentHostView.updateLayoutParams {
+            height = (parentHeight * 0.9).toInt()
+        }
+        bottomNavigation.updateLayoutParams {
+            height = (parentHeight * 0.1).toInt()
+        }
+
         mainViewModel.run {
             if (fragmentHost == null) {
                 fragmentHost =
                     fragmentHostView.create(supportFragmentManager, mainViewModel.fragmentMap)
-                fragmentHost?.setOnIndexChangeListener(this@MainActivity)
+                fragmentHost?.setOnIndexChangeListener(OnIndexChangeListenerImpl())
             } else {
                 fragmentHostView.restore(fragmentHost!!, supportFragmentManager)
-                fragmentHost?.setOnIndexChangeListener(this@MainActivity)
+                fragmentHost?.setOnIndexChangeListener(OnIndexChangeListenerImpl())
             }
         }
 
         bottomNavigation.setSwitchHandler()
+
+        with(BottomSheetBehavior.from(player)) {
+            state = BottomSheetBehavior.STATE_COLLAPSED
+            lifecycleScope.launch {
+                while (true) {
+                    delay(300)
+                    when (state) {
+                        BottomSheetBehavior.STATE_COLLAPSED -> logE("####", "cls")
+                        BottomSheetBehavior.STATE_EXPANDED -> logE("####", "epd")
+                        BottomSheetBehavior.STATE_HALF_EXPANDED -> logE("####", "hlf")
+                        BottomSheetBehavior.STATE_DRAGGING -> logE("####", "drg")
+                        BottomSheetBehavior.STATE_SETTLING -> logE("####", "st")
+                    }
+                }
+            }
+            addBottomSheetCallback(BottomSheetCallbackImpl())
+            peekHeight = (parentHeight * 0.2f).toInt()
+        }
     }
 
     /**
@@ -145,13 +157,16 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      * 检查通知权限, 有权限则启动通知栏播放器
      */
     private fun tryShowRemoteControl() {
-        withPermission(POST_NOTIFICATIONS) {
-            canPostNotification = it
-            if (!it)
-                toast("未授予通知权限, 无法启用状态栏控制")
-            else
-                startRemoteControl()
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            withPermission(POST_NOTIFICATIONS) {
+                canPostNotification = it
+                if (!it)
+                    toast("未授予通知权限, 无法启用状态栏控制")
+                else
+                    startRemoteControl()
+            }
+        else
+            toast("本设备不支持状态栏控制")
     }
 
     /**
@@ -185,8 +200,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         else -> throw Exception("using an invalid id!")
     }
 
-    override fun onResume() {
-        super.onResume()
+    // 在 on resume & on pause 设置会导致闪烁
+    override fun onStart() {
+        super.onStart()
         mainViewModel.fragmentHost?.show()// 防止残留
     }
 
@@ -201,15 +217,46 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         releaseMusicController()
     }
 
-    @SuppressLint("MissingSuperCall")
-    override fun onBackPressed() {
-        handleBackPress()
+
+    /**
+     * 处理 viewmodel 的事件
+     */
+    override fun handle() = lifecycleScope.apply {
+        playMusicJob?.cancel()
+//        playMusicJob = launch {
+//            mainViewModel.uiEffectFlow.collect {
+//                if (it is MainEffect.TryPlaySongOkEffect) {
+//                    binder?.changeSong(it.song) // 更新通知栏 remote views
+//                    MusicController.prepareSong(it.url)
+//                    MusicController.play()
+//                }
+//                if (it is MainEffect.TryPlaySongBadEffect) {
+//                    it.msg.toast()
+//                }
+//            }
+//        }
     }
+
+    fun onSongPass(playlist: List<Song>) {
+        MusicController.resetPlaylist(playlist)
+    }
+
+    private fun startRemoteControl() { // 启动前台服务通知
+        if (binder?.isBinderAlive == true) return
+        appContext?.run {
+            val i = Intent(this, RemoteControlService::class.java)
+            this.bindService(i, RemoteControlConnection(), Context.BIND_AUTO_CREATE)
+            this.startService(i)
+        }
+    }
+
+    @SuppressLint("MissingSuperCall")
+    override fun onBackPressed() = handleBackPress()
 
     /**
      * 返回逻辑
      *
-     * @param enableTwoClickToExit 点击 bottom nav 的时候不退出应用
+     * @param enableTwoClickToExit 传入 false 时点击不双击退出
      */
     private fun handleBackPress(enableTwoClickToExit: Boolean = true) {
         mainViewModel.run {
@@ -241,6 +288,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
+    // 双击退出应用的逻辑
     override fun twoClicksToExit() {
         if (oneMoreClickToExit) {
             finishAffinity()
@@ -257,78 +305,101 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     /**
-     * 记录索引
+     * 用于记录索引
      */
-    override fun onIndexChanged(index: Int) {
-        FragmentTag.apply {
-            when (index) {
-                LISTEN_FRAGMENT -> listenIndex = index
-                TOP_PLAYLIST_FRAGMENT -> {
-                    listenIndex = index
-                }
+    inner class OnIndexChangeListenerImpl : FragmentHost.OnIndexChangeListener {
 
-                PREVIEW_FRAGMENT -> searchIndex = index
-                RESULT_FRAGMENT -> {
-                    searchIndex = index
+        override fun onIndexChanged(index: Int) {
+            FragmentTag.apply {
+                when (index) {
+                    LISTEN_FRAGMENT -> listenIndex = index
+                    TOP_PLAYLIST_FRAGMENT -> {
+                        listenIndex = index
+                    }
+
+                    PREVIEW_FRAGMENT -> searchIndex = index
+                    RESULT_FRAGMENT -> {
+                        searchIndex = index
+                    }
                 }
+                previousTag = getNewTag(index)
             }
-            previousTag = getNewTag(index)
         }
     }
 
-    private fun startRemoteControl() { // 启动前台服务通知
-        if (mainViewModel.binder?.isBinderAlive == true) return
-        appContext?.run {
-            val i = Intent(this, RemoteControlService::class.java)
-            this.bindService(i, RemoteControlConnection(), Context.BIND_AUTO_CREATE)
-            this.startService(i)
+    // 旨在在 remote views 上显示准确的状态, 当 music controller 完成了工作才通知才更新通知
+    inner class MusicControllerListenerImpl : MusicControllerListener {
+        override fun onSwitchedToNext(song: Song) {
+            binder?.changeSong(song)
         }
-    }
 
-    override fun onSwitchToNext() {
-        "->".toast()
-    }
+        override fun onSwitchedToPrevious(song: Song) {
+            binder?.changeSong(song)
+        }
 
-    override fun onSwitchToPrevious() {
-        "<-".toast()
-    }
+        override fun onSongPaused() {
+            binder?.setPlayingStatus(false)
+        }
 
-    override fun onSongPaused() {
-        // if success ...
-        mainViewModel.binder?.setPlayingStatus(false)
-    }
+        override fun onSongPlayed(song: Song) {
+            binder?.changeSong(song)
+            binder?.setPlayingStatus(true)
+        }
 
-    override fun onSongPlayed() {
-        // if success ...
-        mainViewModel.binder?.setPlayingStatus(true)
+        override fun onProgressUpdated(new: Int) {
+            // TODO
+        }
     }
 
     /**
-     * 处理 viewmodel 的事件
+     * 用于通知播放器的 connection
      */
-    override fun handle() = lifecycleScope.apply {
-        playMusicJob?.cancel()
-        playMusicJob = launch {
-            mainViewModel.uiEffectFlow.collect {
-                if (it is MainEffect.TryPlaySongOkEffect) {
-                    mainViewModel.binder?.changeSong(it.song) // 更新通知栏 remote views
-                    MusicController.prepareSong(it.url)
-                    MusicController.play()
-                }
-                if (it is MainEffect.TryPlaySongBadEffect) {
-                    it.msg.toast()
-                }
-            }
-        }
-    }
-
     inner class RemoteControlConnection : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            mainViewModel.binder = service as RemoteControlService.RemoteControlBinder
+            binder = service as RemoteControlService.RemoteControlBinder
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
-            mainViewModel.binder = null
+            binder = null
+        }
+    }
+
+    /**
+     * 在拖动、自动变化和完全展开时隐藏导航栏
+     */
+    inner class BottomSheetCallbackImpl : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+        }
+
+        override fun onSlide(bottomSheet: View, slideOffset: Float) {
+            val bottomNavigationHeight = binding.bottomNavigation.height.toFloat()
+            val translationY = bottomNavigationHeight * slideOffset
+            binding.bottomNavigation.translationY = translationY
+        }
+    }
+
+    // 部分数据存取逻辑
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState) // 包含 initBinding 的调用
+        savedInstanceState?.run {
+            listenIndex = getInt(LISTEN_KEY)
+            myIndex = getInt(MY_KEY)
+            searchIndex = getInt(SEARCH_KEY)
+
+            currentTag = getInt(CURRENT)
+            previousTag = getInt(PREVIOUS)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.run {
+            putInt(LISTEN_KEY, listenIndex)
+            putInt(MY_KEY, myIndex)
+            putInt(SEARCH_KEY, searchIndex)
+
+            putInt(CURRENT, currentTag)
+            putInt(PREVIOUS, previousTag)
         }
     }
 }

@@ -5,12 +5,12 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
+import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.databinding.FragmentTopPlaylistBinding
-import com.niki.music.intents.MainIntent
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
 import com.p1ay1s.base.extension.toast
@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 
 class TopPlaylistFragment :
-    ViewBindingFragment<FragmentTopPlaylistBinding>(), SongAdapterListener {
+    ViewBindingFragment<FragmentTopPlaylistBinding>() {
 
     private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
@@ -35,8 +35,6 @@ class TopPlaylistFragment :
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
             background.alpha = 1 - alpha * alpha
-//            toolbar.visibility =
-//                if (abs(verticalOffset) == appBarLayout.totalScrollRange) View.VISIBLE else View.INVISIBLE
         }
 
         toolbar.title = currentTopPlaylist!!.name
@@ -92,7 +90,7 @@ class TopPlaylistFragment :
             showDetails = true,
             showImage = false
         )
-        songAdapter.setSongAdapterListener(this)
+        songAdapter.setSongAdapterListener(SongAdapterListenerImpl())
         baseLayoutManager = PreloadLayoutManager(
             requireActivity(),
             LinearLayoutManager.VERTICAL,
@@ -105,11 +103,14 @@ class TopPlaylistFragment :
         songAdapter.removeSongAdapterListener()
     }
 
-    override fun onPlayMusic(song: Song) {
-        mainViewModel.sendIntent(MainIntent.TryPlaySong(song))
-    }
+    inner class SongAdapterListenerImpl : SongAdapterListener {
+        override fun onPlayMusic(list: List<Song>) {
+            (activity as MainActivity).onSongPass(list)
+//            mainViewModel.sendIntent(MainIntent.TryPlaySong(song))
+        }
 
-    override fun onMoreClicked(song: Song) {
-        toast("more -> ${song.name}")
+        override fun onMoreClicked(song: Song) {
+            toast("more -> ${song.name}")
+        }
     }
 }

@@ -2,8 +2,6 @@ package com.niki.music.listen
 
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,8 +26,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView,
-    TopPlaylistAdapterListener {
+class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
     private lateinit var topAdapter: TopPlaylistAdapter
     private lateinit var topLayoutManager: ToMiddleLayoutManager
 
@@ -92,7 +89,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView,
 
     private fun initValues() {
         topAdapter = TopPlaylistAdapter()
-        topAdapter.setOnTopPlaylistAdapterListener(this)
+        topAdapter.setOnTopPlaylistAdapterListener(TopPlaylistAdapterListenerImpl())
 
         topLayoutManager = ToMiddleLayoutManager(
             requireActivity(),
@@ -120,55 +117,56 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView,
         playlistJob = null
     }
 
-    override fun onContact(position: Int): Boolean {
-        if (getItemRealPosition() == position) { // 是居中的 item , 打开
-            return true
-        } else {
-            requireScroll(position) // 不是居中的 , 滚动使其居中
-            return false
+    inner class TopPlaylistAdapterListenerImpl : TopPlaylistAdapterListener {
+        override fun onContact(position: Int): Boolean {
+            if (getItemRealPosition() == position) { // 是居中的 item , 打开
+                return true
+            } else {
+                requireScroll(position) // 不是居中的 , 滚动使其居中
+                return false
+            }
+        }
+
+        // adapter 准备完成 , 添加 fragment
+        override fun onReady() {
+            findFragmentHost()?.add(
+                FragmentTag.TOP_PLAYLIST_FRAGMENT,
+                TopPlaylistFragment::class.java,
+                R.anim.right_enter,
+                R.anim.fade_out
+            )
         }
     }
 
-    // adapter 准备完成 , 添加 fragment
-    override fun onReady() {
-        findFragmentHost()?.add(
-            FragmentTag.TOP_PLAYLIST_FRAGMENT,
-            TopPlaylistFragment::class.java,
-            R.anim.right_enter,
-            R.anim.fade_out
-        )
-    }
-}
+    /**
+     * 具有预加载功能的 layoutManager 子类
+     */
+    class ToMiddleLayoutManager(
+        context: Context,
+        orientation: Int,
+        size: Int = 4,
+        reverseLayout: Boolean = false
+    ) : PreloadLayoutManager(context, orientation, size, reverseLayout) {
+        override fun smoothScrollToPosition(
+            recyclerView: RecyclerView,
+            state: RecyclerView.State,
+            position: Int
+        ) {
+            val smoothScroller = CenterSmoothScroller(recyclerView.context)
+            smoothScroller.targetPosition = position
+            startSmoothScroll(smoothScroller)
+        }
 
-
-/**
- * 具有预加载功能的 layoutManager 子类
- */
-class ToMiddleLayoutManager(
-    context: Context,
-    orientation: Int,
-    size: Int = 4,
-    reverseLayout: Boolean = false
-) : PreloadLayoutManager(context, orientation, size, reverseLayout) {
-    override fun smoothScrollToPosition(
-        recyclerView: RecyclerView,
-        state: RecyclerView.State,
-        position: Int
-    ) {
-        val smoothScroller = CenterSmoothScroller(recyclerView.context)
-        smoothScroller.targetPosition = position
-        startSmoothScroll(smoothScroller)
-    }
-
-    private class CenterSmoothScroller(context: Context) : LinearSmoothScroller(context) {
-        override fun calculateDtToFit(
-            viewStart: Int,
-            viewEnd: Int,
-            boxStart: Int,
-            boxEnd: Int,
-            snapPreference: Int
-        ): Int {
-            return (boxStart + (boxEnd - boxStart) / 2) - (viewStart + (viewEnd - viewStart) / 2);
+        private class CenterSmoothScroller(context: Context) : LinearSmoothScroller(context) {
+            override fun calculateDtToFit(
+                viewStart: Int,
+                viewEnd: Int,
+                boxStart: Int,
+                boxEnd: Int,
+                snapPreference: Int
+            ): Int {
+                return (boxStart + (boxEnd - boxStart) / 2) - (viewStart + (viewEnd - viewStart) / 2);
+            }
         }
     }
 }
