@@ -1,22 +1,17 @@
 package com.niki.music.common.viewModels
 
+import android.graphics.drawable.Drawable
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.values.FragmentTag
-import com.niki.music.RemoteControlService
 import com.niki.music.intents.MainEffect
 import com.niki.music.intents.MainIntent
 import com.niki.music.intents.MainState
 import com.niki.music.listen.ListenFragment
 import com.niki.music.my.MyFragment
-import com.niki.music.my.appCookie
 import com.niki.music.search.preview.PreviewFragment
 import com.p1ay1s.base.ui.FragmentHost
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
     companion object {
@@ -28,12 +23,10 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
     private var job: Job? = null
 
     // 关于 current
-    var currentPlaylist = mutableListOf<Song>()
-    private var currentSong = MutableLiveData<Song?>(null)
-    private var currentSongIndex = 0
-    var isPlaying = MutableLiveData<Boolean>()
-    var songPosition = MutableLiveData<Int>()
-    var playMode = MutableLiveData(LOOP)
+//    var currentPlaylist = mutableListOf<Song>()
+    var playerBackground: Drawable? = null
+    var currentSong: Song? = null
+//    private var currentSongIndex = 0
 
     var fragmentHost: FragmentHost? = null // 保存 fragment 的状态
     val fragmentMap: LinkedHashMap<Int, Class<out Fragment>> by lazy {
@@ -44,8 +37,7 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
         )
     }
 
-    override fun initUiState() =
-        MainState
+    override fun initUiState() = MainState
 
     override fun handleIntent(intent: MainIntent) {
         intent.run {
@@ -60,7 +52,7 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
                     page,
                 )
 
-                is MainIntent.SetNewSongList -> setNewSongList(list, index)
+//                is MainIntent.SetNewSongList -> setNewSongList(list, index)
 //                is MainIntent.TryPlaySong -> tryGetSongUrl(song)
             }
         }
@@ -74,11 +66,11 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
 //
 //    }
 
-    private fun setNewSongList(list: MutableList<Song>, index: Int = 0) {
-        currentPlaylist = list
-        currentSongIndex = index
-        currentSong.value = currentPlaylist[currentSongIndex]
-    }
+//    private fun setNewSongList(list: MutableList<Song>, index: Int = 0) {
+//        currentPlaylist = list
+//        currentSongIndex = index
+//        currentSong.value = currentPlaylist[currentSongIndex]
+//    }
 
 //    fun switchMode() {
 //        when (playMode.value) {

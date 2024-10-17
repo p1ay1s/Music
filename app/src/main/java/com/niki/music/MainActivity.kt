@@ -60,19 +60,18 @@ var appFadeInAnim: Animation? = null
 class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     ActivityPreferences.TwoClicksListener {
 
-    var binder: RemoteControlService.RemoteControlBinder? = null
-    var playerBackground: Drawable? = null
-
     companion object {
         const val LISTEN_KEY = "LISTEN"
         const val MY_KEY = "MY"
         const val SEARCH_KEY = "SEARCH"
 
-        const val CURRENT = "current"
-        const val PREVIOUS = "previous"
+        const val CURRENT = "CURRENT"
+        const val PREVIOUS = "PREVIOUS"
 
         const val BOTTOM_NAV_WEIGHT = 0.1
     }
+
+    var binder: RemoteControlService.RemoteControlBinder? = null
 
     private var canPostNotification = false
 
@@ -120,6 +119,14 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 fragmentHostView.restore(fragmentHost!!, supportFragmentManager)
                 fragmentHost?.setOnIndexChangeListener(OnIndexChangeListenerImpl())
             }
+
+            // 重建时恢复状态
+            currentSong?.let { setSong(it) } ?: { songName.text = "未在播放" }
+
+            if (playerBackground == null)
+                playerBackground = player.background
+            if (playerBackground != null && playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED)
+                player.background = playerBackground
         }
 
         bottomNavigation.setSwitchHandler()
@@ -149,7 +156,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         playMode.setOnClickListener {
             MusicController.changePlayMode()
         }
-        playerBackground = player.background
+
         setViewsLayoutParams()
     }
 
@@ -342,20 +349,19 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     // 旨在在各个播放器上显示准确的状态, 当 music controller 完成了工作才通知才更新通知
     inner class MusicControllerListenerImpl : MusicControllerListener {
-        private var currentSong: Song? = null
 
         override fun onSwitchedToNext(song: Song) {
             binder?.changeSong(song)
-            if (currentSong != song)
+            if (mainViewModel.currentSong != song)
                 setSong(song)
-            currentSong = song
+            mainViewModel.currentSong = song
         }
 
         override fun onSwitchedToPrevious(song: Song) {
             binder?.changeSong(song)
-            if (currentSong != song)
+            if (mainViewModel.currentSong != song)
                 setSong(song)
-            currentSong = song
+            mainViewModel.currentSong = song
         }
 
         override fun onSongPaused() {
@@ -366,10 +372,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         override fun onSongPlayed(song: Song) {
             binding.play.switchImage(PlayButton.PAUSE) // 显示 || 按钮
             binder?.changeSong(song)
-            if (currentSong != song)
+            if (mainViewModel.currentSong != song)
                 setSong(song)
             binder?.setPlayingStatus(true)
-            currentSong = song
+            mainViewModel.currentSong = song
         }
 
         override fun onProgressUpdated(newProgress: Int) {
@@ -445,7 +451,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                     )
                 )
             } else {
-                binding.player.background = playerBackground
+                binding.player.background = mainViewModel.playerBackground
             }
         }
     }
@@ -465,7 +471,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         resource: Drawable,
                         transition: Transition<in Drawable?>?
                     ) {
-                        playerBackground = resource
+                        mainViewModel.playerBackground = resource
                         if (playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED) {
                             val transitionDrawable =
                                 TransitionDrawable(arrayOf(player.background, resource))

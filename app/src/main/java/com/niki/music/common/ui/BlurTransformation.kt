@@ -14,7 +14,10 @@ import java.nio.charset.Charset
 import java.security.MessageDigest
 
 /**
- * 虚化Transformation
+ * 虚化/模糊 Transformation
+ *
+ * 网上复制的, 还没学过
+ *
  * 更多效果参考：https://github.com/wasabeef/glide-transformations
  */
 class BlurTransformation @JvmOverloads constructor(

@@ -3,7 +3,7 @@ package com.niki.music.intents
 import com.niki.common.repository.dataclasses.song.Song
 
 sealed class MainIntent {
-    class SetNewSongList(val list: MutableList<Song>, val index: Int) : MainIntent()
+//    class SetNewSongList(val list: MutableList<Song>, val index: Int) : MainIntent()
     data object GetCatePlaylists : MainIntent()
     class GetSongsFromPlaylist(
         val id: String,
