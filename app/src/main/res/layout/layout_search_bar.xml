@@ -23,14 +23,14 @@
                 android:imeOptions="actionSearch"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="?attr/color_contrast" />
+                android:textColor="@color/contrast" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="?attr/color_background"
+            android:background="@color/background"
             app:layout_constraintEnd_toEndOf="@id/searchEdit"
             app:layout_constraintStart_toStartOf="@id/searchEdit"
             app:layout_constraintTop_toBottomOf="@id/searchEdit" />

@@ -72,16 +72,14 @@ class RemoteControlService : Service() {
         remoteViews.setOnClickPendingIntent(R.id.ivPrevious, pPrevious)
         remoteViews.setOnClickPendingIntent(R.id.ivNext, pNext)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "music control channel",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "music control channel",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(
             this,

@@ -4,7 +4,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/color_background"
+        android:background="@color/background"
         android:orientation="vertical">
 
         <com.niki.music.common.ui.SearchBar

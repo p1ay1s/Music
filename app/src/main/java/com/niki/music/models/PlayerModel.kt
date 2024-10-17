@@ -6,6 +6,7 @@ import com.niki.common.repository.dataclasses.song.getSongsFromPlaylistApi.GetSo
 import com.niki.common.services.PlayerService
 import com.p1ay1s.util.ServiceBuilder
 import com.p1ay1s.util.ServiceBuilder.requestEnqueue
+import com.p1ay1s.util.ServiceBuilder.requestExecute
 
 class PlayerModel {
     val playerService by lazy {
@@ -31,6 +32,14 @@ class PlayerModel {
         crossinline onSuccess: (GetSongInfoApiResponse) -> Unit,
         crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.getSongInfo(id, level, cookie), onSuccess, onError)
+
+    suspend inline fun getSongInfoExecute(
+        id: String,
+        level: String,
+        cookie: String?,
+        crossinline onSuccess: (GetSongInfoApiResponse) -> Unit,
+        crossinline onError: (Int?, String) -> Unit
+    ) = requestExecute(playerService.getSongInfo(id, level, cookie), onSuccess, onError)
 
     /**
      * 从歌单分页获取若干首歌曲

@@ -5,7 +5,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/color_background">
+        android:background="@color/background">
 
         <TextView
             android:id="@+id/loginText"
@@ -14,7 +14,7 @@
             android:layout_height="wrap_content"
             android:paddingTop="50dp"
             android:text="@string/login"
-            android:textColor="?attr/color_contrast"
+            android:textColor="@color/contrast"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="phone"
                 android:maxLines="1"
-                android:textColor="?attr/color_contrast" />
+                android:textColor="@color/contrast" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -81,7 +81,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:textColor="?attr/color_contrast" />
+                android:textColor="@color/contrast" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
@@ -89,9 +89,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:backgroundTint="?attr/color_contrast"
+            android:backgroundTint="@color/contrast"
             android:text="@string/login"
-            android:textColor="?attr/color_background"
+            android:textColor="@color/background"
             android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -106,7 +106,7 @@
             android:gravity="center"
             android:padding="50dp"
             android:text="@string/use_password"
-            android:textColor="?attr/color_contrast"
+            android:textColor="@color/contrast"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -118,7 +118,7 @@
             android:gravity="center"
             android:padding="50dp"
             android:text="@string/getCaptcha"
-            android:textColor="?attr/color_contrast"
+            android:textColor="@color/contrast"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>

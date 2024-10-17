@@ -12,10 +12,13 @@ import com.niki.common.utils.shuffle
 import com.niki.common.values.BroadCastMsg
 import com.niki.music.models.PlayerModel
 import com.niki.music.my.appCookie
+import com.p1ay1s.base.extension.toast
+import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 interface MusicControllerListener {
@@ -26,7 +29,6 @@ interface MusicControllerListener {
     fun onProgressUpdated(newProgress: Int)
     fun onPlayModeChanged(newState: Int)
 }
-
 
 object MusicController {
     // player state
@@ -51,6 +53,7 @@ object MusicController {
     private val playerModel by lazy { PlayerModel() }
     private val musicScope by lazy { CoroutineScope(Dispatchers.IO) }
     private var progressJob: Job? = null
+    private var loadMusicJob: Job? = null
 
     private var mainPlayer = Player()
 
@@ -129,17 +132,19 @@ object MusicController {
         }
     }
 
-    private fun startProgressJob() = runCatching {
+    private fun startProgressJob() {
         progressJob?.cancel()
 
         progressJob = musicScope.launch {
-            while (true) {
-                delay(500)
-                if (!mainPlayer.isPlaying) continue
-                val l = mainPlayer.duration // 音频总长度
-                val p = mainPlayer.currentPosition // 播放到的位置
-                val progress = (p * 100) / l // 得到播放进度的百分比
-                listener?.onProgressUpdated(progress)
+            runCatching {
+                while (isActive) {
+                    delay(500)
+                    if (!mainPlayer.isPlaying) continue
+                    val l = mainPlayer.duration // 音频总长度
+                    val p = mainPlayer.currentPosition // 播放到的位置
+                    val progress = (p * 100) / l // 得到播放进度的百分比
+                    listener?.onProgressUpdated(progress)
+                }
             }
         }
     }
@@ -224,8 +229,10 @@ object MusicController {
         }
 
         override fun start() {
-            super.start()
-            _isPlaying = true
+            musicScope.launch {
+                super.start()
+                _isPlaying = true
+            }
         }
 
         override fun pause() {
@@ -242,22 +249,32 @@ object MusicController {
         }
 
         fun prepareAndPlay(song: Song) {
-            playerModel.getSongInfo(song.id, "jymaster", appCookie,
-                {
-                    try {
-                        val url = it.data[0].url
-                        init()
-                        setDataSource(url)
-                        prepare()
-                        playerState = PREPARED
-                        start()
-                    } catch (_: Exception) {
-                        // 空指针
-                        next()
-                    }
-                },
-                { _, _ ->
-                })
+                loadMusicJob?.cancel()
+//                loadMusicJob?.join()
+                loadMusicJob = musicScope.launch {
+                    playerModel.getSongInfoExecute(song.id, "jymaster", appCookie,
+                        {
+                            if (isActive)
+                                try {
+                                    val url = it.data[0].url
+                                    init()
+                                    setDataSource(url)
+                                    prepare()
+                                    playerState = PREPARED
+                                    start()
+                                } catch (e: Exception) {
+                                    // 空指针
+                                    e.printStackTrace()
+                                    "播放失败".toast()
+                                }
+                            else
+                                logE("####","dead")
+                        },
+                        { _, _ ->
+                            if (isActive)
+                                "播放失败".toast()
+                        })
+            }
         }
     }
 

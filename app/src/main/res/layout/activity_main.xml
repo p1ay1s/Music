@@ -5,7 +5,7 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/color_background">
+        android:background="@color/background">
 
         <com.p1ay1s.base.ui.FragmentHostView
             android:id="@+id/fragmentHostView"
@@ -17,7 +17,7 @@
             android:id="@+id/player"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/medium_red"
+            android:background="@color/bar"
             app:behavior_hideable="false"
             app:layout_behavior="@string/bottom_sheet_behavior">
 
@@ -51,12 +51,11 @@
                 android:id="@+id/singerName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="5dp"
                 android:ellipsize="marquee"
                 android:gravity="start"
                 android:maxLines="1"
                 android:paddingHorizontal="20dp"
-                android:textColor="#a0ffffff"
+                android:textColor="#50ffffff"
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="@id/seekBar"
                 app:layout_constraintStart_toStartOf="@id/seekBar"
@@ -66,7 +65,7 @@
                 android:id="@+id/seekBar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="15dp"
+                android:layout_marginVertical="8dp"
                 android:background="@null"
                 android:progressDrawable="@drawable/seek_bar"
                 android:thumb="@android:color/transparent"
@@ -79,10 +78,10 @@
                 android:id="@+id/play"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
-                android:layout_marginTop="40dp"
+                app:layout_constraintBottom_toBottomOf="@id/previous"
                 app:layout_constraintEnd_toEndOf="@id/seekBar"
                 app:layout_constraintStart_toStartOf="@id/seekBar"
-                app:layout_constraintTop_toBottomOf="@id/seekBar"
+                app:layout_constraintTop_toTopOf="@id/previous"
                 app:tint="#a0ffffff" />
 
             <com.niki.music.common.ui.button.PreviousButton
@@ -103,14 +102,14 @@
                 android:id="@+id/next"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:layout_marginTop="40dp"
                 android:layout_marginEnd="20dp"
                 android:paddingVertical="5dp"
                 android:paddingStart="5dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_next"
+                app:layout_constraintBottom_toBottomOf="@id/previous"
                 app:layout_constraintEnd_toEndOf="@id/seekBar"
-                app:layout_constraintTop_toBottomOf="@id/seekBar"
+                app:layout_constraintTop_toTopOf="@id/previous"
                 app:tint="#a0ffffff" />
 
 
@@ -141,56 +140,14 @@
                 app:tint="#a0ffffff" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_gravity="bottom"
-            android:background="?attr/color_bar"
+            android:background="@color/bar"
             app:itemIconTint="@color/bottom_nav_color"
             app:itemTextColor="@color/bottom_nav_color"
             app:menu="@menu/menu_main" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>
-
-
-    <!--<?xml version="1.0" encoding="utf-8"?>-->
-    <!--<layout xmlns:android="http://schemas.android.com/apk/res/android"-->
-    <!--    xmlns:app="http://schemas.android.com/apk/res-auto">-->
-
-    <!--    <androidx.constraintlayout.widget.ConstraintLayout-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="match_parent"-->
-    <!--        android:background="?attr/color_background">-->
-
-    <!--        <com.p1ay1s.base.ui.FragmentHostView-->
-    <!--            android:id="@+id/fragmentHostView"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="0dp"-->
-    <!--            app:layout_constraintBottom_toTopOf="@id/bottomNavigation"-->
-    <!--            app:layout_constraintTop_toTopOf="parent" />-->
-
-    <!--        <View-->
-    <!--            android:id="@+id/player"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:background="@color/unselected"-->
-    <!--            app:behavior_hideable="true"-->
-    <!--            app:layout_behavior="@string/bottom_sheet_behavior"-->
-    <!--            app:layout_constraintBottom_toTopOf="@id/bottomNavigation" />-->
-
-    <!--        <com.google.android.material.bottomnavigation.BottomNavigationView-->
-    <!--            android:id="@+id/bottomNavigation"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:layout_marginStart="0dp"-->
-    <!--            android:layout_marginEnd="0dp"-->
-    <!--            android:background="?attr/color_bar"-->
-    <!--            app:itemIconTint="@color/bottom_nav_color"-->
-    <!--            app:itemTextColor="@color/bottom_nav_color"-->
-    <!--            app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--            app:menu="@menu/menu_main" />-->
-    <!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
-
-    <!--</layout>-->
