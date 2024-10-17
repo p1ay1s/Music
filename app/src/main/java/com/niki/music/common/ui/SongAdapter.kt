@@ -5,6 +5,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.repository.dataclasses.song.SongInfo
+import com.niki.common.utils.formatDetails
 import com.niki.music.databinding.LayoutSongBinding
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
@@ -39,31 +40,6 @@ class SongAdapter(
 
     fun removeSongAdapterListener() {
         listener = null
-    }
-
-    private fun TextView.formatDetails(song: Song) {
-        visibility = View.VISIBLE
-        val builder = StringBuilder()
-        builder.apply {
-            for (artist in song.ar) {
-                if (artist.name.isNotBlank()) {
-                    append(artist.name)
-                } else {
-                    continue
-                }
-                val index = song.ar.indexOf(artist)
-                when (index) { // 效果: a, b, c & d
-                    song.ar.size - 1 -> {} // the last
-                    song.ar.size - 2 -> append(" & ")
-                    else -> append(", ")
-                }
-            }
-            if (song.al.name.isNotBlank()) {
-                append(" • ")
-                append(song.al.name)
-            }
-        }
-        text = builder.toString()
     }
 
     private fun isExplicit(mark: Long?) =

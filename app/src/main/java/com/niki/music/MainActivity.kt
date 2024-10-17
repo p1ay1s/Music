@@ -6,27 +6,36 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.View
-import android.view.animation.AccelerateInterpolator
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.view.animation.DecelerateInterpolator
+import android.widget.SeekBar
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
+import com.niki.common.utils.formatDetails
 import com.niki.common.utils.getNewTag
 import com.niki.common.values.FragmentTag
 import com.niki.music.MusicController.registerMusicReceiver
 import com.niki.music.MusicController.releaseMusicController
+import com.niki.music.common.ui.BlurTransformation
+import com.niki.music.common.ui.button.PlayButton
+import com.niki.music.common.ui.button.PlayModeButton
 import com.niki.music.common.viewModels.MainViewModel
-import com.niki.music.common.views.IView
 import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ui.TopPlaylistFragment
 import com.niki.music.my.MyFragment
@@ -37,21 +46,20 @@ import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.appContext
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
-import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.impl.ViewBindingActivity
+import com.p1ay1s.util.ImageSetter.setRadiusImgView
 import com.p1ay1s.util.ServiceBuilder.ping
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
 
 var appLoadingDialog: LoadingDialog? = null
 var appFadeInAnim: Animation? = null
 
 class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
-    ActivityPreferences.TwoClicksListener, IView {
+    ActivityPreferences.TwoClicksListener {
 
     var binder: RemoteControlService.RemoteControlBinder? = null
 
@@ -62,12 +70,13 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
         const val CURRENT = "current"
         const val PREVIOUS = "previous"
+
+        const val BOTTOM_NAV_WEIGHT = 0.1
     }
 
     private var canPostNotification = false
 
     private var exitJob: Job? = null
-    private var playMusicJob: Job? = null
 
     private var oneMoreClickToExit = false
 
@@ -88,6 +97,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var currentTag = FragmentTag.LISTEN_FRAGMENT
     private var previousTag = FragmentTag.LISTEN_FRAGMENT
 
+    private val playerBehavior
+        get() = BottomSheetBehavior.from(binding.player)
+
     override fun ActivityMainBinding.initBinding() {
         // 非得要 activity 的上下文
         appLoadingDialog = LoadingDialog(this@MainActivity)
@@ -95,19 +107,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
         appFadeInAnim = AnimationUtils.loadAnimation(this@MainActivity, R.anim.fade_in)
         registerMusicReceiver()
-        tryShowRemoteControl()
-
-        handle()
 
         checkServerAbility()
-
-        val parentHeight = root.resources.displayMetrics.heightPixels
-        fragmentHostView.updateLayoutParams {
-            height = (parentHeight * 0.9).toInt()
-        }
-        bottomNavigation.updateLayoutParams {
-            height = (parentHeight * 0.1).toInt()
-        }
+        tryShowRemoteControl()
 
         mainViewModel.run {
             if (fragmentHost == null) {
@@ -122,22 +124,63 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
         bottomNavigation.setSwitchHandler()
 
-        with(BottomSheetBehavior.from(player)) {
+        playerBehavior.apply {
             state = BottomSheetBehavior.STATE_COLLAPSED
-            lifecycleScope.launch {
-                while (true) {
-                    delay(300)
-                    when (state) {
-                        BottomSheetBehavior.STATE_COLLAPSED -> logE("####", "cls")
-                        BottomSheetBehavior.STATE_EXPANDED -> logE("####", "epd")
-                        BottomSheetBehavior.STATE_HALF_EXPANDED -> logE("####", "hlf")
-                        BottomSheetBehavior.STATE_DRAGGING -> logE("####", "drg")
-                        BottomSheetBehavior.STATE_SETTLING -> logE("####", "st")
-                    }
-                }
-            }
             addBottomSheetCallback(BottomSheetCallbackImpl())
-            peekHeight = (parentHeight * 0.2f).toInt()
+            player.setOnClickListener {
+                if (this.state != BottomSheetBehavior.STATE_EXPANDED)
+                    this.state = BottomSheetBehavior.STATE_EXPANDED
+            }
+        }
+
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                if (fromUser)
+                    MusicController.seekToPosition(progress)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
+
+        play.setOnClickListener {
+            MusicController.run {
+                if (isPlaying) pause() else play()
+            }
+        }
+        previous.setOnClickListener {
+            MusicController.previous()
+        }
+        next.setOnClickListener {
+            MusicController.next()
+        }
+        playMode.setOnClickListener {
+            MusicController.changePlayMode()
+        }
+
+        setViewsLayoutParams()
+    }
+
+    /**
+     * 不用约束布局只能用 layout params 设置
+     */
+    private fun setViewsLayoutParams() {
+        binding.apply {
+            val parentHeight = root.resources.displayMetrics.heightPixels
+            val parentWeight = root.resources.displayMetrics.widthPixels
+            fragmentHostView.updateLayoutParams {
+                height = (parentHeight * (1 - BOTTOM_NAV_WEIGHT)).toInt()
+            }
+            bottomNavigation.updateLayoutParams {
+                height = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
+            }
+            cover.updateLayoutParams {
+                width = (0.85 * parentWeight).toInt()
+                height = (0.85 * parentWeight).toInt()
+            }
+
+            playerBehavior.peekHeight = (parentHeight * 2 * BOTTOM_NAV_WEIGHT).toInt()
         }
     }
 
@@ -215,26 +258,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         super.onDestroy()
         mainViewModel.fragmentHost?.removeOnIndexChangeListener()
         releaseMusicController()
-    }
-
-
-    /**
-     * 处理 viewmodel 的事件
-     */
-    override fun handle() = lifecycleScope.apply {
-        playMusicJob?.cancel()
-//        playMusicJob = launch {
-//            mainViewModel.uiEffectFlow.collect {
-//                if (it is MainEffect.TryPlaySongOkEffect) {
-//                    binder?.changeSong(it.song) // 更新通知栏 remote views
-//                    MusicController.prepareSong(it.url)
-//                    MusicController.play()
-//                }
-//                if (it is MainEffect.TryPlaySongBadEffect) {
-//                    it.msg.toast()
-//                }
-//            }
-//        }
     }
 
     fun onSongPass(playlist: List<Song>) {
@@ -329,25 +352,48 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     // 旨在在 remote views 上显示准确的状态, 当 music controller 完成了工作才通知才更新通知
     inner class MusicControllerListenerImpl : MusicControllerListener {
+        private var currentSong: Song? = null
+
         override fun onSwitchedToNext(song: Song) {
             binder?.changeSong(song)
+            if (currentSong != song)
+                setSong(song)
+            currentSong = song
         }
 
         override fun onSwitchedToPrevious(song: Song) {
             binder?.changeSong(song)
+            if (currentSong != song)
+                setSong(song)
+            currentSong = song
         }
 
         override fun onSongPaused() {
             binder?.setPlayingStatus(false)
+            binding.play.switchImage(PlayButton.PLAY) // 暂停时显示类似 |> 的按钮
         }
 
         override fun onSongPlayed(song: Song) {
+            binding.play.switchImage(PlayButton.PAUSE) // 显示 || 按钮
             binder?.changeSong(song)
+            if (currentSong != song)
+                setSong(song)
             binder?.setPlayingStatus(true)
+            currentSong = song
         }
 
-        override fun onProgressUpdated(new: Int) {
-            // TODO
+        override fun onProgressUpdated(newProgress: Int) {
+            binding.seekBar.progress = newProgress
+        }
+
+        override fun onPlayModeChanged(newState: Int) {
+            binding.playMode.run {
+                when (newState) {
+                    MusicController.LOOP -> switchImage(PlayModeButton.LOOP)
+                    MusicController.SINGLE -> switchImage(PlayModeButton.SINGLE)
+                    MusicController.RANDOM -> switchImage(PlayModeButton.RANDOM)
+                }
+            }
         }
     }
 
@@ -365,17 +411,64 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     /**
-     * 在拖动、自动变化和完全展开时隐藏导航栏
+     * 绑定播放器和导航栏(播放器展开时导航栏收缩)
      */
     inner class BottomSheetCallbackImpl : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onStateChanged(bottomSheet: View, newState: Int) {
-        }
 
+        override fun onStateChanged(bottomSheet: View, newState: Int) {}
+
+        /**
+         * [0, 1] 表示介于折叠和展开状态之间, [-1, 0] 介于隐藏和折叠状态之间, 此处由于禁止 hide 所以只会取值在[0, 1]
+         */
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            val bottomNavigationHeight = binding.bottomNavigation.height.toFloat()
-            val translationY = bottomNavigationHeight * slideOffset
+            val bottomNavigationHeight = binding.bottomNavigation.height.toFloat() //
+
+            var n = slideOffset * 2
+            if (n > 1) n = 1F
+            val translationY =
+                bottomNavigationHeight * n // 此处 slideOffset 完全可以当作一个百分数来看待
             binding.bottomNavigation.translationY = translationY
         }
+    }
+
+    private fun setSong(song: Song) {
+        binding.run {
+            Glide.with(this@MainActivity)
+                .load(song.al.picUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .centerCrop()
+                .transform(BlurTransformation(this@MainActivity, 140)) // 分两次数值小会快点
+                .transform(BlurTransformation(this@MainActivity, 140))
+                .into(object : CustomTarget<Drawable?>() {
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        transition: Transition<in Drawable?>?
+                    ) {
+                        player.background = resource
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {}
+
+                })
+            cover.setRadiusImgView(song.al.picUrl, radius = 40)
+            songName.text = song.name
+            singerName.formatDetails(song)
+        }
+    }
+
+    private fun setPlayerRadius(radius: Float) {
+        val shape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(Color.RED) // 设置背景颜色
+            cornerRadii = floatArrayOf(
+                radius, radius, // 左上角
+                radius, radius, // 右上角
+                0f, 0f,       // 右下角
+                0f, 0f        // 左下角
+            )
+        }
+
+        binding.player.background = shape
     }
 
     // 部分数据存取逻辑

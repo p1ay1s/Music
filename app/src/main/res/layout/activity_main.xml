@@ -13,27 +13,145 @@
             android:layout_height="0dp"
             android:layout_gravity="top" />
 
-        <View
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/player"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/unselected"
+            android:layout_height="match_parent"
+            android:background="@color/medium_red"
             app:behavior_hideable="false"
-            android:layout_gravity="bottom"
-            app:layout_behavior="@string/bottom_sheet_behavior" />
+            app:layout_behavior="@string/bottom_sheet_behavior">
+
+            <ImageView
+                android:id="@+id/cover"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="100dp"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/songName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:ellipsize="marquee"
+                android:gravity="start"
+                android:maxLines="1"
+                android:paddingHorizontal="20dp"
+                android:textColor="#a0ffffff"
+                android:textSize="25sp"
+                app:layout_constraintEnd_toEndOf="@id/seekBar"
+                app:layout_constraintStart_toStartOf="@id/seekBar"
+                app:layout_constraintTop_toBottomOf="@id/cover" />
+
+            <TextView
+                android:id="@+id/singerName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="5dp"
+                android:ellipsize="marquee"
+                android:gravity="start"
+                android:maxLines="1"
+                android:paddingHorizontal="20dp"
+                android:textColor="#a0ffffff"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="@id/seekBar"
+                app:layout_constraintStart_toStartOf="@id/seekBar"
+                app:layout_constraintTop_toBottomOf="@id/songName" />
+
+            <SeekBar
+                android:id="@+id/seekBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="15dp"
+                android:background="@null"
+                android:progressDrawable="@drawable/seek_bar"
+                android:thumb="@android:color/transparent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/singerName"
+                app:layout_constraintWidth_percent="0.9" />
+
+            <com.niki.music.common.ui.button.PlayButton
+                android:id="@+id/play"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginTop="40dp"
+                app:layout_constraintEnd_toEndOf="@id/seekBar"
+                app:layout_constraintStart_toStartOf="@id/seekBar"
+                app:layout_constraintTop_toBottomOf="@id/seekBar"
+                app:tint="#a0ffffff" />
+
+            <com.niki.music.common.ui.button.PreviousButton
+                android:id="@+id/previous"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="40dp"
+                android:paddingVertical="5dp"
+                android:paddingEnd="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_previous"
+                app:layout_constraintStart_toStartOf="@id/seekBar"
+                app:layout_constraintTop_toBottomOf="@id/seekBar"
+                app:tint="#a0ffffff" />
+
+            <com.niki.music.common.ui.button.NextButton
+                android:id="@+id/next"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="20dp"
+                android:paddingVertical="5dp"
+                android:paddingStart="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_next"
+                app:layout_constraintEnd_toEndOf="@id/seekBar"
+                app:layout_constraintTop_toBottomOf="@id/seekBar"
+                app:tint="#a0ffffff" />
+
+
+            <com.niki.music.common.ui.button.PlayModeButton
+                android:id="@+id/playMode"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginBottom="25dp"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_loop"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:tint="#a0ffffff" />
+
+            <ImageView
+                android:id="@+id/playlist"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginBottom="25dp"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_list"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:tint="#a0ffffff" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_gravity="bottom"
             android:background="?attr/color_bar"
             app:itemIconTint="@color/bottom_nav_color"
             app:itemTextColor="@color/bottom_nav_color"
             app:menu="@menu/menu_main" />
-
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
 </layout>
 
 

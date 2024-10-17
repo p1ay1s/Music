@@ -13,7 +13,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
-// 摘自招新系统，略有修改
+fun <T> shuffle(list: MutableList<T>) {
+    // 从列表末尾开始
+    for (i in list.size - 1 downTo 1) {
+        // 得到一个随机索引 `j` 使得 `0 <= j <= i`
+        val j = Random.nextInt(i + 1)
+
+        // 将列表中第 i 个位置的元素与第 j 个位置的元素交换
+        val temp = list[i]
+        list[i] = list[j]
+        list[j] = temp
+    }
+}
 
 fun getNewTag(index: Int): Int {
     FragmentTag.apply {
