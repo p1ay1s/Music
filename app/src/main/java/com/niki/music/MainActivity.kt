@@ -31,8 +31,9 @@ import com.niki.common.utils.getNewTag
 import com.niki.common.utils.intersectionPoint
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
-import com.niki.music.MusicController.registerMusicReceiver
-import com.niki.music.MusicController.releaseMusicController
+import com.niki.music.RemoteControlService.Companion.LOOP
+import com.niki.music.RemoteControlService.Companion.RANDOM
+import com.niki.music.RemoteControlService.Companion.SINGLE
 import com.niki.music.common.ui.BlurTransformation
 import com.niki.music.common.ui.button.PlayButton
 import com.niki.music.common.ui.button.PlayModeButton
@@ -75,7 +76,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         const val BOTTOM_NAV_WEIGHT = 0.1
     }
 
-    private var binder: RemoteControlService.RemoteControlBinder? = null
+    private var serviceBinder: RemoteControlService.RemoteControlBinder? = null
     private var connection = RemoteControlConnection()
 
     private var canPostNotification = false
@@ -109,10 +110,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     override fun ActivityMainBinding.initBinding() {
         // 非得要 activity 的上下文
         appLoadingDialog = LoadingDialog(this@MainActivity)
-        MusicController.listener = MusicControllerListenerImpl()
         mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
         appFadeInAnim = AnimationUtils.loadAnimation(this@MainActivity, R.anim.fade_in)
-        registerMusicReceiver()
 
         checkServerUsability()
         tryShowRemoteControl()
@@ -147,22 +146,19 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             }
         }
 
-
         seekBar.setOnSeekBarChangeListener(OnSeekBarChangeListenerImpl())
 
         play.setOnClickListener {
-            MusicController.run {
-                if (isPlaying) pause() else play()
-            }
+            serviceBinder?.play()
         }
         previous.setOnClickListener {
-            MusicController.previous()
+            serviceBinder?.previous()
         }
         next.setOnClickListener {
-            MusicController.next()
+            serviceBinder?.next()
         }
         playMode.setOnClickListener {
-            MusicController.changePlayMode()
+            serviceBinder?.changePlayMode()
         }
 
         setViewsLayoutParams()
@@ -263,19 +259,19 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     override fun onDestroy() {
         super.onDestroy()
         mainViewModel.fragmentHost?.removeOnIndexChangeListener()
-        releaseMusicController()
+        serviceBinder?.setListener(null)
         unbindService(connection) // 不仅是要同一个 connection, 还得是同一个 context
     }
 
     fun onSongPass(playlist: List<Song>) {
-        MusicController.resetPlaylist(playlist)
+        serviceBinder?.resetPlaylist(playlist)
     }
 
     private fun startRemoteControl() { // 启动前台服务通知
-        if (binder?.isBinderAlive == true) return
+        if (serviceBinder?.isBinderAlive == true) return
         val i = Intent(this, RemoteControlService::class.java)
-        this.bindService(i, connection, Context.BIND_AUTO_CREATE)
-        this.startService(i)
+        bindService(i, connection, Context.BIND_AUTO_CREATE)
+        startService(i)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -355,34 +351,15 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     // 旨在在各个播放器上显示准确的状态, 当 music controller 完成了工作才通知才更新通知
-    inner class MusicControllerListenerImpl : MusicControllerListener {
+    inner class MusicControllerListenerImpl : MusicServiceListener {
 
-        override fun onSwitchedToNext(song: Song) {
-            binder?.changeSong(song)
-            if (mainViewModel.currentSong != song)
+        override fun onPlayingStateChanged(song: Song, isPlaying: Boolean) {
+            if (mainViewModel.currentSong != song) {
                 setSong(song)
-            mainViewModel.currentSong = song
-        }
-
-        override fun onSwitchedToPrevious(song: Song) {
-            binder?.changeSong(song)
-            if (mainViewModel.currentSong != song)
-                setSong(song)
-            mainViewModel.currentSong = song
-        }
-
-        override fun onSongPaused() {
-            binder?.setPlayingStatus(false)
-            binding.play.switchImage(PlayButton.PLAY) // 暂停时显示 |> 的按钮
-        }
-
-        override fun onSongPlayed(song: Song) {
-            binding.play.switchImage(PlayButton.PAUSE) // 显示 || 按钮
-            binder?.changeSong(song)
-            if (mainViewModel.currentSong != song)
-                setSong(song)
-            binder?.setPlayingStatus(true)
-            mainViewModel.currentSong = song
+                mainViewModel.currentSong = song
+            }
+            val target = if (isPlaying) PlayButton.PAUSE else PlayButton.PLAY
+            binding.play.switchImage(target)
         }
 
         override fun onProgressUpdated(newProgress: Int) {
@@ -392,9 +369,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         override fun onPlayModeChanged(newState: Int) {
             binding.playMode.run {
                 when (newState) {
-                    MusicController.LOOP -> switchImage(PlayModeButton.LOOP)
-                    MusicController.SINGLE -> switchImage(PlayModeButton.SINGLE)
-                    MusicController.RANDOM -> switchImage(PlayModeButton.RANDOM)
+                    LOOP -> switchImage(PlayModeButton.LOOP)
+                    SINGLE -> switchImage(PlayModeButton.SINGLE)
+                    RANDOM -> switchImage(PlayModeButton.RANDOM)
                 }
             }
         }
@@ -405,11 +382,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     inner class RemoteControlConnection : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            binder = service as RemoteControlService.RemoteControlBinder
+            serviceBinder = service as RemoteControlService.RemoteControlBinder
+            serviceBinder?.setListener(MusicControllerListenerImpl())
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
-            binder = null
+            serviceBinder = null
         }
     }
 
@@ -423,7 +401,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         override fun onStartTrackingTouch(seekBar: SeekBar) {}
 
         override fun onStopTrackingTouch(seekBar: SeekBar) {
-            MusicController.seekToPosition(musicProgress)
+            serviceBinder?.seekToPosition(musicProgress)
         }
     }
 
@@ -432,12 +410,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      * 绑定播放器和导航栏(播放器展开时导航栏收缩)
      */
     inner class BottomSheetCallbackImpl : BottomSheetBehavior.BottomSheetCallback() {
-        private lateinit var pivot: Point
-
-
-        private fun calculatePivot() {
-
-        }
 
         override fun onStateChanged(bottomSheet: View, newState: Int) {}
 
@@ -454,7 +426,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             bindCover(slideOffset)
 
-            if (slideOffset < 0.005) {
+            if (slideOffset < 0.005) { // 拉动一点点就隐藏歌名和设置背景
                 binding.player.setBackgroundColor(
                     ContextCompat.getColor(
                         this@MainActivity,
@@ -466,10 +438,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 binding.player.background = mainViewModel.playerBackground
                 binding.smallSongName.visibility = View.INVISIBLE
             }
-
         }
-
-
     }
 
     private fun bindCover(slideOffset: Float) {
@@ -484,8 +453,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             lateinit var pivot: Point
             val minScale = (navHeight * 0.8F) / coverHeight // 使封面宽高到达最小的 scale 因子
-
-            logE("####", "coverHeight: $coverHeight")
 
             val scale =
                 (1 - slideOffset) * minScale + slideOffset  // (1 - t) * C + t * A 谁能想到要用到这么条鬼公式, 作用是当 slide offset 约为 0 时结果为 minScale
@@ -526,14 +493,15 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                             val transitionDrawable =
                                 TransitionDrawable(arrayOf(player.background, resource))
                             player.background = transitionDrawable
-                            transitionDrawable.startTransition(200)
+                            transitionDrawable.startTransition(600)
                         }
                     }
 
                     override fun onLoadCleared(placeholder: Drawable?) {}
                 })
             cover.setRadiusImgView(song.al.picUrl, radius = 40)
-            bindCover(0F)
+            if (playerBehavior.state == BottomSheetBehavior.STATE_COLLAPSED)
+                bindCover(0F)
             songName.text = song.name
             smallSongName.text = song.name
             singerName.setSongDetails(song)

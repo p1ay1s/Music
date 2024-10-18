@@ -14,19 +14,9 @@ import com.p1ay1s.base.ui.FragmentHost
 import kotlinx.coroutines.Job
 
 class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
-    companion object {
-        const val SINGLE = 0
-        const val LOOP = 1
-        const val RANDOM = 2
-    }
 
-    private var job: Job? = null
-
-    // 关于 current
-//    var currentPlaylist = mutableListOf<Song>()
     var playerBackground: Drawable? = null
     var currentSong: Song? = null
-//    private var currentSongIndex = 0
 
     var fragmentHost: FragmentHost? = null // 保存 fragment 的状态
 
@@ -52,33 +42,9 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
                     limit,
                     page,
                 )
-
-//                is MainIntent.SetNewSongList -> setNewSongList(list, index)
-//                is MainIntent.TryPlaySong -> tryGetSongUrl(song)
             }
         }
     }
-
-//        fun addSongToNext(song: Song) {
-//        if (currentPlayList.size <= 1)
-//            currentPlayList.add(song)
-//        else
-//            currentPlayList.add(currentIndex + 1, song)
-//
-//    }
-
-//    private fun setNewSongList(list: MutableList<Song>, index: Int = 0) {
-//        currentPlaylist = list
-//        currentSongIndex = index
-//        currentSong.value = currentPlaylist[currentSongIndex]
-//    }
-
-//    fun switchMode() {
-//        when (playMode.value) {
-//            RANDOM -> playMode.value = SINGLE
-//            else -> playMode.value = playMode.value?.plus(1)
-//        }
-//    }
 
     private fun getSongsFromPlaylist(
         id: String,
@@ -99,23 +65,4 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
         page,
         { callback(it.songs) },
         { _, _ -> callback(null) })
-
-//    /**
-//     * Effect-only
-//     */
-//    private fun tryGetSongUrl(song: Song) = viewModelScope.launch {
-//        job?.cancel()
-//        job?.join()
-//        job = launch(Dispatchers.IO) Job@{ // 加标签解决 scope 重名冲突问题
-//            val cookie = appCookie
-//
-//            playerModel.getSongInfo(song.id, "jymaster", cookie,
-//                {
-//                    sendEffect { MainEffect.TryPlaySongOkEffect(it.data[0].url, song) }
-//                },
-//                { _, _ ->
-//                    sendEffect { MainEffect.TryPlaySongBadEffect("无法播放") }
-//                })
-//        }
-//    }
 }
