@@ -128,7 +128,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             }
 
             // 重建时恢复状态
-            currentSong?.let { setSong(it) } ?: { songName.text = "未在播放" }
+            currentSong?.let { setSong(it) }
 
             if (playerBackground == null)
                 playerBackground = player.background
@@ -454,15 +454,17 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             bindCover(slideOffset)
 
-            if (slideOffset < 0.01) {
+            if (slideOffset < 0.005) {
                 binding.player.setBackgroundColor(
                     ContextCompat.getColor(
                         this@MainActivity,
                         R.color.bar
                     )
                 )
+                binding.smallSongName.visibility = View.VISIBLE
             } else {
                 binding.player.background = mainViewModel.playerBackground
+                binding.smallSongName.visibility = View.INVISIBLE
             }
 
         }
@@ -481,7 +483,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             val minMargin = 0.1F * navHeight // 封面收缩后距离播放器的最小间距
 
             lateinit var pivot: Point
-            val minScale = (navHeight - 30) / coverHeight // 使封面宽高到达最小的 scale 因子
+            val minScale = (navHeight * 0.8F) / coverHeight // 使封面宽高到达最小的 scale 因子
 
             logE("####", "coverHeight: $coverHeight")
 
@@ -533,6 +535,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             cover.setRadiusImgView(song.al.picUrl, radius = 40)
             bindCover(0F)
             songName.text = song.name
+            smallSongName.text = song.name
             singerName.setSongDetails(song)
         }
     }

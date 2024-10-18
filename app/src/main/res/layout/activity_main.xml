@@ -21,6 +21,21 @@
             app:behavior_hideable="false"
             app:layout_behavior="@string/bottom_sheet_behavior">
 
+            <TextView
+                android:id="@+id/smallSongName"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:ellipsize="marquee"
+                android:gravity="start|center_vertical"
+                android:maxLines="1"
+                android:paddingHorizontal="20dp"
+                android:textColor="@color/contrast"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_percent="0.1"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_percent="0.86" />
+
             <ImageView
                 android:id="@+id/cover"
                 android:layout_width="200dp"
