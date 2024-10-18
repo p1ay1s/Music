@@ -31,9 +31,9 @@ import com.niki.common.utils.getNewTag
 import com.niki.common.utils.intersectionPoint
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
-import com.niki.music.RemoteControlService.Companion.LOOP
-import com.niki.music.RemoteControlService.Companion.RANDOM
-import com.niki.music.RemoteControlService.Companion.SINGLE
+import com.niki.music.MusicService.Companion.LOOP
+import com.niki.music.MusicService.Companion.RANDOM
+import com.niki.music.MusicService.Companion.SINGLE
 import com.niki.music.common.ui.BlurTransformation
 import com.niki.music.common.ui.button.PlayButton
 import com.niki.music.common.ui.button.PlayModeButton
@@ -47,7 +47,6 @@ import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
-import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.impl.ViewBindingActivity
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
@@ -76,10 +75,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         const val BOTTOM_NAV_WEIGHT = 0.1
     }
 
-    private var serviceBinder: RemoteControlService.RemoteControlBinder? = null
-    private var connection = RemoteControlConnection()
-
-    private var canPostNotification = false
+    private var serviceBinder: MusicService.MusicServiceBinder? = null
+    private var connection = MusicServiceConnection()
 
     private var exitJob: Job? = null
 
@@ -114,7 +111,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         appFadeInAnim = AnimationUtils.loadAnimation(this@MainActivity, R.anim.fade_in)
 
         checkServerUsability()
-        tryShowRemoteControl()
+        startMusicSerivce()
 
         mainViewModel.run {
             if (fragmentHost == null) {
@@ -201,14 +198,17 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     /**
      * 检查通知权限, 有权限则启动通知栏播放器
      */
-    private fun tryShowRemoteControl() {
+    private fun startMusicSerivce() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             withPermission(POST_NOTIFICATIONS) {
-                canPostNotification = it
                 if (!it)
                     toast("未授予通知权限, 无法启用状态栏控制")
-                else
-                    startRemoteControl()
+                else {
+                    if (serviceBinder?.isBinderAlive == true) return@withPermission
+                    val i = Intent(this, MusicService::class.java)
+                    bindService(i, connection, Context.BIND_AUTO_CREATE)
+                    startService(i)
+                }
             }
         else
             toast("本设备不支持状态栏控制")
@@ -265,13 +265,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     fun onSongPass(playlist: List<Song>) {
         serviceBinder?.resetPlaylist(playlist)
-    }
-
-    private fun startRemoteControl() { // 启动前台服务通知
-        if (serviceBinder?.isBinderAlive == true) return
-        val i = Intent(this, RemoteControlService::class.java)
-        bindService(i, connection, Context.BIND_AUTO_CREATE)
-        startService(i)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -380,9 +373,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     /**
      * 用于通知播放器的 connection
      */
-    inner class RemoteControlConnection : ServiceConnection {
+    inner class MusicServiceConnection : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            serviceBinder = service as RemoteControlService.RemoteControlBinder
+            serviceBinder = service as MusicService.MusicServiceBinder
             serviceBinder?.setListener(MusicControllerListenerImpl())
         }
 

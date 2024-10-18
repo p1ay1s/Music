@@ -43,7 +43,7 @@ interface MusicServiceListener {
     fun onPlayModeChanged(newState: Int)
 }
 
-class RemoteControlService : Service() {
+class MusicService : Service() {
     companion object {
         const val CHANNEL_ID = "p1ay1s.music"
         const val NOTIFICATION_ID = 666
@@ -65,14 +65,10 @@ class RemoteControlService : Service() {
     }
 
     private lateinit var remoteViews: RemoteViews
-    private val binder = RemoteControlBinder()
+    private val binder = MusicServiceBinder()
     private var listener: MusicServiceListener? = null
 
     private var _isPlaying = MutableLiveData(false)
-        get() {
-            logE("####", field.value.toString())
-            return field
-        }
 
     private var _playMode = MutableLiveData(LOOP)
 
@@ -112,11 +108,11 @@ class RemoteControlService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val iSwitch = Intent(this, RemoteControlService::class.java)
+        val iSwitch = Intent(this, MusicService::class.java)
         iSwitch.action = ACTION_SWITCH
-        val iPrevious = Intent(this, RemoteControlService::class.java)
+        val iPrevious = Intent(this, MusicService::class.java)
         iPrevious.action = ACTION_PREVIOUS
-        val iNext = Intent(this, RemoteControlService::class.java)
+        val iNext = Intent(this, MusicService::class.java)
         iNext.action = ACTION_NEXT
 
         val pSwitch =
@@ -257,22 +253,22 @@ class RemoteControlService : Service() {
         notificationManager.notify(NOTIFICATION_ID, createNotification())
     }
 
-    inner class RemoteControlBinder : Binder() {
-        fun resetPlaylist(list: List<Song>) = this@RemoteControlService.resetPlaylist(list)
+    inner class MusicServiceBinder : Binder() {
+        fun resetPlaylist(list: List<Song>) = this@MusicService.resetPlaylist(list)
         fun play() {
             if (_isPlaying.value == null) return
 
             if (_isPlaying.value!!)
-                this@RemoteControlService.pause()
+                this@MusicService.pause()
             else
-                this@RemoteControlService.play()
+                this@MusicService.play()
         }
 
-        fun previous() = this@RemoteControlService.previous()
-        fun next() = this@RemoteControlService.next()
-        fun seekToPosition(position: Int) = this@RemoteControlService.seekToPosition(position)
-        fun setListener(l: MusicServiceListener?) = this@RemoteControlService.setListener(l)
-        fun changePlayMode() = this@RemoteControlService.changePlayMode()
+        fun previous() = this@MusicService.previous()
+        fun next() = this@MusicService.next()
+        fun seekToPosition(position: Int) = this@MusicService.seekToPosition(position)
+        fun setListener(l: MusicServiceListener?) = this@MusicService.setListener(l)
+        fun changePlayMode() = this@MusicService.changePlayMode()
     }
 
     private fun setListener(l: MusicServiceListener?) {
@@ -299,8 +295,8 @@ class RemoteControlService : Service() {
     ) = runCatching {
         action()
     }.onFailure {
+        it.printStackTrace()
         mainPlayer.playerState = ERROR
-        _isPlaying.value = false
         reset()
     }.onSuccess {
         onSuccess()
@@ -310,6 +306,7 @@ class RemoteControlService : Service() {
         reset()
         withCurrentSong { mainPlayer.prepareAndPlay(it) }
     }, {
+        _isPlaying.value = true
         startProgressJob()
         withCurrentSong {
             changeSong(it)
@@ -329,6 +326,7 @@ class RemoteControlService : Service() {
         if (currentPlaylist.isEmpty()) throw Exception("empty list") // 此处抛出异常是不希望进入 on success 块
         mainPlayer.start()
     }, {
+        _isPlaying.value = true
         startProgressJob()
         withCurrentSong {
             changeSong(it)
@@ -340,6 +338,7 @@ class RemoteControlService : Service() {
         if (currentPlaylist.isEmpty()) throw Exception("empty list")
         mainPlayer.pause()
     }, {
+        _isPlaying.value = false
         withCurrentSong {
             changeSong(it)
             listener?.onPlayingStateChanged(it, false)
@@ -438,6 +437,7 @@ class RemoteControlService : Service() {
                         .build()
                 )
                 setOnCompletionListener {
+                    _isPlaying.value = false
                     if (_playMode.value == SINGLE) {
                         play()
                     } else {
@@ -451,22 +451,19 @@ class RemoteControlService : Service() {
                     true
                 }
 
-                playerState = INIT
                 _isPlaying.value = false
+                playerState = INIT
             }
         }
 
         override fun start() {
             if (playerState != PREPARED) throw Exception("not prepared")
-            _isPlaying.value = true
-            logD("####", "called successfully")
             super.start()
         }
 
         override fun pause() {
             if (playerState != PREPARED) throw Exception("not prepared")
             super.pause()
-            _isPlaying.value = false
         }
 
         fun clean() = runCatching {
@@ -474,7 +471,6 @@ class RemoteControlService : Service() {
             reset()
             release()
             playerState = RELEASED
-            _isPlaying.value = false
         }
 
         override fun seekTo(msec: Int) {
@@ -495,7 +491,6 @@ class RemoteControlService : Service() {
                                 prepare()
                                 playerState = PREPARED
                                 start()
-                                _isPlaying.value = true
                             } catch (e: Exception) {
                                 // 空指针
                                 playerState = ERROR

@@ -28,7 +28,7 @@
             android:resizeableActivity="true" />
 
         <service
-            android:name=".RemoteControlService"
+            android:name=".MusicService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback" />
