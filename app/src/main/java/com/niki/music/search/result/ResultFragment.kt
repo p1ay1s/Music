@@ -12,6 +12,7 @@ import com.niki.music.common.ui.SearchBar
 import com.niki.music.common.ui.SearchBarListener
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener
+import com.niki.music.common.ui.showSongDetail
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentSearchResultBinding
@@ -113,7 +114,7 @@ class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView
         }
 
         override fun onMoreClicked(song: Song) {
-            toast("more -> ${song.name}")
+            showSongDetail(song)
         }
     }
 

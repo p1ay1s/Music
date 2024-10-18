@@ -12,12 +12,12 @@ import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener
+import com.niki.music.common.ui.showSongDetail
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentMyBinding
 import com.niki.music.my.login.LoginFragment
 import com.p1ay1s.base.extension.addLineDecoration
-import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import com.p1ay1s.util.ImageSetter
@@ -116,15 +116,6 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
         likeListJob = null
     }
 
-
-    private fun SongAdapter.submitPartly(list: List<Song>) = lifecycleScope.launch {
-        val newList = takePartOf(list)
-        if (newList.isNotEmpty())
-            submitList(newList)
-        else
-            submitList(emptyList())
-    }
-
     private fun setUnLoggedInViews() {
         binding.apply {
             userAvatar.visibility = View.INVISIBLE
@@ -175,7 +166,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
         }
 
         override fun onMoreClicked(song: Song) {
-            toast("more -> ${song.name}")
+            showSongDetail(song)
         }
     }
 }

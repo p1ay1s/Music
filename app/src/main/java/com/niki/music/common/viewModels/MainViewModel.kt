@@ -29,6 +29,7 @@ class MainViewModel : BaseViewModel<MainIntent, MainState, MainEffect>() {
 //    private var currentSongIndex = 0
 
     var fragmentHost: FragmentHost? = null // 保存 fragment 的状态
+
     val fragmentMap: LinkedHashMap<Int, Class<out Fragment>> by lazy {
         linkedMapOf(
             FragmentTag.LISTEN_FRAGMENT to ListenFragment::class.java,

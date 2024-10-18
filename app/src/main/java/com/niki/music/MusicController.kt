@@ -12,8 +12,6 @@ import com.niki.common.utils.shuffle
 import com.niki.common.values.BroadCastMsg
 import com.niki.music.models.PlayerModel
 import com.niki.music.my.appCookie
-import com.p1ay1s.base.extension.toast
-import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -249,31 +247,25 @@ object MusicController {
         }
 
         fun prepareAndPlay(song: Song) {
-                loadMusicJob?.cancel()
-//                loadMusicJob?.join()
-                loadMusicJob = musicScope.launch {
-                    playerModel.getSongInfoExecute(song.id, "jymaster", appCookie,
-                        {
-                            if (isActive)
-                                try {
-                                    val url = it.data[0].url
-                                    init()
-                                    setDataSource(url)
-                                    prepare()
-                                    playerState = PREPARED
-                                    start()
-                                } catch (e: Exception) {
-                                    // 空指针
-                                    e.printStackTrace()
-                                    "播放失败".toast()
-                                }
-                            else
-                                logE("####","dead")
-                        },
-                        { _, _ ->
-                            if (isActive)
-                                "播放失败".toast()
-                        })
+            loadMusicJob?.cancel()
+            loadMusicJob = musicScope.launch {
+                playerModel.getSongInfoExecute(song.id, "jymaster", appCookie,
+                    {
+                        if (isActive)
+                            try {
+                                val url = it.data[0].url
+                                init()
+                                setDataSource(url)
+                                prepare()
+                                playerState = PREPARED
+                                start()
+                            } catch (e: Exception) {
+                                // 空指针
+                                e.printStackTrace()
+                            }
+                    },
+                    { _, _ ->
+                    })
             }
         }
     }

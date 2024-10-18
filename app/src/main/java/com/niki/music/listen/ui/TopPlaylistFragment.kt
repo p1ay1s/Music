@@ -9,6 +9,7 @@ import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener
+import com.niki.music.common.ui.showSongDetail
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.databinding.FragmentTopPlaylistBinding
 import com.p1ay1s.base.extension.addLineDecoration
@@ -110,7 +111,7 @@ class TopPlaylistFragment :
         }
 
         override fun onMoreClicked(song: Song) {
-            toast("more -> ${song.name}")
+            showSongDetail(song)
         }
     }
 }

@@ -1,17 +1,17 @@
-package com.niki.common.ui
+package com.niki.music.common.ui
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.niki.music.R
 
 /**
- * TODO 改用behavior
  * @param layoutId 布局id
  * @param collapsable 是否允许悬挂
  * @param collapseHeightPercent 悬挂时的高度百分比
@@ -35,7 +35,7 @@ open class BaseBottomSheetDialogFragment(
             val radius = 70f // 圆角半径
             val shape = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                setColor(Color.WHITE) // 设置背景颜色
+                setColor(ContextCompat.getColor(requireContext(), R.color.bar)) // 设置背景颜色
                 cornerRadii = floatArrayOf(
                     radius, radius, // 左上角
                     radius, radius, // 右上角

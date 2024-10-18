@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.niki.common.ui.BaseBottomSheetDialogFragment
+import com.niki.music.common.ui.BaseBottomSheetDialogFragment
 import com.niki.music.R
 import com.niki.music.appLoadingDialog
 import com.niki.music.common.views.IView

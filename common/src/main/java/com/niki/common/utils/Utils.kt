@@ -37,8 +37,43 @@ fun getNewTag(index: Int): Int {
     }
 }
 
+data class Point(val x: Float, val y: Float)
 
-fun TextView.formatDetails(song: Song) {
+/**
+ * 求直线ab、cd的交点坐标
+ */
+fun intersectionPoint(a: Point, b: Point, c: Point, d: Point): Point? {
+    val denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)
+
+    if (denominator == 0.0F) {
+        return null // 直线平行或重合,无交点
+    }
+
+    val t = ((a.x - c.x) * (c.y - d.y) - (a.y - c.y) * (c.x - d.x)) / denominator
+
+    val intersectionX = a.x + t * (b.x - a.x)
+    val intersectionY = a.y + t * (b.y - a.y)
+
+    return Point(intersectionX, intersectionY)
+}
+
+fun TextView.setSongDetails(song: Song) {
+    setSingerName(song)
+    val singerName = text.toString()
+    val builder = StringBuilder()
+    builder.apply {
+        if (song.al.name.isNotBlank()) {
+            append(" • ")
+            append(song.al.name)
+        }
+    }
+    text = singerName + builder.toString()
+}
+
+/**
+ * 效果 : 'a, b, c & d'
+ */
+fun TextView.setSingerName(song: Song) {
     visibility = View.VISIBLE
     val builder = StringBuilder()
     builder.apply {
@@ -54,10 +89,6 @@ fun TextView.formatDetails(song: Song) {
                 song.ar.size - 2 -> append(" & ")
                 else -> append(", ")
             }
-        }
-        if (song.al.name.isNotBlank()) {
-            append(" • ")
-            append(song.al.name)
         }
     }
     text = builder.toString()

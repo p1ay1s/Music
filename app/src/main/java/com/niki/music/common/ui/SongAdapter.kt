@@ -1,11 +1,10 @@
 package com.niki.music.common.ui
 
 import android.view.View
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.repository.dataclasses.song.SongInfo
-import com.niki.common.utils.formatDetails
+import com.niki.common.utils.setSongDetails
 import com.niki.music.databinding.LayoutSongBinding
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
@@ -58,7 +57,7 @@ class SongAdapter(
         songName.text = data.name
 
         if (showDetails) {
-            songDetails.formatDetails(data)
+            songDetails.setSongDetails(data)
             if (isExplicit(data.mark)) {
                 explicit.visibility = View.VISIBLE
             }

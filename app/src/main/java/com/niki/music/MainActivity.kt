@@ -26,8 +26,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
-import com.niki.common.utils.formatDetails
+import com.niki.common.utils.Point
 import com.niki.common.utils.getNewTag
+import com.niki.common.utils.intersectionPoint
+import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
 import com.niki.music.MusicController.registerMusicReceiver
 import com.niki.music.MusicController.releaseMusicController
@@ -42,9 +44,9 @@ import com.niki.music.my.login.dismissCallback
 import com.niki.music.search.result.ResultFragment
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
-import com.p1ay1s.base.appContext
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
+import com.p1ay1s.base.log.logE
 import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.impl.ViewBindingActivity
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
@@ -68,10 +70,13 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         const val CURRENT = "CURRENT"
         const val PREVIOUS = "PREVIOUS"
 
+        const val PROGRESS = "PROGRESS"
+
         const val BOTTOM_NAV_WEIGHT = 0.1
     }
 
     var binder: RemoteControlService.RemoteControlBinder? = null
+    var connection = RemoteControlConnection()
 
     private var canPostNotification = false
 
@@ -96,8 +101,13 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var currentTag = FragmentTag.LISTEN_FRAGMENT
     private var previousTag = FragmentTag.LISTEN_FRAGMENT
 
+    private var musicProgress = 0
+
     private val playerBehavior
         get() = BottomSheetBehavior.from(binding.player)
+
+    var left: Float = 0F
+    var top: Float = 0F
 
     override fun ActivityMainBinding.initBinding() {
         // 非得要 activity 的上下文
@@ -140,6 +150,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             }
         }
 
+
         seekBar.setOnSeekBarChangeListener(OnSeekBarChangeListenerImpl())
 
         play.setOnClickListener {
@@ -158,6 +169,11 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
 
         setViewsLayoutParams()
+    }
+
+    override fun onResume() {
+        super.onResume()
+//        bindCover(0.001F)
     }
 
     /**
@@ -256,6 +272,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         super.onDestroy()
         mainViewModel.fragmentHost?.removeOnIndexChangeListener()
         releaseMusicController()
+        unbindService(connection) // 不仅是要同一个 connection, 还得是同一个 context
     }
 
     fun onSongPass(playlist: List<Song>) {
@@ -264,11 +281,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     private fun startRemoteControl() { // 启动前台服务通知
         if (binder?.isBinderAlive == true) return
-        appContext?.run {
-            val i = Intent(this, RemoteControlService::class.java)
-            this.bindService(i, RemoteControlConnection(), Context.BIND_AUTO_CREATE)
-            this.startService(i)
-        }
+        val i = Intent(this, RemoteControlService::class.java)
+        this.bindService(i, connection, Context.BIND_AUTO_CREATE)
+        this.startService(i)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -407,27 +422,32 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     inner class OnSeekBarChangeListenerImpl : SeekBar.OnSeekBarChangeListener {
-        private var progress = 0
 
         override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
             if (fromUser)
-                this.progress = progress
+                musicProgress = progress
         }
 
         override fun onStartTrackingTouch(seekBar: SeekBar) {}
 
         override fun onStopTrackingTouch(seekBar: SeekBar) {
-            MusicController.seekToPosition(progress)
+            MusicController.seekToPosition(musicProgress)
         }
     }
+
 
     /**
      * 绑定播放器和导航栏(播放器展开时导航栏收缩)
      */
     inner class BottomSheetCallbackImpl : BottomSheetBehavior.BottomSheetCallback() {
+        private lateinit var pivot: Point
 
-        override fun onStateChanged(bottomSheet: View, newState: Int) {
+
+        private fun calculatePivot() {
+
         }
+
+        override fun onStateChanged(bottomSheet: View, newState: Int) {}
 
         /**
          * [0, 1] 表示介于折叠和展开状态之间, [-1, 0] 介于隐藏和折叠状态之间, 此处由于禁止 hide 所以只会取值在[0, 1]
@@ -435,13 +455,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
          * 此处 slideOffset 完全可以当作一个百分数来看待
          */
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            val bottomNavigationHeight = binding.bottomNavigation.height.toFloat()
+            val navHeight = binding.bottomNavigation.height.toFloat() // 导航栏高
 
-            var n = slideOffset * 2
-            if (n > 1) n = 1F
-            val translationY =
-                bottomNavigationHeight * n
-            binding.bottomNavigation.translationY = translationY
+            val navTranslationY = navHeight * slideOffset * 2 // 导航栏的偏移量
+            binding.bottomNavigation.translationY = navTranslationY
+
+            bindCover(slideOffset)
 
             if (slideOffset < 0.01) {
                 binding.player.setBackgroundColor(
@@ -453,6 +472,40 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             } else {
                 binding.player.background = mainViewModel.playerBackground
             }
+
+        }
+
+
+    }
+
+    private fun bindCover(slideOffset: Float) {
+        val navHeight = binding.bottomNavigation.height.toFloat() // 导航栏高
+
+        binding.cover.run {
+            val coverHeight = height // 封面 imageview 宽高
+            val minMargin = 0.1F * navHeight // 封面收缩后距离播放器的最小间距
+
+            lateinit var pivot: Point
+            val minScale = (navHeight - 30) / coverHeight // 使封面宽高到达最小的 scale 因子
+
+            logE("####", "coverHeight: $coverHeight")
+
+            val scale =
+                (1 - slideOffset) * minScale + slideOffset  // (1 - t) * C + t * A 谁能想到要用到这么条鬼公式, 作用是当 slide offset 约为 0 时结果为 minScale
+            scaleX = scale
+            scaleY = scale
+
+            val pivotPosition = intersectionPoint( // 求完全展开和完全收缩的方形对应的点(用于计算 pivot)
+                Point(minMargin + minScale * coverHeight, minMargin),
+                Point(right.toFloat(), top.toFloat()),
+                Point(minMargin, minMargin + minScale * coverHeight),
+                Point(left.toFloat(), bottom.toFloat())
+            )
+            pivotPosition!!.let {
+                pivot = Point(pivotPosition.x - left, pivotPosition.y - top)
+            }
+            pivotX = pivot.x
+            pivotY = pivot.y
         }
     }
 
@@ -484,28 +537,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 })
             cover.setRadiusImgView(song.al.picUrl, radius = 40)
             songName.text = song.name
-            singerName.formatDetails(song)
+            singerName.setSongDetails(song)
         }
     }
 
-//    private fun setPlayerRadius(radius: Float) {
-//        val shape = GradientDrawable().apply {
-//            shape = GradientDrawable.RECTANGLE
-//            setColor(Color.RED) // 设置背景颜色
-//            cornerRadii = floatArrayOf(
-//                radius, radius, // 左上角
-//                radius, radius, // 右上角
-//                0f, 0f,       // 右下角
-//                0f, 0f        // 左下角
-//            )
-//        }
-//
-//        binding.player.background = shape
-//    }
-
     // 部分数据存取逻辑
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState) // 包含 initBinding 的调用
         savedInstanceState?.run {
             listenIndex = getInt(LISTEN_KEY)
             myIndex = getInt(MY_KEY)
@@ -513,7 +550,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             currentTag = getInt(CURRENT)
             previousTag = getInt(PREVIOUS)
+
+            musicProgress = getInt(PROGRESS)
         }
+        super.onCreate(savedInstanceState) // 包含 initBinding 的调用
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -525,6 +565,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             putInt(CURRENT, currentTag)
             putInt(PREVIOUS, previousTag)
+
+            putInt(PROGRESS, musicProgress)
         }
     }
 }
