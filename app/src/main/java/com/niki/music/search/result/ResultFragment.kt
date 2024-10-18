@@ -1,7 +1,6 @@
 package com.niki.music.search.result
 
 import android.widget.LinearLayout
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,12 +12,10 @@ import com.niki.music.common.ui.SearchBarListener
 import com.niki.music.common.ui.SongAdapter
 import com.niki.music.common.ui.SongAdapterListener
 import com.niki.music.common.ui.showSongDetail
-import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentSearchResultBinding
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
-import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -28,7 +25,6 @@ import kotlinx.coroutines.launch
 
 class ResultFragment : ViewBindingFragment<FragmentSearchResultBinding>(), IView {
     private lateinit var resultViewModel: ResultViewModel
-    private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager

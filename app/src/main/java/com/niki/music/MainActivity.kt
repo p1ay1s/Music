@@ -27,16 +27,12 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
 import com.niki.common.utils.Point
+import com.niki.common.utils.getIntersectionPoint
 import com.niki.common.utils.getNewTag
-import com.niki.common.utils.intersectionPoint
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
-import com.niki.music.MusicService.Companion.LOOP
-import com.niki.music.MusicService.Companion.RANDOM
-import com.niki.music.MusicService.Companion.SINGLE
 import com.niki.music.common.ui.BlurTransformation
 import com.niki.music.common.ui.button.PlayButton
-import com.niki.music.common.ui.button.PlayModeButton
 import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ui.TopPlaylistFragment
@@ -124,18 +120,24 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             }
 
             // 重建时恢复状态
-            currentSong?.let { setSong(it) }
+            if (currentSong != null) {
+                playerBehavior.isHideable = false
+                playerBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                setSong(currentSong!!)
+            } else {
+                playerBehavior.isHideable = true
+                playerBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            }
 
             if (playerBackground == null)
                 playerBackground = player.background
-            if (playerBackground != null && playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED)
+            if (playerBackground != null && playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED && playerBehavior.state != BottomSheetBehavior.STATE_HIDDEN)
                 player.background = playerBackground
         }
 
         bottomNavigation.setSwitchHandler()
 
         playerBehavior.apply {
-            state = BottomSheetBehavior.STATE_COLLAPSED
             addBottomSheetCallback(BottomSheetCallbackImpl())
             player.setOnClickListener {
                 if (this.state != BottomSheetBehavior.STATE_EXPANDED)
@@ -156,6 +158,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
         playMode.setOnClickListener {
             serviceBinder?.changePlayMode()
+        }
+        smallNext.setOnClickListener {
+            serviceBinder?.next()
+        }
+        smallPlay.setOnClickListener {
+            serviceBinder?.play()
         }
 
         setViewsLayoutParams()
@@ -348,11 +356,34 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
         override fun onPlayingStateChanged(song: Song, isPlaying: Boolean) {
             if (mainViewModel.currentSong != song) {
+                playerBehavior.run {
+                    if (state == BottomSheetBehavior.STATE_HIDDEN) {
+                        state = BottomSheetBehavior.STATE_COLLAPSED
+                        lifecycleScope.launch { // 立即设置 false 会导致页面从顶端回落
+                            while (true) {
+                                if (state != BottomSheetBehavior.STATE_COLLAPSED) {
+                                    delay(20)
+                                } else {
+                                    isHideable = false
+                                    return@launch
+                                }
+                            }
+                        }
+                    }
+                }
                 setSong(song)
                 mainViewModel.currentSong = song
             }
-            val target = if (isPlaying) PlayButton.PAUSE else PlayButton.PLAY
-            binding.play.switchImage(target)
+
+            binding.run {
+                if (isPlaying) {
+                    play.switchImage(PlayButton.PAUSE)
+                    smallPlay.setImageResource(R.drawable.ic_pause)
+                } else {
+                    play.switchImage(PlayButton.PLAY)
+                    smallPlay.setImageResource(R.drawable.ic_play)
+                }
+            }
         }
 
         override fun onProgressUpdated(newProgress: Int) {
@@ -360,13 +391,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
 
         override fun onPlayModeChanged(newState: Int) {
-            binding.playMode.run {
-                when (newState) {
-                    LOOP -> switchImage(PlayModeButton.LOOP)
-                    SINGLE -> switchImage(PlayModeButton.SINGLE)
-                    RANDOM -> switchImage(PlayModeButton.RANDOM)
-                }
-            }
+            binding.playMode.switchImage(newState)
         }
     }
 
@@ -404,7 +429,17 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     inner class BottomSheetCallbackImpl : BottomSheetBehavior.BottomSheetCallback() {
 
-        override fun onStateChanged(bottomSheet: View, newState: Int) {}
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+            if (newState == BottomSheetBehavior.STATE_COLLAPSED) { // 弹出播放器后重设大小避免遮挡
+                binding.apply {
+                    val parentHeight = root.resources.displayMetrics.heightPixels
+                    val navHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
+                    fragmentHostView.updateLayoutParams {
+                        height = parentHeight - navHeight * 2
+                    }
+                }
+            }
+        }
 
         /**
          * [0, 1] 表示介于折叠和展开状态之间, [-1, 0] 介于隐藏和折叠状态之间, 此处由于禁止 hide 所以只会取值在[0, 1]
@@ -415,7 +450,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             val navHeight = binding.bottomNavigation.height.toFloat() // 导航栏高
 
             val navTranslationY = navHeight * slideOffset * 2 // 导航栏的偏移量
-            binding.bottomNavigation.translationY = navTranslationY
+            if (slideOffset in 0.0F..1.0F)
+                binding.bottomNavigation.translationY = navTranslationY
 
             bindCover(slideOffset)
 
@@ -426,14 +462,19 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         R.color.bar
                     )
                 )
-                binding.smallSongName.visibility = View.VISIBLE
+                binding.smallPlayer.visibility = View.VISIBLE
             } else {
                 binding.player.background = mainViewModel.playerBackground
-                binding.smallSongName.visibility = View.INVISIBLE
+                binding.smallPlayer.visibility = View.INVISIBLE
             }
         }
     }
 
+    /**
+     * 用一个 [0, 1] 区间内的数设置 cover 的大小及位置
+     *
+     * pivot 计算原理: 以 cover 左上角为原点, 求完全缩小和原始尺寸的 cover 的右上角、左下角坐标的交点即为 pivot 点
+     */
     private fun bindCover(slideOffset: Float) {
         val navHeight = binding.bottomNavigation.height.toFloat() // 导航栏高
 
@@ -444,25 +485,26 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             val minMargin = 0.1F * navHeight // 封面收缩后距离播放器的最小间距
 
-            lateinit var pivot: Point
             val minScale = (navHeight * 0.8F) / coverHeight // 使封面宽高到达最小的 scale 因子
 
-            val scale =
-                (1 - slideOffset) * minScale + slideOffset  // (1 - t) * C + t * A 谁能想到要用到这么条鬼公式, 作用是当 slide offset 约为 0 时结果为 minScale
+            // (1 - t) * C + t * A 当 slide offset 约为 0 时结果为 minScale, 约为 1 时结果也为 1, 作用是限定 cover 的尺寸
+            val scale = (1 - slideOffset) * minScale + slideOffset
+
             scaleX = scale
             scaleY = scale
 
-            val pivotPosition = intersectionPoint( // 求完全展开和完全收缩的方形对应的点(用于计算 pivot)
+            val pivotPoint = getIntersectionPoint( // 求完全展开和完全收缩的方形对应的点(用于计算 pivot)
                 Point(minMargin + minScale * coverHeight, minMargin),
                 Point(right.toFloat(), top.toFloat()),
                 Point(minMargin, minMargin + minScale * coverHeight),
                 Point(left.toFloat(), bottom.toFloat())
-            )
-            pivotPosition!!.let {
-                pivot = Point(pivotPosition.x - left, pivotPosition.y - top)
+            ) // 此处得到的坐标并不是以 cover 的左上角为原点, 需要再计算
+
+            pivotPoint?.let {
+                val pivot = Point(pivotPoint.x - left, pivotPoint.y - top)
+                pivotX = pivot.x
+                pivotY = pivot.y
             }
-            pivotX = pivot.x
-            pivotY = pivot.y
         }
     }
 
@@ -481,8 +523,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         resource: Drawable,
                         transition: Transition<in Drawable?>?
                     ) {
+                        if (mainViewModel.currentSong != song) return
+
                         mainViewModel.playerBackground = resource
-                        if (playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED) {
+                        if (playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED && playerBehavior.state != BottomSheetBehavior.STATE_HIDDEN) {
                             val transitionDrawable =
                                 TransitionDrawable(arrayOf(player.background, resource))
                             player.background = transitionDrawable
@@ -494,7 +538,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 })
             cover.setRadiusImgView(song.al.picUrl, radius = 40)
             if (playerBehavior.state == BottomSheetBehavior.STATE_COLLAPSED)
-                bindCover(0F)
+                bindCover(0F) // 让图片立即复位, 否则在初始化时不会显示在下端
             songName.text = song.name
             smallSongName.text = song.name
             singerName.setSongDetails(song)
@@ -513,7 +557,21 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             musicProgress = getInt(PROGRESS)
         }
+
         super.onCreate(savedInstanceState) // 包含 initBinding 的调用
+
+//        val builder = MaterialAlertDialogBuilder(this)
+//
+//        builder.setTitle("material dialog test")
+//            .setMessage("baseurl: http://\${your_ip}:3000/")
+//            .setCancelable(true)
+//            .setPositiveButton("positive") { dialog, which ->
+//            }
+//            .setNegativeButton("negative") { dialog, which ->
+//            }
+//
+//        val dialog = builder.create()
+//        dialog.show()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

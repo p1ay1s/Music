@@ -13,6 +13,7 @@ import com.niki.common.utils.setSingerName
 import com.niki.music.MainActivity
 import com.niki.music.R
 import com.niki.music.databinding.FragmentSongDetailBinding
+import com.p1ay1s.base.extension.toast
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
 fun Fragment.showSongDetail(song: Song) {
@@ -45,8 +46,15 @@ class SongDetailDialogFragment(private val targetSong: Song) :
             song = targetSong
             singerName.setSingerName(targetSong)
             cover.setRadiusImgView(targetSong.al.picUrl, radius = 30)
+            root.setOnClickListener {
+                //
+            }
+            singerName.setOnClickListener { singerName.text.toast() }
+            songName.setOnClickListener { songName.text.toast() }
+            albumName.setOnClickListener { albumName.text.toast() }
             cover.setOnClickListener {
                 (activity as MainActivity).onSongPass(listOf(targetSong))
+                dismiss()
             }
         }
     }

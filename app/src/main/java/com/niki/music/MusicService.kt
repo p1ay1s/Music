@@ -27,8 +27,6 @@ import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.shuffle
 import com.niki.music.models.PlayerModel
 import com.niki.music.my.appCookie
-import com.p1ay1s.base.log.logD
-import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -193,6 +191,7 @@ class MusicService : Service() {
         }
         remoteViews.setTextViewText(R.id.tvSongName, song.name)
         remoteViews.setTextViewText(R.id.tvSinger, builder.toString())
+        setPlayingStatus(_isPlaying.value!!)
         setCover(song.al.picUrl, callback)
     }
 
@@ -206,14 +205,17 @@ class MusicService : Service() {
         Glide.with(this)
             .asBitmap()
             .load(imageUrl)
-            .override(256)
+            .override(200)
             .transform(RoundedCorners(35))
             .into(object : CustomTarget<Bitmap>() {
                 override fun onResourceReady(
                     resource: Bitmap,
                     transition: Transition<in Bitmap>?
                 ) {
-                    remoteViews.setImageViewBitmap(R.id.ivCover, resource)
+                    withCurrentSong { // 避免前面的歌曲后回调
+                        if (it.al.picUrl == imageUrl)
+                            remoteViews.setImageViewBitmap(R.id.ivCover, resource)
+                    }
                     callback()
                 }
 
@@ -229,7 +231,7 @@ class MusicService : Service() {
     }
 
     private fun changeSong(song: Song) {
-        if (!::remoteViews.isInitialized) return
+        remoteViews = RemoteViews(packageName, R.layout.remote_control) // 切换过多后就不会响应, 尝试每次都重建
         setSong(song) {
             refreshRemoteView()
         }
@@ -303,6 +305,7 @@ class MusicService : Service() {
     }
 
     private fun loadAndPlay() = playAction({
+        listener?.onProgressUpdated(0)
         reset()
         withCurrentSong { mainPlayer.prepareAndPlay(it) }
     }, {
@@ -438,6 +441,7 @@ class MusicService : Service() {
                 )
                 setOnCompletionListener {
                     _isPlaying.value = false
+                    listener?.onProgressUpdated(0)
                     if (_playMode.value == SINGLE) {
                         play()
                     } else {
@@ -447,7 +451,6 @@ class MusicService : Service() {
 
                 setOnErrorListener { _, _, _ ->
                     playerState = ERROR
-                    clean()
                     true
                 }
 

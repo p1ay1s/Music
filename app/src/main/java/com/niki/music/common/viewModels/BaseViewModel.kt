@@ -9,7 +9,6 @@ abstract class BaseViewModel<Intent, State, Effect> : MVIViewModel<Intent, State
     protected val playerModel by lazy { PlayerModel() }
     protected val playlistModel by lazy { PlaylistModel() }
 
-
     val state
         get() = uiStateFlow.value
 

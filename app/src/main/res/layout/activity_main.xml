@@ -21,20 +21,62 @@
             app:behavior_hideable="false"
             app:layout_behavior="@string/bottom_sheet_behavior">
 
-            <TextView
-                android:id="@+id/smallSongName"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/smallPlayer"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:ellipsize="marquee"
-                android:gravity="start|center_vertical"
-                android:maxLines="1"
-                android:paddingHorizontal="20dp"
-                android:textColor="@color/contrast"
-                android:textSize="18sp"
+                android:padding="3dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHeight_percent="0.1"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_percent="0.86" />
+                app:layout_constraintWidth_percent="0.85">
+
+                <TextView
+                    android:id="@+id/smallSongName"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:ellipsize="marquee"
+                    android:gravity="start|center_vertical"
+                    android:maxLines="1"
+                    android:paddingHorizontal="20dp"
+                    android:textColor="@color/contrast"
+                    android:textSize="18sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/smallPlay"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintWidth_percent="0.7" />
+
+                <ImageView
+                    android:id="@+id/smallPlay"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:clickable="true"
+                    android:padding="2dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_play"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/smallNext"
+                    app:layout_constraintStart_toEndOf="@id/smallSongName"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/contrast" />
+
+                <ImageView
+                    android:id="@+id/smallNext"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginEnd="10dp"
+                    android:clickable="true"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_next"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/smallPlay"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/contrast" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
 
             <ImageView
                 android:id="@+id/cover"
@@ -107,8 +149,6 @@
                 android:layout_marginTop="40dp"
                 android:paddingVertical="5dp"
                 android:paddingEnd="5dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_previous"
                 app:layout_constraintStart_toStartOf="@id/seekBar"
                 app:layout_constraintTop_toBottomOf="@id/seekBar"
                 app:tint="#a0ffffff" />
@@ -120,8 +160,6 @@
                 android:layout_marginEnd="20dp"
                 android:paddingVertical="5dp"
                 android:paddingStart="5dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_next"
                 app:layout_constraintBottom_toBottomOf="@id/previous"
                 app:layout_constraintEnd_toEndOf="@id/seekBar"
                 app:layout_constraintTop_toTopOf="@id/previous"
@@ -135,8 +173,6 @@
                 android:layout_marginEnd="15dp"
                 android:layout_marginBottom="25dp"
                 android:padding="5dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_loop"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:tint="#a0ffffff" />

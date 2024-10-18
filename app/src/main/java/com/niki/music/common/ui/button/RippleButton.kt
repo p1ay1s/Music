@@ -18,7 +18,7 @@ open class RippleButton @JvmOverloads constructor(
 
     private var rippleColor = "#40FFFFFF"
 
-    protected val imgList: LinkedHashMap<String, Int> = linkedMapOf()
+    protected val imgList: LinkedHashMap<Int, Int> = linkedMapOf()
 
     init {
         scaleType = ScaleType.FIT_CENTER
@@ -28,12 +28,12 @@ open class RippleButton @JvmOverloads constructor(
         )
     }
 
-    fun setImageResources(map: LinkedHashMap<String, Int>) {
+    fun setImageResources(map: LinkedHashMap<Int, Int>) {
         imgList.putAll(map)
         switchImage(map.keys.first())
     }
 
-    fun switchImage(target: String) {
+    fun switchImage(target: Int) {
         try {
             val id = imgList[target]!!
             setImageResource(id)

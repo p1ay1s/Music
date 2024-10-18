@@ -42,7 +42,7 @@ data class Point(val x: Float, val y: Float)
 /**
  * 求直线ab、cd的交点坐标
  */
-fun intersectionPoint(a: Point, b: Point, c: Point, d: Point): Point? {
+fun getIntersectionPoint(a: Point, b: Point, c: Point, d: Point): Point? {
     val denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x)
 
     if (denominator == 0.0F) {

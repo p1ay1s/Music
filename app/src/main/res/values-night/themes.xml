@@ -1,13 +1,14 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.Music" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/black</item>
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
+<!--    <style name="Theme.Music" parent="Theme.MaterialComponents.DayNight.NoActionBar">-->
+    <style name="Theme.Music" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorSecondary">@color/pink</item>
+        <item name="colorSecondaryVariant">@color/pinky_red</item>
+        <item name="colorOnSecondary">@color/faded_white</item>
 
+        <item name="colorPrimary">@color/medium_red</item>
+        <item name="colorPrimaryVariant">@color/dark_red</item>
+        <item name="colorOnPrimary">@color/faded_white</item>
 
         <item name="android:navigationBarColor">@color/bar</item>
         <!-- 最底部的颜色 -->

@@ -4,17 +4,15 @@
     <color name="contrast">#000000</color>
     <color name="background">#FFFFFF</color>
 
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
 
     <color name="unselected">#9a9a9c</color>
     <color name="white">#FFFFFFFF</color>
     <color name="faded_white">#f5f5f7</color>
 
+    <color name="pink">#f05a7e</color>
+
+    <color name="classic_red">#b8001f</color>
     <color name="dark_red">#fa2b43</color>
     <color name="medium_red">#fa3f57</color>
     <color name="pinky_red">#fb5870</color>

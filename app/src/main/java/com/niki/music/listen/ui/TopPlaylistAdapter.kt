@@ -5,7 +5,6 @@ import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.appLoadingDialog
-import com.niki.music.common.ILoad
 import com.niki.music.databinding.LayoutTopPlaylistBinding
 import com.niki.music.models.PlayerModel
 import com.p1ay1s.base.extension.toast
@@ -37,8 +36,7 @@ interface TopPlaylistAdapterListener {
 }
 
 class TopPlaylistAdapter :
-    ViewBindingListAdapter<LayoutTopPlaylistBinding, Playlist, List<Song>>(TopPlaylistCallback()),
-    ILoad {
+    ViewBindingListAdapter<LayoutTopPlaylistBinding, Playlist, List<Song>>(TopPlaylistCallback()) {
 
     private var listener: TopPlaylistAdapterListener? = null
     private val playerModel by lazy { PlayerModel() }
@@ -101,12 +99,12 @@ class TopPlaylistAdapter :
         this.listener = null
     }
 
-    override fun startWaiting() {
+    private fun startWaiting() {
         appLoadingDialog?.show()
         isTopLoading = true
     }
 
-    override fun endWaiting() {
+    private fun endWaiting() {
         appLoadingDialog?.dismiss()
         isTopLoading = false
     }

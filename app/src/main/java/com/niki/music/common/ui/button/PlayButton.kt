@@ -6,8 +6,8 @@ import com.niki.music.R
 
 class PlayButton(context: Context, attr: AttributeSet?) : RippleButton(context, attr) {
     companion object {
-        const val PLAY = "play"
-        const val PAUSE = "pause"
+        const val PLAY = 0
+        const val PAUSE = 1
     }
 
    private val map = linkedMapOf(
