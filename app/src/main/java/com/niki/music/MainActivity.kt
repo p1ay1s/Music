@@ -75,8 +75,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         const val BOTTOM_NAV_WEIGHT = 0.1
     }
 
-    var binder: RemoteControlService.RemoteControlBinder? = null
-    var connection = RemoteControlConnection()
+    private var binder: RemoteControlService.RemoteControlBinder? = null
+    private var connection = RemoteControlConnection()
 
     private var canPostNotification = false
 
@@ -105,9 +105,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     private val playerBehavior
         get() = BottomSheetBehavior.from(binding.player)
-
-    var left: Float = 0F
-    var top: Float = 0F
 
     override fun ActivityMainBinding.initBinding() {
         // 非得要 activity 的上下文
@@ -169,11 +166,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
 
         setViewsLayoutParams()
-    }
-
-    override fun onResume() {
-        super.onResume()
-//        bindCover(0.001F)
     }
 
     /**
@@ -483,6 +475,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
         binding.cover.run {
             val coverHeight = height // 封面 imageview 宽高
+
+            if (coverHeight == 0) return
+
             val minMargin = 0.1F * navHeight // 封面收缩后距离播放器的最小间距
 
             lateinit var pivot: Point
@@ -536,6 +531,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                     override fun onLoadCleared(placeholder: Drawable?) {}
                 })
             cover.setRadiusImgView(song.al.picUrl, radius = 40)
+            bindCover(0F)
             songName.text = song.name
             singerName.setSongDetails(song)
         }
