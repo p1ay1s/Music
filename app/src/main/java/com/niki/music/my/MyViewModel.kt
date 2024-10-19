@@ -10,7 +10,7 @@ import com.niki.common.values.preferenceCookie
 import com.niki.common.values.preferenceNickname
 import com.niki.common.values.preferenceUid
 import com.niki.music.appLoadingDialog
-import com.niki.music.common.viewModels.BaseViewModel
+import com.niki.music.viewModel.BaseViewModel
 import com.niki.music.my.login.LoginModel
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.extension.toast

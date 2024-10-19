@@ -1,6 +1,5 @@
 package com.niki.music
 
-
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -25,7 +24,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.shuffle
-import com.niki.music.models.PlayerModel
+import com.niki.music.model.PlayerModel
 import com.niki.music.my.appCookie
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +33,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+
 
 interface MusicServiceListener {
     fun onPlayingStateChanged(song: Song, isPlaying: Boolean)
@@ -147,10 +147,11 @@ class MusicService : Service() {
 
         when (intent.action) {
             ACTION_SWITCH -> {
-                if (_isPlaying.value!!)
-                    pause()
-                else
-                    play()
+                if (_isPlaying.value != null)
+                    if (_isPlaying.value!!)
+                        pause()
+                    else
+                        play()
             }
 
             ACTION_PREVIOUS -> {
@@ -213,8 +214,10 @@ class MusicService : Service() {
                     transition: Transition<in Bitmap>?
                 ) {
                     withCurrentSong { // 避免前面的歌曲后回调
-                        if (it.al.picUrl == imageUrl)
+                        if (it.al.picUrl == imageUrl) {
+//                            remoteViews.setBitmap(R.id.remoteRoot, "setBackground", resource) // 尝试设置父布局背景 - 失败
                             remoteViews.setImageViewBitmap(R.id.ivCover, resource)
+                        }
                     }
                     callback()
                 }

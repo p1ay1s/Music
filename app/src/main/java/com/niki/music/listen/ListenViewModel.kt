@@ -1,7 +1,7 @@
 package com.niki.music.listen
 
 import androidx.lifecycle.viewModelScope
-import com.niki.music.common.viewModels.BaseViewModel
+import com.niki.music.viewModel.BaseViewModel
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.Dispatchers

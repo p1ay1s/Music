@@ -30,8 +30,8 @@ fun getNewTag(index: Int): Int {
     FragmentTag.apply {
         if (index in LISTEN_FRAGMENT..TOP_PLAYLIST_FRAGMENT)
             return LISTEN_FRAGMENT
-        if (index in PREVIEW_FRAGMENT..RESULT_FRAGMENT)
-            return PREVIEW_FRAGMENT
+        if (index == RESULT_FRAGMENT)
+            return RESULT_FRAGMENT
 
         return MY_FRAGMENT
     }
@@ -142,39 +142,4 @@ fun Window.showNavigationBar() {
 
 fun sendBroadcast(msg: String) = appContext?.let {
     LocalBroadcastManager.getInstance(it).sendBroadcast(Intent(msg))
-}
-
-fun <T> MutableList<T>.updateList(list: List<T>, clean: Boolean = false) {
-    val originalSize = this.size
-    if (clean) {
-        this.clear()
-        this.addAll(list)
-    } else {
-        this.addAll(list)
-    }
-    val updatedSize = this.size
-    Log.d("Utils", "updateList: $originalSize -> $updatedSize")
-}
-
-suspend fun <T> takePartOf(list: List<T>, size: Int = 30): List<T> = withContext(Dispatchers.IO) {
-    val actualOffset = minOf(size, list.size)
-    val random = Random(System.nanoTime())
-
-    val startIndex = random.nextInt(0, list.size - actualOffset + 1)
-
-    val indices = IntArray(actualOffset) { it }
-    val newList = list.subList(startIndex, startIndex + actualOffset)
-    val result = ArrayList<T>(actualOffset)
-
-    for (i in actualOffset - 1 downTo 1) {
-        val j = random.nextInt(i + 1)
-        val temp = indices[i]
-        indices[i] = indices[j]
-        indices[j] = temp
-    }
-    for (i in 0 until actualOffset) {
-        result.add(newList[indices[i]])
-    }
-
-    return@withContext result
 }

@@ -31,14 +31,13 @@ import com.niki.common.utils.getIntersectionPoint
 import com.niki.common.utils.getNewTag
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
-import com.niki.music.common.ui.BlurTransformation
-import com.niki.music.common.ui.button.PlayButton
-import com.niki.music.common.viewModels.MainViewModel
 import com.niki.music.databinding.ActivityMainBinding
-import com.niki.music.listen.ui.TopPlaylistFragment
+import com.niki.music.listen.top.TopPlaylistFragment
 import com.niki.music.my.MyFragment
 import com.niki.music.my.login.dismissCallback
-import com.niki.music.search.result.ResultFragment
+import com.niki.music.ui.BlurTransformation
+import com.niki.music.ui.button.PlayButton
+import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.extension.toast
@@ -51,9 +50,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-
 var appLoadingDialog: LoadingDialog? = null
 var appFadeInAnim: Animation? = null
+
+// baseUrl 在 MusicApp
 
 class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     ActivityPreferences.TwoClicksListener {
@@ -85,7 +85,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private var listenIndex = FragmentTag.LISTEN_FRAGMENT
     private var myIndex = FragmentTag.MY_FRAGMENT
-    private var searchIndex = FragmentTag.PREVIEW_FRAGMENT
+    private var searchIndex = FragmentTag.RESULT_FRAGMENT
 
     /**
      * 用于处理 bottom navigation view 的点击事件
@@ -107,7 +107,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         appFadeInAnim = AnimationUtils.loadAnimation(this@MainActivity, R.anim.fade_in)
 
         checkServerUsability()
-        startMusicSerivce()
+        startMusicService()
 
         mainViewModel.run {
             if (fragmentHost == null) {
@@ -175,7 +175,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private fun setViewsLayoutParams() {
         binding.apply {
             val parentHeight = root.resources.displayMetrics.heightPixels
-            val parentWeight = root.resources.displayMetrics.widthPixels
+            val parentWidth = root.resources.displayMetrics.widthPixels
             val navHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
             fragmentHostView.updateLayoutParams {
                 height = parentHeight - navHeight
@@ -184,8 +184,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 height = navHeight
             }
             cover.updateLayoutParams {
-                width = (0.85 * parentWeight).toInt()
-                height = (0.85 * parentWeight).toInt()
+                width = (0.85 * parentWidth).toInt()
+                height = (0.85 * parentWidth).toInt()
             }
             playerBehavior.peekHeight = navHeight * 2
         }
@@ -206,7 +206,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     /**
      * 检查通知权限, 有权限则启动通知栏播放器
      */
-    private fun startMusicSerivce() {
+    private fun startMusicService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             withPermission(POST_NOTIFICATIONS) {
                 if (!it)
@@ -297,12 +297,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         R.anim.right_exit
                     )
 
-                is ResultFragment -> fragmentHost!!.navigate(
-                    PREVIEW_FRAGMENT,
-                    R.anim.fade_in,
-                    R.anim.fade_out
-                )
-
                 is MyFragment -> dismissCallback?.dismissDialog() ?: {
                     if (enableTwoClickToExit) twoClicksToExit()
                 }
@@ -336,12 +330,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         override fun onIndexChanged(index: Int) {
             FragmentTag.apply {
                 when (index) {
-                    LISTEN_FRAGMENT -> listenIndex = index
-                    TOP_PLAYLIST_FRAGMENT -> {
+                    LISTEN_FRAGMENT, TOP_PLAYLIST_FRAGMENT -> {
                         listenIndex = index
                     }
 
-                    PREVIEW_FRAGMENT -> searchIndex = index
                     RESULT_FRAGMENT -> {
                         searchIndex = index
                     }

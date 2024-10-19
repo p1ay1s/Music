@@ -7,14 +7,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
+import com.niki.common.repository.dataclasses.playlist.Playlist
+import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.values.FragmentTag
 import com.niki.music.R
-import com.niki.music.common.views.IView
 import com.niki.music.databinding.FragmentListenBinding
 import com.niki.music.listen.ListenViewModel.Companion.TOP_LIMIT
-import com.niki.music.listen.ui.TopPlaylistAdapter
-import com.niki.music.listen.ui.TopPlaylistAdapterListener
-import com.niki.music.listen.ui.TopPlaylistFragment
+import com.niki.music.listen.top.TopPlaylistAdapter
+import com.niki.music.listen.top.TopPlaylistAdapterListener
+import com.niki.music.listen.top.TopPlaylistFragment
 import com.p1ay1s.base.extension.addOnLoadMoreListener_H
 import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.extension.setSnapHelper
@@ -26,7 +27,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
+class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
     private lateinit var topAdapter: TopPlaylistAdapter
     private lateinit var topLayoutManager: ToMiddleLayoutManager
 
@@ -98,7 +99,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
         )
     }
 
-    override fun handle() = listenViewModel.run {
+    private fun handle() = listenViewModel.run {
         playlistJob?.cancel()
 
         observeState {
@@ -112,7 +113,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        topAdapter.removeTopPlaylistAdapterListener()
+        topAdapter.setOnTopPlaylistAdapterListener(null)
         playlistJob?.cancel()
         playlistJob = null
     }
@@ -128,10 +129,10 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>(), IView {
         }
 
         // adapter 准备完成 , 添加 fragment
-        override fun onReady() {
+        override fun onReady(playlist: Playlist, songs: List<Song>) {
             findFragmentHost()?.add(
                 FragmentTag.TOP_PLAYLIST_FRAGMENT,
-                TopPlaylistFragment::class.java,
+                TopPlaylistFragment(playlist, songs),
                 R.anim.right_enter,
                 R.anim.fade_out
             )

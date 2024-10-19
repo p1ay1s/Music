@@ -66,7 +66,5 @@
             app:layout_constraintBottom_toBottomOf="@id/cover"
             app:layout_constraintEnd_toEndOf="@id/cover"
             app:layout_constraintStart_toStartOf="@id/cover" />
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

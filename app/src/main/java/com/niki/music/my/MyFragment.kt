@@ -7,14 +7,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
-import com.niki.common.utils.takePartOf
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
-import com.niki.music.common.ui.SongAdapter
-import com.niki.music.common.ui.SongAdapterListener
-import com.niki.music.common.ui.showSongDetail
-import com.niki.music.common.viewModels.MainViewModel
-import com.niki.music.common.views.IView
+import com.niki.music.ui.SongAdapter
+import com.niki.music.ui.SongAdapterListener
+import com.niki.music.ui.showSongDetail
+import com.niki.music.viewModel.MainViewModel
 import com.niki.music.databinding.FragmentMyBinding
 import com.niki.music.my.login.LoginFragment
 import com.p1ay1s.base.extension.addLineDecoration
@@ -27,7 +25,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
+class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
 
     companion object {
         const val CLICK_TO_LOGIN = "点击登录"
@@ -88,7 +86,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>(), IView {
         )
     }
 
-    override fun handle() = myViewModel.observeState {
+    private fun handle() = myViewModel.observeState {
         loginStateJob?.cancel()
         loginStateJob = lifecycleScope.launch {
             map { it.loggedInDatas }.distinctUntilChanged().collect {

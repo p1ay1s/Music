@@ -6,6 +6,5 @@ object FragmentTag {
 
     const val MY_FRAGMENT = 10
 
-    const val PREVIEW_FRAGMENT = 100
-    const val RESULT_FRAGMENT = 101
+    const val RESULT_FRAGMENT = 100
 }

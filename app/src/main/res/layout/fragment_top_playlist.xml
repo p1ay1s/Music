@@ -29,14 +29,46 @@
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:toolbarId="@id/toolbar">
 
-                <ImageView
-                    android:id="@+id/background"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/block"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="250dp"
-                    android:scaleType="centerCrop"
-                    app:layout_collapseMode="parallax"
-                    app:layout_collapseParallaxMultiplier="0.75" />
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/background"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="250dp"
+                        android:scaleType="centerCrop"
+                        app:layout_collapseMode="parallax"
+                        app:layout_collapseParallaxMultiplier="0.75" />
+
+                    <ImageView
+                        android:id="@+id/q"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_nnn"
+                        app:layout_constraintBottom_toBottomOf="@id/background"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/description"
+                        app:layout_constraintWidth_percent="0.1"
+                        app:tint="@color/unselected" />
+
+                    <TextView
+                        android:id="@+id/description"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="5dp"
+                        android:ellipsize="marquee"
+                        android:gravity="bottom"
+                        android:maxLines="4"
+                        android:textColor="@color/unselected"
+                        android:textSize="12sp"
+                        android:textStyle="italic"
+                        app:layout_constraintBottom_toBottomOf="@id/background"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintWidth_percent="0.9" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
@@ -59,8 +91,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp" />
-
-            <!--       l\l-->
         </LinearLayout>
 
 

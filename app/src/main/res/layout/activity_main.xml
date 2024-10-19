@@ -131,7 +131,7 @@
                 app:layout_constraintTop_toBottomOf="@id/singerName"
                 app:layout_constraintWidth_percent="0.9" />
 
-            <com.niki.music.common.ui.button.PlayButton
+            <com.niki.music.ui.button.PlayButton
                 android:id="@+id/play"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
@@ -141,7 +141,7 @@
                 app:layout_constraintTop_toTopOf="@id/previous"
                 app:tint="#a0ffffff" />
 
-            <com.niki.music.common.ui.button.PreviousButton
+            <com.niki.music.ui.button.PreviousButton
                 android:id="@+id/previous"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
@@ -153,7 +153,7 @@
                 app:layout_constraintTop_toBottomOf="@id/seekBar"
                 app:tint="#a0ffffff" />
 
-            <com.niki.music.common.ui.button.NextButton
+            <com.niki.music.ui.button.NextButton
                 android:id="@+id/next"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
@@ -166,7 +166,7 @@
                 app:tint="#a0ffffff" />
 
 
-            <com.niki.music.common.ui.button.PlayModeButton
+            <com.niki.music.ui.button.PlayModeButton
                 android:id="@+id/playMode"
                 android:layout_width="35dp"
                 android:layout_height="35dp"

@@ -7,10 +7,9 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.niki.music.common.ui.BaseBottomSheetDialogFragment
 import com.niki.music.R
 import com.niki.music.appLoadingDialog
-import com.niki.music.common.views.IView
+import com.niki.music.ui.BaseBottomSheetDialogFragment
 import com.niki.music.databinding.FragmentLoginBinding
 import com.niki.music.my.MyEffect
 import com.niki.music.my.MyIntent
@@ -30,8 +29,7 @@ fun interface DismissCallback {
 // 会被及时释放
 var dismissCallback: DismissCallback? = null
 
-class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IView,
-    DismissCallback {
+class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), DismissCallback {
     private lateinit var myViewModel: MyViewModel
 
     private lateinit var binding: FragmentLoginBinding
@@ -83,7 +81,7 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), IV
         myViewModel.sendIntent(MyIntent.PasswordLogin)
     }
 
-    override fun handle() =
+    private fun handle() =
         lifecycleScope.apply {
             effectJob?.cancel()
             effectJob = launch {
