@@ -16,17 +16,17 @@ import com.niki.music.ui.showSongDetail
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
+import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import com.p1ay1s.util.ImageSetter.setImgView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class TopPlaylistFragment(
+class PlaylistFragment(
     private val playlist: Playlist,
     private var songs: List<Song>
-) :
-    ViewBindingFragment<FragmentTopPlaylistBinding>() {
+) : ViewBindingFragment<FragmentTopPlaylistBinding>() {
 
     private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
@@ -72,7 +72,7 @@ class TopPlaylistFragment(
     }
 
     private fun loadMore() {
-        if (isLoading || !hasMore) return
+        if (isLoading || !hasMore || playlist.id == "") return
         isLoading = true
         mainViewModel.getSongsFromPlaylist(
             playlist.id,
@@ -105,7 +105,7 @@ class TopPlaylistFragment(
 
     override fun onDestroyView() {
         super.onDestroyView()
-        songAdapter.removeSongAdapterListener()
+        songAdapter.setSongAdapterListener(null)
     }
 
     inner class SongAdapterListenerImpl : SongAdapterListener {
@@ -114,7 +114,9 @@ class TopPlaylistFragment(
         }
 
         override fun onMoreClicked(song: Song) {
-            showSongDetail(song)
+            findFragmentHost()?.let {
+                showSongDetail(song, it)
+            }
         }
     }
 }

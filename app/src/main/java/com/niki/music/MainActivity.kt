@@ -32,7 +32,7 @@ import com.niki.common.utils.getNewTag
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
 import com.niki.music.databinding.ActivityMainBinding
-import com.niki.music.listen.top.TopPlaylistFragment
+import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.my.MyFragment
 import com.niki.music.my.login.dismissCallback
 import com.niki.music.ui.BlurTransformation
@@ -289,7 +289,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         val fragment = fragmentHost!!.getCurrentFragment()
         FragmentTag.apply {
             when (fragment) {
-                is TopPlaylistFragment ->
+                is PlaylistFragment ->
                     fragmentHost!!.pop(
                         TOP_PLAYLIST_FRAGMENT,
                         LISTEN_FRAGMENT,

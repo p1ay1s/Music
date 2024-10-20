@@ -32,7 +32,9 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/block"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    app:layout_collapseMode="parallax"
+                    app:layout_collapseParallaxMultiplier="0.75">
 
                     <ImageView
                         android:id="@+id/background"
@@ -40,8 +42,7 @@
                         android:layout_height="wrap_content"
                         android:minHeight="250dp"
                         android:scaleType="centerCrop"
-                        app:layout_collapseMode="parallax"
-                        app:layout_collapseParallaxMultiplier="0.75" />
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <ImageView
                         android:id="@+id/q"

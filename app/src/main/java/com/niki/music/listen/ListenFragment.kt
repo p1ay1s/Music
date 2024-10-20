@@ -15,7 +15,7 @@ import com.niki.music.databinding.FragmentListenBinding
 import com.niki.music.listen.ListenViewModel.Companion.TOP_LIMIT
 import com.niki.music.listen.top.TopPlaylistAdapter
 import com.niki.music.listen.top.TopPlaylistAdapterListener
-import com.niki.music.listen.top.TopPlaylistFragment
+import com.niki.music.listen.top.PlaylistFragment
 import com.p1ay1s.base.extension.addOnLoadMoreListener_H
 import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.extension.setSnapHelper
@@ -132,7 +132,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
         override fun onReady(playlist: Playlist, songs: List<Song>) {
             findFragmentHost()?.add(
                 FragmentTag.TOP_PLAYLIST_FRAGMENT,
-                TopPlaylistFragment(playlist, songs),
+                PlaylistFragment(playlist, songs),
                 R.anim.right_enter,
                 R.anim.fade_out
             )

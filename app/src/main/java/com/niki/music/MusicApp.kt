@@ -22,6 +22,7 @@ class MyApp : App() {
 
         IPSetter.setIp()
         appBaseUrl = "http://$appIpAddress:3000/"
+//        appBaseUrl = "http://10.44.4.65:3000/"
     }
 }
 

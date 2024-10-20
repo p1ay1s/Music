@@ -1,5 +1,6 @@
 package com.niki.common.services
 
+import com.niki.common.repository.dataclasses.album.AlbumResponse
 import com.niki.common.repository.dataclasses.song.availabilityApi.AvailabilityResponse
 import com.niki.common.repository.dataclasses.song.getSongInfoApi.GetSongInfoApiResponse
 import com.niki.common.repository.dataclasses.song.getSongsFromPlaylistApi.GetSongsFromPlaylistApiResponse
@@ -27,6 +28,11 @@ interface PlayerService {
         @Query("limit") limit: Int,
         @Query("offset") offset: Int
     ): Call<GetSongsFromPlaylistApiResponse>
+
+    @GET(WebConstant.SONGS_FROM_ALBUM)
+    fun getAlbumSongs(
+        @Query("id") id: String
+    ): Call<AlbumResponse>
 
     @GET(WebConstant.SEARCH_SONGS_DETAIL)
     fun getSongsWithIds(

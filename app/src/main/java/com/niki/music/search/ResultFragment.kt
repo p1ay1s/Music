@@ -15,6 +15,7 @@ import com.niki.music.ui.SongAdapterListener
 import com.niki.music.ui.showSongDetail
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
+import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -99,17 +100,18 @@ class ResultFragment : ViewBindingFragment<FragmentResultBinding>() {
     override fun onDestroyView() {
         super.onDestroyView()
         searchBar.listener = null
-        songAdapter.removeSongAdapterListener()
+        songAdapter.setSongAdapterListener(null)
     }
 
     inner class SongAdapterListenerImpl : SongAdapterListener {
         override fun onPlayMusic(list: List<Song>) {
             (activity as MainActivity).onSongPass(list)
-//            mainViewModel.sendIntent(MainIntent.TryPlaySong(song))
         }
 
         override fun onMoreClicked(song: Song) {
-            showSongDetail(song)
+            findFragmentHost()?.let {
+                showSongDetail(song, it)
+            }
         }
     }
 

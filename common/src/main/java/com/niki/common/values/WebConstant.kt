@@ -10,9 +10,6 @@ object WebConstant {
     const val USER_LOGIN_WITH_CAPTCHA = "login/cellphone"
     const val USER_LOGIN_REFRESH = "login/refresh"
 
-    // 歌单分类
-    const val PLAYLIST_CATE = "playlist/catlist"
-
     // 最流行歌单
     const val PLAYLIST_TOP = "top/playlist"
 
@@ -23,6 +20,8 @@ object WebConstant {
 
     // 歌曲详情
     const val SEARCH_SONGS_DETAIL = "song/detail"
+
+    const val SONGS_FROM_ALBUM = "album"
 
     // 音乐相关接口
     const val SONGS_FROM_PLAYLIST = "playlist/track/all"

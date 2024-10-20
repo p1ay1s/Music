@@ -1,6 +1,7 @@
 package com.niki.music.ui
 
 import android.view.View
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.repository.dataclasses.song.SongInfo
@@ -24,29 +25,24 @@ class SongAdapter(
 
     companion object {
         const val EXPLICIT = 1048576L
-
-
     }
 
-//    override fun getItemViewType(position: Int): Int {
-//        listener // TODO
-//        return super.getItemViewType(position)
-//    }
-
-    fun setSongAdapterListener(l: SongAdapterListener) {
+    fun setSongAdapterListener(l: SongAdapterListener?) {
         listener = l
-    }
-
-    fun removeSongAdapterListener() {
-        listener = null
     }
 
     private fun isExplicit(mark: Long?) =
         if (mark != null) (mark and EXPLICIT) == EXPLICIT else false
 
     override fun LayoutSongBinding.onBindViewHolder(data: Song, position: Int) {
-        root.setOnClickListener {
-            listener?.onPlayMusic(getRelocatedList(data))
+        root.run {
+            setOnClickListener {
+                listener?.onPlayMusic(getRelocatedList(data))
+            }
+
+            updateLayoutParams {
+                height = (0.08 * resources.displayMetrics.heightPixels).toInt()
+            }
         }
 
         if (showImage)

@@ -1,5 +1,6 @@
 package com.niki.music.model
 
+import com.niki.common.repository.dataclasses.album.AlbumResponse
 import com.niki.common.repository.dataclasses.song.availabilityApi.AvailabilityResponse
 import com.niki.common.repository.dataclasses.song.getSongInfoApi.GetSongInfoApiResponse
 import com.niki.common.repository.dataclasses.song.getSongsFromPlaylistApi.GetSongsFromPlaylistApiResponse
@@ -21,6 +22,15 @@ class PlayerModel {
         crossinline onSuccess: (AvailabilityResponse) -> Unit,
         crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.checkSong(id), onSuccess, onError)
+
+    /**
+     * 获取专辑中所有歌曲, 注意为了复用代码此处不能直接使用结果而应该用所有的 id 重新获取 song
+     */
+    inline fun getAlbumSongs(
+        id: String,
+        crossinline onSuccess: (AlbumResponse) -> Unit,
+        crossinline onError: (Int?, String) -> Unit
+    ) = requestEnqueue(playerService.getAlbumSongs(id), onSuccess, onError)
 
     /**
      * 通过 id 等信息获取播放的必要内容(如歌曲的 url 以及歌名等)

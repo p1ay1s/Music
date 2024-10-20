@@ -16,6 +16,7 @@ import com.niki.music.viewModel.MainViewModel
 import com.niki.music.databinding.FragmentMyBinding
 import com.niki.music.my.login.LoginFragment
 import com.p1ay1s.base.extension.addLineDecoration
+import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import com.p1ay1s.util.ImageSetter
@@ -37,7 +38,6 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
     private lateinit var baseLayoutManager: PreloadLayoutManager
 
     private lateinit var myViewModel: MyViewModel
-    private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
     private var loginStateJob: Job? = null
     private var likeListJob: Job? = null
@@ -107,7 +107,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        songAdapter.removeSongAdapterListener()
+        songAdapter.setSongAdapterListener(null)
         loginStateJob?.cancel()
         loginStateJob = null
         likeListJob?.cancel()
@@ -164,7 +164,9 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
         }
 
         override fun onMoreClicked(song: Song) {
-            showSongDetail(song)
+            findFragmentHost()?.let {
+                showSongDetail(song, it)
+            }
         }
     }
 }

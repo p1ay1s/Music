@@ -5,6 +5,4 @@ data class Playlist(
     var id: String = "",
     var coverImgUrl: String = "",
     var description: String = "",
-    var tags: List<String> = listOf(),
-    var creator: Creator = Creator()
 )

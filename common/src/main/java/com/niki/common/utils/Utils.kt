@@ -1,16 +1,15 @@
 package com.niki.common.utils
 
 import android.content.Intent
-import android.util.Log
 import android.view.View
 import android.view.Window
 import android.widget.TextView
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.niki.common.repository.dataclasses.album.AlbumDetails
+import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.values.FragmentTag
 import com.p1ay1s.base.appContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 fun <T> shuffle(list: MutableList<T>) {
@@ -142,4 +141,8 @@ fun Window.showNavigationBar() {
 
 fun sendBroadcast(msg: String) = appContext?.let {
     LocalBroadcastManager.getInstance(it).sendBroadcast(Intent(msg))
+}
+
+fun AlbumDetails.toPlaylist(): Playlist {
+    return Playlist(name, "", picUrl, description)
 }
