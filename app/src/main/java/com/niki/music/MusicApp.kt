@@ -19,6 +19,7 @@ class MyApp : App() {
 //        Logger.crashActivity = CrashApp::class.java // 其实感觉还不如让他直接崩溃
 
         startLogger(context, VERBOSE)
+//        appContext = context
 
         IPSetter.setIp()
         appBaseUrl = "http://$appIpAddress:3000/"

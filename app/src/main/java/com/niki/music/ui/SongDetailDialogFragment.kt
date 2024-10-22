@@ -10,9 +10,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.niki.common.repository.dataclasses.song.Song
+import com.niki.common.utils.getLargeRandomNum
 import com.niki.common.utils.setSingerName
 import com.niki.common.utils.toPlaylist
-import com.niki.common.values.FragmentTag
 import com.niki.music.MainActivity
 import com.niki.music.R
 import com.niki.music.appLoadingDialog
@@ -20,15 +20,14 @@ import com.niki.music.databinding.FragmentSongDetailBinding
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.toast
-import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
-fun Fragment.showSongDetail(song: Song, host: FragmentHost) {
-    val fragment = SongDetailDialogFragment(song, host)
+fun Fragment.showSongDetail(song: Song) {
+    val fragment = SongDetailDialogFragment(song)
     fragment.show(parentFragmentManager, "SONG_DETAIL")
 }
 
-class SongDetailDialogFragment(private val targetSong: Song, private val host: FragmentHost) :
+class SongDetailDialogFragment(private val targetSong: Song) :
     BottomSheetDialogFragment(R.layout.layout_search_bar) {
 
     companion object {
@@ -77,12 +76,15 @@ class SongDetailDialogFragment(private val targetSong: Song, private val host: F
         mainViewModel.getSongsFromAlbum(targetSong.al.id) { songs, album ->
             if (!songs.isNullOrEmpty()) {
                 try {
-                    host.add(
-                        FragmentTag.PLAYLIST_FRAGMENT,
-                        PlaylistFragment(album!!.album.toPlaylist(), songs),
+                    val num = getLargeRandomNum()
+                    mainViewModel.playlistMap[num.toString()] =
+                        Pair(album!!.album.toPlaylist(), songs)
+                    mainViewModel.host?.pushFragment(
+                        num,
+                        PlaylistFragment(),
                         R.anim.right_enter,
                         R.anim.fade_out
-                    ) // TODO 搞三个独立返回栈！！
+                    )
                 } catch (_: Exception) {
                     "该歌曲为单曲".toast()
                 } finally {

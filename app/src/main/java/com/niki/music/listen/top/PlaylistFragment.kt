@@ -16,17 +16,13 @@ import com.niki.music.ui.showSongDetail
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
-import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import com.p1ay1s.util.ImageSetter.setImgView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class PlaylistFragment(
-    private val playlist: Playlist,
-    private var songs: List<Song>
-) : ViewBindingFragment<FragmentTopPlaylistBinding>() {
+class PlaylistFragment : ViewBindingFragment<FragmentTopPlaylistBinding>() {
 
     private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
@@ -37,7 +33,20 @@ class PlaylistFragment(
     private var hasMore = true
     private var isLoading = false
 
+    private lateinit var playlist: Playlist
+    private lateinit var songs: List<Song>
+
+    private fun getPair() {
+        mainViewModel.run {
+            playlistMap[this@PlaylistFragment.tag].let { pair ->
+                playlist = pair!!.first
+                songs = pair.second
+            }
+        }
+    }
+
     override fun FragmentTopPlaylistBinding.initBinding() {
+        getPair()
         initValues()
 
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
@@ -114,9 +123,7 @@ class PlaylistFragment(
         }
 
         override fun onMoreClicked(song: Song) {
-            findFragmentHost()?.let {
-                showSongDetail(song, it)
-            }
+            showSongDetail(song)
         }
     }
 }

@@ -8,9 +8,12 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.niki.common.repository.dataclasses.album.AlbumDetails
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
-import com.niki.common.values.FragmentTag
 import com.p1ay1s.base.appContext
 import kotlin.random.Random
+
+fun getLargeRandomNum(): Int {
+    return (0..Int.MAX_VALUE).random()
+}
 
 fun <T> shuffle(list: MutableList<T>) {
     // 从列表末尾开始
@@ -22,17 +25,6 @@ fun <T> shuffle(list: MutableList<T>) {
         val temp = list[i]
         list[i] = list[j]
         list[j] = temp
-    }
-}
-
-fun getNewTag(index: Int): Int {
-    FragmentTag.apply {
-        if (index in LISTEN_FRAGMENT..TOP_PLAYLIST_FRAGMENT)
-            return LISTEN_FRAGMENT
-        if (index == RESULT_FRAGMENT)
-            return RESULT_FRAGMENT
-
-        return MY_FRAGMENT
     }
 }
 

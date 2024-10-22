@@ -2,21 +2,18 @@ package com.niki.music.my
 
 import android.view.View
 import android.widget.LinearLayout
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
+import com.niki.music.databinding.FragmentMyBinding
+import com.niki.music.my.login.LoginFragment
 import com.niki.music.ui.SongAdapter
 import com.niki.music.ui.SongAdapterListener
 import com.niki.music.ui.showSongDetail
-import com.niki.music.viewModel.MainViewModel
-import com.niki.music.databinding.FragmentMyBinding
-import com.niki.music.my.login.LoginFragment
 import com.p1ay1s.base.extension.addLineDecoration
-import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import com.p1ay1s.util.ImageSetter
@@ -164,9 +161,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
         }
 
         override fun onMoreClicked(song: Song) {
-            findFragmentHost()?.let {
-                showSongDetail(song, it)
-            }
+            showSongDetail(song)
         }
     }
 }

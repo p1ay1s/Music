@@ -7,7 +7,7 @@
         android:layout_height="match_parent"
         android:background="@color/background">
 
-        <com.p1ay1s.base.ui.FragmentHostView
+        <com.niki.music.ui.HostView
             android:id="@+id/fragmentHostView"
             android:layout_width="match_parent"
             android:layout_height="0dp"

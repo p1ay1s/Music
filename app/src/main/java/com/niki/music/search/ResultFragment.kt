@@ -15,7 +15,6 @@ import com.niki.music.ui.SongAdapterListener
 import com.niki.music.ui.showSongDetail
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
-import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -97,9 +96,11 @@ class ResultFragment : ViewBindingFragment<FragmentResultBinding>() {
         }
     }
 
+
+
     override fun onDestroyView() {
-        super.onDestroyView()
         searchBar.listener = null
+        super.onDestroyView() // <---- 此方法后访问 binding 会出错
         songAdapter.setSongAdapterListener(null)
     }
 
@@ -109,9 +110,7 @@ class ResultFragment : ViewBindingFragment<FragmentResultBinding>() {
         }
 
         override fun onMoreClicked(song: Song) {
-            findFragmentHost()?.let {
-                showSongDetail(song, it)
-            }
+            showSongDetail(song)
         }
     }
 

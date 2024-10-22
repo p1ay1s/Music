@@ -30,7 +30,7 @@ class SearchBar(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
     var listener: SearchBarListener? = null
     private var enableSet = true
 
-    private lateinit var suggestionAdapter: SuggestionAdapter
+    private var suggestionAdapter = SuggestionAdapter {}
 
     private var preloadLayoutManager = PreloadLayoutManager(
         context,
@@ -48,7 +48,7 @@ class SearchBar(context: Context, attrs: AttributeSet?) : LinearLayout(context, 
                  *
                  * 要想不输入回车要在 edit text 设置 single line 属性
                  */
-                setOnEditorActionListener { textView, actionId, event ->
+                setOnEditorActionListener { textView, actionId, _ ->
                     textView.text?.let {
                         listener?.onSubmit(it.toString())
                     }

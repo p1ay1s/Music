@@ -2,6 +2,7 @@ package com.niki.music.listen
 
 
 import android.content.Context
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -9,15 +10,16 @@ import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
-import com.niki.common.values.FragmentTag
+import com.niki.common.utils.getLargeRandomNum
 import com.niki.music.R
 import com.niki.music.databinding.FragmentListenBinding
 import com.niki.music.listen.ListenViewModel.Companion.TOP_LIMIT
+import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.listen.top.TopPlaylistAdapter
 import com.niki.music.listen.top.TopPlaylistAdapterListener
-import com.niki.music.listen.top.PlaylistFragment
+import com.niki.music.ui.findHost
+import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.addOnLoadMoreListener_H
-import com.p1ay1s.base.extension.findFragmentHost
 import com.p1ay1s.base.extension.setSnapHelper
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
@@ -32,6 +34,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
     private lateinit var topLayoutManager: ToMiddleLayoutManager
 
     private lateinit var listenViewModel: ListenViewModel
+    private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
 
     private var playlistJob: Job? = null
 
@@ -130,9 +133,11 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
 
         // adapter 准备完成 , 添加 fragment
         override fun onReady(playlist: Playlist, songs: List<Song>) {
-            findFragmentHost()?.add(
-                FragmentTag.TOP_PLAYLIST_FRAGMENT,
-                PlaylistFragment(playlist, songs),
+            val num = getLargeRandomNum()
+            mainViewModel.playlistMap[num.toString()] = Pair(playlist, songs)
+            findHost()?.pushFragment(
+                num,
+                PlaylistFragment(),
                 R.anim.right_enter,
                 R.anim.fade_out
             )

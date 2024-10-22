@@ -28,21 +28,21 @@ import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
 import com.niki.common.utils.Point
 import com.niki.common.utils.getIntersectionPoint
-import com.niki.common.utils.getNewTag
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
 import com.niki.music.databinding.ActivityMainBinding
-import com.niki.music.listen.top.PlaylistFragment
+import com.niki.music.listen.ListenFragment
 import com.niki.music.my.MyFragment
-import com.niki.music.my.login.dismissCallback
+import com.niki.music.search.ResultFragment
 import com.niki.music.ui.BlurTransformation
+import com.niki.music.ui.Host
+import com.niki.music.ui.HostView
 import com.niki.music.ui.button.PlayButton
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
-import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.impl.ViewBindingActivity
 import com.p1ay1s.util.ImageSetter.setRadiusImgView
 import com.p1ay1s.util.ServiceBuilder.ping
@@ -59,15 +59,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     ActivityPreferences.TwoClicksListener {
 
     companion object {
-        const val LISTEN_KEY = "LISTEN"
-        const val MY_KEY = "MY"
-        const val SEARCH_KEY = "SEARCH"
-
-        const val CURRENT = "CURRENT"
-        const val PREVIOUS = "PREVIOUS"
-
-        const val PROGRESS = "PROGRESS"
-
         const val BOTTOM_NAV_WEIGHT = 0.1
     }
 
@@ -81,19 +72,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private lateinit var mainViewModel: MainViewModel
 
     /**
-     * 用于导航
-     */
-    private var listenIndex = FragmentTag.LISTEN_FRAGMENT
-    private var myIndex = FragmentTag.MY_FRAGMENT
-    private var searchIndex = FragmentTag.RESULT_FRAGMENT
-
-    /**
      * 用于处理 bottom navigation view 的点击事件
      *
      * 比如点击同一个选项回退上一界面等
      */
-    private var currentTag = FragmentTag.LISTEN_FRAGMENT
-    private var previousTag = FragmentTag.LISTEN_FRAGMENT
+    private var currentIndex = FragmentTag.LISTEN_FRAGMENT
+    private var previousIndex = FragmentTag.LISTEN_FRAGMENT
 
     private var musicProgress = 0
 
@@ -109,16 +93,34 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         checkServerUsability()
         startMusicService()
 
-        mainViewModel.run {
-            if (fragmentHost == null) {
-                fragmentHost =
-                    fragmentHostView.create(supportFragmentManager, fragmentMap)
-                fragmentHost?.setOnIndexChangeListener(OnIndexChangeListenerImpl())
+        fragmentHostView.apply {
+            this.fragmentManager = supportFragmentManager
+            setOnHostChangeListener(OnHostChangeListenerImpl())
+            if (mainViewModel.hostMap == null || mainViewModel.host == null) {
+                addHost(R.id.index_search) {
+                    pushFragment(
+                        FragmentTag.RESULT_FRAGMENT,
+                        ResultFragment::class.java
+                    )
+                }
+                addHost(R.id.index_my) {
+                    pushFragment(
+                        FragmentTag.MY_FRAGMENT,
+                        MyFragment::class.java
+                    )
+                }
+                addHost(R.id.index_listen) {
+                    pushFragment(
+                        FragmentTag.LISTEN_FRAGMENT,
+                        ListenFragment::class.java
+                    )
+                }
             } else {
-                fragmentHostView.restore(fragmentHost!!, supportFragmentManager)
-                fragmentHost?.setOnIndexChangeListener(OnIndexChangeListenerImpl())
+                restore(mainViewModel.hostMap!!, mainViewModel.activityIndex)
             }
+        }
 
+        mainViewModel.run {
             // 重建时恢复状态
             if (currentSong != null) {
                 playerBehavior.isHideable = false
@@ -227,46 +229,33 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun BottomNavigationView.setSwitchHandler() {
         setOnItemSelectedListener { item ->
-            val newIndex = getIndex(item.itemId)
-            currentTag = getNewTag(newIndex) // 用 index 判断属于哪个页面
+            currentIndex = item.itemId
 
-            if (previousTag == currentTag) { // 如果点击了相同的按钮则尝试回退到上一层 fragment
+            if (previousIndex == currentIndex) { // 如果点击了相同的按钮则尝试回退到上一层 fragment
                 handleBackPress(false)
-            } else { // 否则判断方位并导航
-                mainViewModel.fragmentHost?.navigate(
-                    newIndex,
-                    R.anim.fade_in,
-                    R.anim.fade_out
-                )
+            } else { // 导航
+                binding.fragmentHostView.switchHost(item.itemId, R.anim.fade_in, R.anim.fade_out)
             }
 
-            previousTag = currentTag // 更新旧的 tag
+            previousIndex = currentIndex // 更新旧的 tag
             true
         }
-    }
-
-    // 取回用于导航的 index
-    private fun getIndex(id: Int) = when (id) {
-        R.id.index_my -> myIndex
-        R.id.index_search -> searchIndex
-        R.id.index_listen -> listenIndex
-        else -> throw Exception("using an invalid id!")
     }
 
     // 在 on resume & on pause 设置会导致闪烁
     override fun onStart() {
         super.onStart()
-        mainViewModel.fragmentHost?.show() // 防止残留
+        mainViewModel.host?.show() // 防止残留
     }
 
     override fun onStop() {
-        mainViewModel.fragmentHost?.hide() // 防止残留
+        mainViewModel.host?.hide() // 防止残留
+        mainViewModel.hostMap = binding.fragmentHostView.map
         super.onStop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mainViewModel.fragmentHost?.removeOnIndexChangeListener()
         serviceBinder?.setListener(null)
         unbindService(connection) // 不仅是要同一个 connection, 还得是同一个 context
     }
@@ -286,23 +275,16 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      * @param enableTwoClickToExit 传入 false 时点击不双击退出
      */
     private fun handleBackPress(enableTwoClickToExit: Boolean = true) = mainViewModel.run {
-        val fragment = fragmentHost!!.getCurrentFragment()
-        FragmentTag.apply {
-            when (fragment) {
-                is PlaylistFragment ->
-                    fragmentHost!!.pop(
-                        TOP_PLAYLIST_FRAGMENT,
-                        LISTEN_FRAGMENT,
+        val pair = mainViewModel.host?.getPeekPair()
+        FragmentTag.run {
+            if (pair != null)
+                when (pair.first) {
+                    LISTEN_FRAGMENT, MY_FRAGMENT, RESULT_FRAGMENT -> if (enableTwoClickToExit) twoClicksToExit()
+                    else -> mainViewModel.host?.popFragment(
                         R.anim.fade_in,
                         R.anim.right_exit
                     )
-
-                is MyFragment -> dismissCallback?.dismissDialog() ?: {
-                    if (enableTwoClickToExit) twoClicksToExit()
                 }
-
-                else -> if (enableTwoClickToExit) twoClicksToExit()
-            }
         }
     }
 
@@ -322,23 +304,11 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    /**
-     * 用于记录索引
-     */
-    inner class OnIndexChangeListenerImpl : FragmentHost.OnIndexChangeListener {
-
-        override fun onIndexChanged(index: Int) {
-            FragmentTag.apply {
-                when (index) {
-                    LISTEN_FRAGMENT, TOP_PLAYLIST_FRAGMENT -> {
-                        listenIndex = index
-                    }
-
-                    RESULT_FRAGMENT -> {
-                        searchIndex = index
-                    }
-                }
-                previousTag = getNewTag(index)
+    inner class OnHostChangeListenerImpl : HostView.OnHostChangeListener {
+        override fun onHostChanged(newHost: Host?, newIndex: Int) {
+            newHost?.let {
+                mainViewModel.host = it
+                mainViewModel.activityIndex = newIndex
             }
         }
     }
@@ -540,18 +510,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     // 部分数据存取逻辑
     override fun onCreate(savedInstanceState: Bundle?) {
         savedInstanceState?.run {
-            listenIndex = getInt(LISTEN_KEY)
-            myIndex = getInt(MY_KEY)
-            searchIndex = getInt(SEARCH_KEY)
-
-            currentTag = getInt(CURRENT)
-            previousTag = getInt(PREVIOUS)
-
-            musicProgress = getInt(PROGRESS)
         }
-
         super.onCreate(savedInstanceState) // 包含 initBinding 的调用
-
 //        val builder = MaterialAlertDialogBuilder(this)
 //
 //        builder.setTitle("material dialog test")
@@ -564,19 +524,5 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 //
 //        val dialog = builder.create()
 //        dialog.show()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.run {
-            putInt(LISTEN_KEY, listenIndex)
-            putInt(MY_KEY, myIndex)
-            putInt(SEARCH_KEY, searchIndex)
-
-            putInt(CURRENT, currentTag)
-            putInt(PREVIOUS, previousTag)
-
-            putInt(PROGRESS, musicProgress)
-        }
     }
 }
