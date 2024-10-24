@@ -1,4 +1,4 @@
-package com.niki.music.my.login
+package com.niki.music.mine.login
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,9 +11,9 @@ import com.niki.music.R
 import com.niki.music.appLoadingDialog
 import com.niki.music.ui.BaseBottomSheetDialogFragment
 import com.niki.music.databinding.FragmentLoginBinding
-import com.niki.music.my.MyEffect
-import com.niki.music.my.MyIntent
-import com.niki.music.my.MyViewModel
+import com.niki.music.mine.UserEffect
+import com.niki.music.mine.UserIntent
+import com.niki.music.mine.UserViewModel
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.log.logE
 import com.p1ay1s.util.ImageSetter.setCircleImgView
@@ -30,7 +30,7 @@ fun interface DismissCallback {
 var dismissCallback: DismissCallback? = null
 
 class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), DismissCallback {
-    private lateinit var myViewModel: MyViewModel
+    private lateinit var userViewModel: UserViewModel
 
     private lateinit var binding: FragmentLoginBinding
     private var effectJob: Job? = null
@@ -47,7 +47,7 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), Di
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        myViewModel = ViewModelProvider(requireActivity())[MyViewModel::class.java]
+        userViewModel = ViewModelProvider(requireActivity())[UserViewModel::class.java]
 
         dismissCallback = this
         handle()
@@ -55,15 +55,15 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), Di
         binding.run {
             editPhone.editText?.addTextChangedListener {
                 updatePhone(it.toString())
-                myViewModel.sendIntent(MyIntent.GetAvatarUrl)
+                userViewModel.sendIntent(UserIntent.GetAvatarUrl)
             }
             editPassword.editText?.addTextChangedListener { updateCaptcha(it.toString()) }
-            getCodeButton.setOnClickListener { myViewModel.sendIntent(MyIntent.SendCaptcha) }
+            getCodeButton.setOnClickListener { userViewModel.sendIntent(UserIntent.SendCaptcha) }
             switchMethod.setOnClickListener {
-                myViewModel.sendIntent(MyIntent.SwitchMethod)
+                userViewModel.sendIntent(UserIntent.SwitchMethod)
             }
             loginButton.setOnClickListener {
-                if (myViewModel.state.useCaptcha)
+                if (userViewModel.state.useCaptcha)
                     captchaLogin()
                 else
                     passwordLogin()
@@ -73,33 +73,33 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), Di
 
     private fun captchaLogin() {
         appLoadingDialog?.show()
-        myViewModel.sendIntent(MyIntent.CaptchaLogin)
+        userViewModel.sendIntent(UserIntent.CaptchaLogin)
     }
 
     private fun passwordLogin() {
         appLoadingDialog?.show()
-        myViewModel.sendIntent(MyIntent.PasswordLogin)
+        userViewModel.sendIntent(UserIntent.PasswordLogin)
     }
 
     private fun handle() =
         lifecycleScope.apply {
             effectJob?.cancel()
             effectJob = launch {
-                myViewModel.uiEffectFlow
+                userViewModel.uiEffectFlow
                     .collect {
                         logE(
                             TAG,
                             "COLLECTED ${it::class.qualifiedName.toString()}"
                         )
                         when (it) {
-                            is MyEffect.GetAvatarUrlOkEffect -> {
+                            is UserEffect.GetAvatarUrlOkEffect -> {
                                 binding.userAvatar.setCircleImgView(
                                     it.url,
                                     false
                                 )
                             }
 
-                            MyEffect.GetAvatarUrlBadEffect -> {
+                            UserEffect.GetAvatarUrlBadEffect -> {
                                 binding.userAvatar.visibility =
                                     View.INVISIBLE
                             }
@@ -107,7 +107,7 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), Di
                     }
             }
 
-            myViewModel.observeState {
+            userViewModel.observeState {
                 launch {
                     map { it.isLoggedIn }.distinctUntilChanged().collect {
                         if (it) {
@@ -133,9 +133,9 @@ class LoginFragment : BaseBottomSheetDialogFragment(R.layout.fragment_login), Di
             }
         }
 
-    private fun updatePhone(phone: String) = myViewModel.sendIntent(MyIntent.UpdatePhone(phone))
+    private fun updatePhone(phone: String) = userViewModel.sendIntent(UserIntent.UpdatePhone(phone))
     private fun updateCaptcha(captcha: String) =
-        myViewModel.sendIntent(MyIntent.UpdateCaptcha(captcha))
+        userViewModel.sendIntent(UserIntent.UpdateCaptcha(captcha))
 
     override fun onDestroyView() {
         super.onDestroyView()

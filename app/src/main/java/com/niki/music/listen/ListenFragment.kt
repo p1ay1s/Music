@@ -17,7 +17,7 @@ import com.niki.music.listen.ListenViewModel.Companion.TOP_LIMIT
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.listen.top.TopPlaylistAdapter
 import com.niki.music.listen.top.TopPlaylistAdapterListener
-import com.niki.music.ui.findHost
+import com.p1ay1s.base.extension.findHost
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.addOnLoadMoreListener_H
 import com.p1ay1s.base.extension.setSnapHelper

@@ -85,10 +85,9 @@ class SongDetailDialogFragment(private val targetSong: Song) :
                         R.anim.right_enter,
                         R.anim.fade_out
                     )
+                    dismiss()
                 } catch (_: Exception) {
                     "该歌曲为单曲".toast()
-                } finally {
-                    dismiss()
                 }
             } else {
                 "加载失败, 请重试".toast()

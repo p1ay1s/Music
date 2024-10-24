@@ -1,6 +1,6 @@
 package com.niki.common.repository.dataclasses.album
 
-data class AlbumArtist(
+data class ArtistMsg(
     val followed: Boolean,
     val id: Int,
     val name: String,

@@ -1,26 +1,11 @@
 package com.niki.music.ui
 
-import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import java.util.Stack
 
-fun Fragment.findHost(): Host? {
-    var view = view
-    var parent = view?.parent
-
-    while (parent != null) {
-        if (parent is HostView) {
-            return parent.getActiveHost()
-        }
-        view = parent as? View // as? 如果转换失败则变为 null
-        parent = view?.parent
-    }
-    return null
-}
-
-open class Host(
+open class Host1(
     private val viewId: Int,
 ) : Stack<Pair<Int, Class<out Fragment>>>() {
 

@@ -25,7 +25,7 @@ import com.bumptech.glide.request.transition.Transition
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.shuffle
 import com.niki.music.model.PlayerModel
-import com.niki.music.my.appCookie
+import com.niki.music.mine.appCookie
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

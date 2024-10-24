@@ -1,6 +1,7 @@
 package com.niki.common.services
 
 import com.niki.common.repository.dataclasses.playlist.topPlaylistApi.TopPlaylistResponse
+import com.niki.common.repository.dataclasses.song.likeAlbumApi.LikeAlbumResponse
 import com.niki.common.repository.dataclasses.song.likeListApi.LikePlaylistResponse
 import com.niki.common.values.WebConstant
 import retrofit2.Call
@@ -21,4 +22,11 @@ interface PlaylistService {
         @Query("uid") uid: String,
         @Query("cookie") cookie: String
     ): Call<LikePlaylistResponse>
+
+    @GET(WebConstant.USER_ALBUM)
+    fun getLikeAlbums(
+        @Query("cookie") cookie: String,
+        @Query("limit") limit: Int,
+        @Query("offset") offset: Int
+    ): Call<LikeAlbumResponse>
 }

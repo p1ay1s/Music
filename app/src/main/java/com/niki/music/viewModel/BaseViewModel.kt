@@ -16,6 +16,8 @@ abstract class BaseViewModel<Intent, State, Effect> : MVIViewModel<Intent, State
         ids: List<String>,
         crossinline callback: (songList: List<Song>?) -> Unit
     ) = playerModel.getSongsWithIds(ids.joinToString(","),
-        { data -> callback(data.songs) },
+        {
+            callback(it.songs)
+        },
         { _, _ -> callback(null) })
 }

@@ -57,4 +57,4 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
                 })
         }
     }
-}
+    }

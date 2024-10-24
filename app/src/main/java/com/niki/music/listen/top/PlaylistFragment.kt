@@ -1,5 +1,6 @@
 package com.niki.music.listen.top
 
+import android.view.View
 import android.widget.LinearLayout
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -56,6 +57,9 @@ class PlaylistFragment : ViewBindingFragment<FragmentTopPlaylistBinding>() {
 
         toolbar.title = playlist.name
         description.text = playlist.description
+        if (playlist.description.isBlank()) {
+            q.visibility = View.INVISIBLE
+        }
 
         playlist.run {
             background.setImgView(coverImgUrl)

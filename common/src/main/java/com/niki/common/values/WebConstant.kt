@@ -30,4 +30,5 @@ object WebConstant {
 
     // 用户喜好
     const val USER_LIKELIST = "likelist"
+    const val USER_ALBUM = "album/sublist"
 }

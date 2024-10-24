@@ -4,7 +4,7 @@ import android.graphics.drawable.Drawable
 import com.niki.common.repository.dataclasses.album.AlbumResponse
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
-import com.niki.music.ui.Host
+import com.p1ay1s.base.ui.FragmentHost
 
 data object Null
 
@@ -17,8 +17,8 @@ class MainViewModel : BaseViewModel<Null, Null, Null>() {
     var playerBackground: Drawable? = null
     var currentSong: Song? = null
 
-    var hostMap: HashMap<Int, Host>? = null
-    var host: Host? = null
+    var hostMap: HashMap<Int, FragmentHost>? = null
+    var host: FragmentHost? = null
 
     var activityIndex = -1
 

@@ -1,4 +1,4 @@
-package com.niki.music.my
+package com.niki.music.mine
 
 import androidx.lifecycle.viewModelScope
 import com.niki.common.repository.dataclasses.login.loginApi.LoginResponse
@@ -10,8 +10,8 @@ import com.niki.common.values.preferenceCookie
 import com.niki.common.values.preferenceNickname
 import com.niki.common.values.preferenceUid
 import com.niki.music.appLoadingDialog
+import com.niki.music.mine.login.LoginModel
 import com.niki.music.viewModel.BaseViewModel
-import com.niki.music.my.login.LoginModel
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.toastSuspended
@@ -23,31 +23,36 @@ import kotlinx.coroutines.launch
 
 var appCookie = ""
 
-class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
+class UserViewModel : BaseViewModel<UserIntent, UserState, UserEffect>() {
     private val loginModel by lazy { LoginModel() }
 
     private var avatarJob: Job? = null
 
+    companion object {
+        const val MAX_ALBUM_COUNT = 20
+    }
+
     override fun initUiState() =
-        MyState(null, null, isLoggedIn = false, useCaptcha = true, null, null)
+        UserState(null, null, isLoggedIn = false, useCaptcha = true, null, null, null)
 
     init {
         initLoginState()
     }
 
-    override fun handleIntent(intent: MyIntent) {
+    override fun handleIntent(intent: UserIntent) {
         intent.run {
             logE(TAG, "RECEIVED " + this::class.simpleName.toString())
             when (this) {
-                is MyIntent.UpdatePhone -> updateState { copy(phone = this@run.phone) }
-                is MyIntent.UpdateCaptcha -> updateState { copy(captcha = this@run.captcha) }
-                MyIntent.GetAvatarUrl -> getAvatarUrl()
-                MyIntent.CaptchaLogin -> captchaLogin()
-                MyIntent.GetLikePlaylist -> getLikePlaylist()
-                MyIntent.SendCaptcha -> sendCaptcha()
-                MyIntent.Logout -> logout()
-                MyIntent.PasswordLogin -> passwordLogin()
-                MyIntent.SwitchMethod -> updateState {
+                is UserIntent.UpdatePhone -> updateState { copy(phone = this@run.phone) }
+                is UserIntent.UpdateCaptcha -> updateState { copy(captcha = this@run.captcha) }
+                UserIntent.GetAvatarUrl -> getAvatarUrl()
+                UserIntent.CaptchaLogin -> captchaLogin()
+                UserIntent.GetLikePlaylist -> getLikePlaylist()
+                UserIntent.GetLikeAlbums -> getLikeAlbums()
+                UserIntent.SendCaptcha -> sendCaptcha()
+                UserIntent.Logout -> logout()
+                UserIntent.PasswordLogin -> passwordLogin()
+                UserIntent.SwitchMethod -> updateState {
                     copy(useCaptcha = !useCaptcha)
                 }
             }
@@ -66,12 +71,12 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
                 loginModel.getAvatarUrl(phone,
                     {
                         if (it.exist == 1)
-                            sendEffect { MyEffect.GetAvatarUrlOkEffect(it.avatarUrl) }
+                            sendEffect { UserEffect.GetAvatarUrlOkEffect(it.avatarUrl) }
                         else
-                            sendEffect { MyEffect.GetAvatarUrlBadEffect }
+                            sendEffect { UserEffect.GetAvatarUrlBadEffect }
                     },
                     { _, _ ->
-                        sendEffect { MyEffect.GetAvatarUrlBadEffect }
+                        sendEffect { UserEffect.GetAvatarUrlBadEffect }
                     })
             }
         }
@@ -222,12 +227,29 @@ class MyViewModel : BaseViewModel<MyIntent, MyState, MyEffect>() {
         if (this != null)
             playlistModel.getLikePlaylist(userId, cookie,
                 {
-                    getSongsWithIds(it.ids) { list ->
-                        updateState { copy(likeList = list) }
+                    runCatching {
+                        getSongsWithIds(it.ids) { list ->
+                            updateState { copy(likeList = list) }
+                        }
                     }
                 },
                 { _, _ ->
                     updateState { copy(likeList = null) }
+                })
+    }
+
+    private fun getLikeAlbums() = state.loggedInDatas.run {
+        if (this != null)
+            playlistModel.getLikeAlbums(cookie, MAX_ALBUM_COUNT, 0,
+                {
+                    runCatching {
+                        updateState { copy(likeAlbums = it.data) }
+                    }.onFailure {
+                        updateState { copy(likeAlbums = null) }
+                    }
+                },
+                { _, _ ->
+                    updateState { copy(likeAlbums = null) }
                 })
     }
 

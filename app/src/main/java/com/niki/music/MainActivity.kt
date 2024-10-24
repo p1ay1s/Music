@@ -32,11 +32,11 @@ import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
 import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ListenFragment
-import com.niki.music.my.MyFragment
+import com.niki.music.mine.MineFragment
 import com.niki.music.search.ResultFragment
 import com.niki.music.ui.BlurTransformation
-import com.niki.music.ui.Host
-import com.niki.music.ui.HostView
+import com.p1ay1s.base.ui.FragmentHost
+import com.p1ay1s.base.ui.FragmentHostView2
 import com.niki.music.ui.button.PlayButton
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.ActivityPreferences
@@ -106,7 +106,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 addHost(R.id.index_my) {
                     pushFragment(
                         FragmentTag.MY_FRAGMENT,
-                        MyFragment::class.java
+                        MineFragment::class.java
                     )
                 }
                 addHost(R.id.index_listen) {
@@ -304,8 +304,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    inner class OnHostChangeListenerImpl : HostView.OnHostChangeListener {
-        override fun onHostChanged(newHost: Host?, newIndex: Int) {
+    inner class OnHostChangeListenerImpl : FragmentHostView2.OnHostChangeListener {
+        override fun onHostChanged(newHost: FragmentHost?, newIndex: Int) {
             newHost?.let {
                 mainViewModel.host = it
                 mainViewModel.activityIndex = newIndex

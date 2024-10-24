@@ -1,4 +1,4 @@
-package com.niki.music.my
+package com.niki.music.mine
 
 import android.view.View
 import android.widget.LinearLayout
@@ -9,7 +9,7 @@ import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.databinding.FragmentMyBinding
-import com.niki.music.my.login.LoginFragment
+import com.niki.music.mine.login.LoginFragment
 import com.niki.music.ui.SongAdapter
 import com.niki.music.ui.SongAdapterListener
 import com.niki.music.ui.showSongDetail
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
+class MineFragment : ViewBindingFragment<FragmentMyBinding>() {
 
     companion object {
         const val CLICK_TO_LOGIN = "点击登录"
@@ -34,7 +34,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
     private lateinit var songAdapter: SongAdapter
     private lateinit var baseLayoutManager: PreloadLayoutManager
 
-    private lateinit var myViewModel: MyViewModel
+    private lateinit var userViewModel: UserViewModel
 
     private var loginStateJob: Job? = null
     private var likeListJob: Job? = null
@@ -46,7 +46,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
         }
 
         // 如果 activity 中没有创建 vm 而使用 activityViewModels 就会是不同的实例
-        myViewModel = ViewModelProvider(requireActivity())[MyViewModel::class.java]
+        userViewModel = ViewModelProvider(requireActivity())[UserViewModel::class.java]
 
         initValues()
         handle()
@@ -63,9 +63,9 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
     override fun onResume() {
         super.onResume()
 
-        myViewModel.state.run {
+        userViewModel.state.run {
             if (likeList == null && isLoggedIn)
-                myViewModel.sendIntent(MyIntent.GetLikePlaylist)
+                userViewModel.sendIntent(UserIntent.GetLikePlaylist)
         }
     }
 
@@ -83,7 +83,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
         )
     }
 
-    private fun handle() = myViewModel.observeState {
+    private fun handle() = userViewModel.observeState {
         loginStateJob?.cancel()
         loginStateJob = lifecycleScope.launch {
             map { it.loggedInDatas }.distinctUntilChanged().collect {
@@ -133,7 +133,7 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
             nickname.text = data.nickname
             logout.text = LOGOUT
             logout.setOnClickListener {
-                myViewModel.sendIntent(MyIntent.Logout)
+                userViewModel.sendIntent(UserIntent.Logout)
             }
 
             ImageSetter.apply {
@@ -147,9 +147,9 @@ class MyFragment : ViewBindingFragment<FragmentMyBinding>() {
                 )
             }
 
-            myViewModel.state.apply {
+            userViewModel.state.apply {
                 if (isLoggedIn && likeList == null)
-                    myViewModel.sendIntent(MyIntent.GetLikePlaylist)
+                    userViewModel.sendIntent(UserIntent.GetLikePlaylist)
             }
         }
     }

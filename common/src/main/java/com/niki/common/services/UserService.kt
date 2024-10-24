@@ -9,7 +9,7 @@ import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface LoginService {
+interface UserService {
     @GET(WebConstant.SEND_CAPTCHA)
     fun sendCaptcha(
         @Query("phone") phone: String,
@@ -36,5 +36,4 @@ interface LoginService {
     fun loginRefresh(
         @Query("cookie") cookie: String? = null
     ): Call<RefreshCookieResponse>
-
 }
