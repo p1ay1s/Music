@@ -35,16 +35,16 @@ import com.niki.music.listen.ListenFragment
 import com.niki.music.mine.MineFragment
 import com.niki.music.search.ResultFragment
 import com.niki.music.ui.BlurTransformation
-import com.p1ay1s.base.ui.FragmentHost
-import com.p1ay1s.base.ui.FragmentHostView2
 import com.niki.music.ui.button.PlayButton
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
+import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
+import com.p1ay1s.base.ui.FragmentHost
+import com.p1ay1s.base.ui.FragmentHostView
 import com.p1ay1s.impl.ViewBindingActivity
-import com.p1ay1s.util.ImageSetter.setRadiusImgView
 import com.p1ay1s.util.ServiceBuilder.ping
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -304,7 +304,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    inner class OnHostChangeListenerImpl : FragmentHostView2.OnHostChangeListener {
+    inner class OnHostChangeListenerImpl : FragmentHostView.OnHostChangeListener {
         override fun onHostChanged(newHost: FragmentHost?, newIndex: Int) {
             newHost?.let {
                 mainViewModel.host = it
@@ -498,7 +498,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
                     override fun onLoadCleared(placeholder: Drawable?) {}
                 })
-            cover.setRadiusImgView(song.al.picUrl, radius = 40)
+
+            cover.loadRadiusImage(song.al.picUrl, radius = 40)
             if (playerBehavior.state == BottomSheetBehavior.STATE_COLLAPSED)
                 bindCover(0F) // 让图片立即复位, 否则在初始化时不会显示在下端
             songName.text = song.name

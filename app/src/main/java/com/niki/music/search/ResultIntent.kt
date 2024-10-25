@@ -4,6 +4,7 @@ import com.niki.common.repository.dataclasses.song.Song
 
 sealed class ResultIntent {
     data class KeywordsChanged(val keywords: String) : ResultIntent()
+    data object GetHotSuggests : ResultIntent()
     data object SearchSongs : ResultIntent()
 }
 

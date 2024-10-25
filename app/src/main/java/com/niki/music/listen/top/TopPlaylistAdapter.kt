@@ -7,9 +7,9 @@ import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.appLoadingDialog
 import com.niki.music.databinding.LayoutTopPlaylistBinding
 import com.niki.music.model.PlayerModel
+import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
-import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
 /**
  * 用于实现点击居中 item 时打开 fragment , 否则滚动
@@ -27,7 +27,7 @@ interface TopPlaylistAdapterListener {
 }
 
 class TopPlaylistAdapter :
-    ViewBindingListAdapter<LayoutTopPlaylistBinding, Playlist, List<Song>>(TopPlaylistCallback()) {
+    ViewBindingListAdapter<LayoutTopPlaylistBinding, Playlist>(TopPlaylistCallback()) {
 
     companion object {
         const val PLAYLIST_SONGS_LIMIT = 15
@@ -46,7 +46,7 @@ class TopPlaylistAdapter :
 
         playlist = data
 
-        cover.setRadiusImgView(data.coverImgUrl, radius = 55)
+        cover.loadRadiusImage(data.coverImgUrl, radius = 55)
         root.setOnClickListener {
             onItemClick(data, position)
         }

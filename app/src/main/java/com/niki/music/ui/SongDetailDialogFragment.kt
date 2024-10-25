@@ -1,14 +1,7 @@
 package com.niki.music.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.getLargeRandomNum
 import com.niki.common.utils.setSingerName
@@ -19,8 +12,9 @@ import com.niki.music.appLoadingDialog
 import com.niki.music.databinding.FragmentSongDetailBinding
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.viewModel.MainViewModel
+import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.base.extension.toast
-import com.p1ay1s.util.ImageSetter.setRadiusImgView
+import com.p1ay1s.impl.ui.ViewBindingDialogFragment
 
 fun Fragment.showSongDetail(song: Song) {
     val fragment = SongDetailDialogFragment(song)
@@ -28,45 +22,28 @@ fun Fragment.showSongDetail(song: Song) {
 }
 
 class SongDetailDialogFragment(private val targetSong: Song) :
-    BottomSheetDialogFragment(R.layout.layout_search_bar) {
-
-    companion object {
-        const val HEIGHT_PERCENT = 0.75
-    }
+    ViewBindingDialogFragment<FragmentSongDetailBinding>() {
 
     private lateinit var mainViewModel: MainViewModel
-    lateinit var binding: FragmentSongDetailBinding
     private var isLoading = false
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentSongDetailBinding.inflate(layoutInflater)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun FragmentSongDetailBinding.initBinding() {
         mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
-        binding.run {
-            root.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bar))
-            song = targetSong
-            singerName.setSingerName(targetSong)
-            cover.setRadiusImgView(targetSong.al.picUrl, radius = 30)
-            root.setOnClickListener {
 
-            }
-            singerName.setOnClickListener { singerName.text.toast() }
-            songName.setOnClickListener { songName.text.toast() }
-            albumName.setOnClickListener {
-                loadAlbumFragment()
-            }
-            cover.setOnClickListener {
-                (activity as MainActivity).onSongPass(listOf(targetSong))
-                dismiss()
-            }
+        song = targetSong
+        singerName.setSingerName(targetSong)
+        cover.loadRadiusImage(targetSong.al.picUrl, radius = 30)
+        root.setOnClickListener {
+
+        }
+        singerName.setOnClickListener { singerName.text.toast() }
+        songName.setOnClickListener { songName.text.toast() }
+        albumName.setOnClickListener {
+            loadAlbumFragment()
+        }
+        cover.setOnClickListener {
+            (activity as MainActivity).onSongPass(listOf(targetSong))
+            dismiss()
         }
     }
 
@@ -104,23 +81,5 @@ class SongDetailDialogFragment(private val targetSong: Song) :
     private fun endWaiting() {
         appLoadingDialog?.dismiss()
         isLoading = false
-    }
-
-    override fun onStart() {
-        super.onStart()
-        setupBottomSheetBehavior()
-    }
-
-    private fun setupBottomSheetBehavior() = dialog?.apply {
-        findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) // view
-            ?.let { bottomSheet ->
-                with(BottomSheetBehavior.from(bottomSheet)) {
-                    state = BottomSheetBehavior.STATE_EXPANDED
-                    skipCollapsed = true
-                }
-                bottomSheet.layoutParams = bottomSheet.layoutParams.apply {
-                    height = (resources.displayMetrics.heightPixels * HEIGHT_PERCENT).toInt()
-                }
-            }
     }
 }

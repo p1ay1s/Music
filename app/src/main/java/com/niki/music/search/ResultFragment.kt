@@ -78,25 +78,30 @@ class ResultFragment : ViewBindingFragment<FragmentResultBinding>() {
                         searchBar.showDefaultList(it) // 接受并给 searchBar 的热词初始化
                     }
                 }
-                launch {
-                    uiEffectFlow
-                        .collect {
-                            when (it) {
-                                is ResultEffect.KeywordSuccessEffect -> {
-                                    searchBar.setSuggestions(
-                                        state.suggestKeywords
-                                    )
-                                }
+            }
 
-                                is ResultEffect.KeywordsFailedEffect -> searchBar.showDefaultList() // 失败的时候展示默认
+            launch {
+                uiEffectFlow
+                    .collect {
+                        when (it) {
+                            is ResultEffect.KeywordSuccessEffect -> {
+                                searchBar.setSuggestions(
+                                    state.suggestKeywords
+                                )
                             }
+
+                            is ResultEffect.KeywordsFailedEffect -> searchBar.showDefaultList() // 失败的时候展示默认
                         }
-                }
+                    }
             }
         }
     }
 
-
+    override fun onResume() {
+        super.onResume()
+        if (resultViewModel.state.hotKeywords == null)
+            resultViewModel.sendIntent(ResultIntent.GetHotSuggests)
+    }
 
     override fun onDestroyView() {
         searchBar.listener = null

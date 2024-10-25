@@ -35,6 +35,8 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
                         resetResult()
                         getRelativeSuggest()
                     }
+
+                is ResultIntent.GetHotSuggests-> getHotSuggest()
             }
         }
 

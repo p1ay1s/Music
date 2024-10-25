@@ -4,11 +4,10 @@ import android.view.View
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.song.Song
-import com.niki.common.repository.dataclasses.song.SongInfo
 import com.niki.common.utils.setSongDetails
 import com.niki.music.databinding.LayoutSongBinding
+import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
-import com.p1ay1s.util.ImageSetter.setRadiusImgView
 
 interface SongAdapterListener {
     fun onPlayMusic(list: List<Song>)
@@ -16,10 +15,9 @@ interface SongAdapterListener {
 }
 
 class SongAdapter(
-    private val enableCache: Boolean = false,
     private val showDetails: Boolean = true,
     private val showImage: Boolean = true
-) : ViewBindingListAdapter<LayoutSongBinding, Song, SongInfo>(SongCallback()) {
+) : ViewBindingListAdapter<LayoutSongBinding, Song>(SongCallback()) {
 
     private var listener: SongAdapterListener? = null
 
@@ -46,7 +44,7 @@ class SongAdapter(
         }
 
         if (showImage)
-            cover.setRadiusImgView(data.al.picUrl, enableCache = enableCache)
+            cover.loadRadiusImage(data.al.picUrl)
         else
             cover.visibility = View.GONE
 

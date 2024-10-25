@@ -85,6 +85,7 @@ class UserViewModel : BaseViewModel<UserIntent, UserState, UserEffect>() {
     // State-only
     private fun captchaLogin() = state.run {
         if (phone.isNullOrBlank() || captcha.isNullOrBlank()) {
+            appLoadingDialog?.dismiss()
             logout("请检查输入")
         } else
             loginModel.captchaLogin(phone, captcha,
@@ -108,6 +109,7 @@ class UserViewModel : BaseViewModel<UserIntent, UserState, UserEffect>() {
 
     private fun passwordLogin() = state.run {
         if (phone.isNullOrBlank() || captcha.isNullOrBlank()) {
+            appLoadingDialog?.dismiss()
             logout("请检查输入")
         } else
             loginModel.passwordLogin(phone, captcha,

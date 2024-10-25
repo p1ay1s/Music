@@ -17,9 +17,9 @@ import com.niki.music.ui.showSongDetail
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
+import com.p1ay1s.base.extension.loadImage
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
-import com.p1ay1s.util.ImageSetter.setImgView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -61,9 +61,7 @@ class PlaylistFragment : ViewBindingFragment<FragmentTopPlaylistBinding>() {
             q.visibility = View.INVISIBLE
         }
 
-        playlist.run {
-            background.setImgView(coverImgUrl)
-        }
+        background.loadImage(playlist.coverImgUrl)
 
         with(binding.recyclerView) {
             adapter = songAdapter
@@ -104,7 +102,6 @@ class PlaylistFragment : ViewBindingFragment<FragmentTopPlaylistBinding>() {
 
     private fun initValues() {
         songAdapter = SongAdapter(
-            enableCache = false,
             showDetails = true,
             showImage = false
         )

@@ -8,22 +8,23 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
-import com.niki.music.databinding.FragmentMyBinding
+import com.niki.music.databinding.FragmentMineBinding
 import com.niki.music.mine.login.LoginFragment
 import com.niki.music.ui.SongAdapter
 import com.niki.music.ui.SongAdapterListener
 import com.niki.music.ui.showSongDetail
 import com.p1ay1s.base.extension.addLineDecoration
+import com.p1ay1s.base.extension.loadCircleImage
+import com.p1ay1s.base.extension.loadImage
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
-import com.p1ay1s.util.ImageSetter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class MineFragment : ViewBindingFragment<FragmentMyBinding>() {
+class MineFragment : ViewBindingFragment<FragmentMineBinding>() {
 
     companion object {
         const val CLICK_TO_LOGIN = "点击登录"
@@ -39,7 +40,7 @@ class MineFragment : ViewBindingFragment<FragmentMyBinding>() {
     private var loginStateJob: Job? = null
     private var likeListJob: Job? = null
 
-    override fun FragmentMyBinding.initBinding() {
+    override fun FragmentMineBinding.initBinding() {
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
             structure.alpha = 1 - alpha * alpha
@@ -71,7 +72,6 @@ class MineFragment : ViewBindingFragment<FragmentMyBinding>() {
 
     private fun initValues() {
         songAdapter = SongAdapter(
-            enableCache = false,
             showDetails = true,
             showImage = false
         )
@@ -136,16 +136,8 @@ class MineFragment : ViewBindingFragment<FragmentMyBinding>() {
                 userViewModel.sendIntent(UserIntent.Logout)
             }
 
-            ImageSetter.apply {
-                userAvatar.setCircleImgView(
-                    data.avatarUrl,
-                    enableCache = true
-                )
-                background.setImgView(
-                    data.backgroundUrl,
-                    enableCache = true
-                )
-            }
+            userAvatar.loadCircleImage(data.avatarUrl)
+            background.loadImage(data.backgroundUrl)
 
             userViewModel.state.apply {
                 if (isLoggedIn && likeList == null)

@@ -6,7 +6,7 @@ import com.p1ay1s.impl.ui.ViewBindingListAdapter
 
 
 class SuggestionAdapter(private val callback: (String) -> Unit) :
-    ViewBindingListAdapter<LayoutSuggestionBinding, String, String>(SuggestionCallback()) {
+    ViewBindingListAdapter<LayoutSuggestionBinding, String>(SuggestionCallback()) {
     class SuggestionCallback : DiffUtil.ItemCallback<String>() {
         override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
             return oldItem == newItem

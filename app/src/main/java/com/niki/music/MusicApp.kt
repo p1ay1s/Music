@@ -4,8 +4,9 @@ import android.content.Context
 import com.p1ay1s.base.App
 import com.p1ay1s.base.CrashActivity
 import com.p1ay1s.base.appBaseUrl
+import com.p1ay1s.base.appContext
 import com.p1ay1s.base.appIpAddress
-import com.p1ay1s.base.log.Logger.startLogger
+import com.p1ay1s.base.log.Logger
 import com.p1ay1s.base.log.VERBOSE
 import com.p1ay1s.util.IPSetter
 import com.p1ay1s.util.ServiceBuilder
@@ -16,14 +17,12 @@ class MyApp : App() {
         ServiceBuilder.setTimeout(4L)
         ServiceBuilder.enableLogger = true
 
-//        Logger.crashActivity = CrashApp::class.java // 其实感觉还不如让他直接崩溃
-
-        startLogger(context, VERBOSE)
-//        appContext = context
+        appContext = context
+        Logger.setLogLevel(VERBOSE)
 
         IPSetter.setIp()
         appBaseUrl = "http://$appIpAddress:3000/"
-//        appBaseUrl = "http://10.44.4.65:3000/"
+//        appBaseUrl = "http://10.33.74.45:3000/"
     }
 }
 
