@@ -52,6 +52,7 @@ android {
 
 dependencies {
     implementation("jp.wasabeef:glide-transformations:2.0.1") // glide 模糊效果的 transformation
+//    implementation("com.github.iammert:ScalingLayout:1.2.1")
 
     implementation(libs.zephyr)
 

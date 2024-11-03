@@ -2,6 +2,7 @@ package com.niki.music.listen
 
 
 import android.content.Context
+import android.os.Build
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -11,15 +12,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.getLargeRandomNum
+import com.niki.common.utils.setViewBelowStatusBar
 import com.niki.music.R
 import com.niki.music.databinding.FragmentListenBinding
 import com.niki.music.listen.ListenViewModel.Companion.TOP_LIMIT
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.listen.top.TopPlaylistAdapter
 import com.niki.music.listen.top.TopPlaylistAdapterListener
-import com.p1ay1s.base.extension.findHost
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.addOnLoadMoreListener_H
+import com.p1ay1s.base.extension.findHost
 import com.p1ay1s.base.extension.setSnapHelper
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.impl.ViewBindingFragment
@@ -43,6 +45,9 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
 
         initValues()
         handle()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            setViewBelowStatusBar(recyclerViewTop)
 
         with(binding.recyclerViewTop) {
             setSnapHelper()

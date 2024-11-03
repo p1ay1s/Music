@@ -5,6 +5,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.setSongDetails
+import com.niki.music.appVibrator
 import com.niki.music.databinding.LayoutSongBinding
 import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.impl.ui.ViewBindingListAdapter
@@ -16,7 +17,7 @@ interface SongAdapterListener {
 
 class SongAdapter(
     private val showDetails: Boolean = true,
-    private val showImage: Boolean = true
+    private val showImage: Boolean = true,
 ) : ViewBindingListAdapter<LayoutSongBinding, Song>(SongCallback()) {
 
     private var listener: SongAdapterListener? = null
@@ -36,6 +37,11 @@ class SongAdapter(
         root.run {
             setOnClickListener {
                 listener?.onPlayMusic(getRelocatedList(data))
+            }
+
+            setOnLongClickListener {
+                listener?.onMoreClicked(data)
+                false // true -> 还会触发 onclick
             }
 
             updateLayoutParams {

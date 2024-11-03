@@ -9,6 +9,7 @@ import com.niki.common.utils.toPlaylist
 import com.niki.music.MainActivity
 import com.niki.music.R
 import com.niki.music.appLoadingDialog
+import com.niki.music.appVibrator
 import com.niki.music.databinding.FragmentSongDetailBinding
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.viewModel.MainViewModel
@@ -19,6 +20,7 @@ import com.p1ay1s.impl.ui.ViewBindingDialogFragment
 fun Fragment.showSongDetail(song: Song) {
     val fragment = SongDetailDialogFragment(song)
     fragment.show(parentFragmentManager, "SONG_DETAIL")
+    appVibrator?.vibrate(15)
 }
 
 class SongDetailDialogFragment(private val targetSong: Song) :

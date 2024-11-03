@@ -1,5 +1,6 @@
 package com.niki.music.listen.top
 
+import android.os.Build
 import android.view.View
 import android.widget.LinearLayout
 import androidx.fragment.app.activityViewModels
@@ -7,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
+import com.niki.common.utils.setViewBelowStatusBar
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.databinding.FragmentTopPlaylistBinding
@@ -49,6 +51,9 @@ class PlaylistFragment : ViewBindingFragment<FragmentTopPlaylistBinding>() {
     override fun FragmentTopPlaylistBinding.initBinding() {
         getPair()
         initValues()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            setViewBelowStatusBar(toolbar)
 
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())

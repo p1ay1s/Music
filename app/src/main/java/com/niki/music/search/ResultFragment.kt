@@ -1,10 +1,12 @@
 package com.niki.music.search
 
+import android.os.Build
 import android.widget.LinearLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
+import com.niki.common.utils.setViewBelowStatusBar
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.databinding.FragmentResultBinding
@@ -36,6 +38,9 @@ class ResultFragment : ViewBindingFragment<FragmentResultBinding>() {
 
         initValues()
         handle()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            setViewBelowStatusBar(searchBar)
 
         with(recyclerViewResult) {
             adapter = songAdapter

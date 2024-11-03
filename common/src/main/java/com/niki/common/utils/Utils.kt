@@ -1,15 +1,77 @@
 package com.niki.common.utils
 
+import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.view.View
+import android.view.ViewGroup
 import android.view.Window
+import android.view.WindowInsets
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.niki.common.repository.dataclasses.album.AlbumDetails
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
 import com.p1ay1s.base.appContext
 import kotlin.random.Random
+
+fun Fragment.setViewBelowStatusBar(view: View) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        view.setMargins(top = requireActivity().calculateStatusBarHeight())
+}
+
+fun View.setMargins(
+    start: Int? = null,
+    end: Int? = null,
+    top: Int? = null,
+    bottom: Int? = null,
+) = runCatching {
+    val lp = layoutParams
+    (lp as? ViewGroup.MarginLayoutParams)?.run {
+        start?.let { leftMargin = it }
+        end?.let { rightMargin = it }
+        top?.let { topMargin = it }
+        bottom?.let { bottomMargin = it }
+    }
+    layoutParams = lp
+    requestLayout()
+}
+
+@RequiresApi(Build.VERSION_CODES.R)
+fun Activity.calculateStatusBarHeight(): Int {
+    val windowMetrics = windowManager.currentWindowMetrics
+    val insets = windowMetrics.windowInsets
+        .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+    return insets.top
+}
+
+@RequiresApi(Build.VERSION_CODES.R)
+fun Activity.calculateNavigationBarHeight(): Int {
+    val windowMetrics = windowManager.currentWindowMetrics
+    val insets = windowMetrics.windowInsets
+        .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+    return insets.bottom
+}
+
+@RequiresApi(Build.VERSION_CODES.R)
+fun Activity.getScreenHeight(): Int {
+    val windowMetrics = windowManager.currentWindowMetrics
+    val insets = windowMetrics.windowInsets
+        .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+    val heights = insets.top + insets.bottom
+    return windowMetrics.bounds.height() + heights
+}
+
+@RequiresApi(Build.VERSION_CODES.R)
+fun Activity.getScreenWidth(): Int {
+    val windowMetrics = windowManager.currentWindowMetrics
+    val insets = windowMetrics.windowInsets
+        .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+    val widths = insets.left + insets.right
+    return windowMetrics.bounds.width() + widths
+}
 
 fun getLargeRandomNum(): Int {
     return (0..Int.MAX_VALUE).random()

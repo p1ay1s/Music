@@ -26,6 +26,7 @@ import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.shuffle
 import com.niki.music.mine.appCookie
 import com.niki.music.model.PlayerModel
+import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,16 +35,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-interface MusicServiceListener {
+interface MusicServiceListener2 {
     fun onPlayingStateChanged(song: Song, isPlaying: Boolean)
     fun onProgressUpdated(newProgress: Int)
     fun onPlayModeChanged(newState: Int)
 }
 
-/**
- * 改名一定要看看清单里有没有改成功
- */
-class MusicService : Service() {
+class MusicService2 : Service() {
     companion object {
         const val CHANNEL_ID = "p1ay1s.music"
         const val NOTIFICATION_ID = 666
@@ -51,12 +49,6 @@ class MusicService : Service() {
         const val ACTION_SWITCH = "switch"
         const val ACTION_NEXT = "next"
         const val ACTION_PREVIOUS = "previous"
-
-        // player state
-        private const val RELEASED = 0
-        private const val INIT = 1
-        private const val PREPARED = 2
-        private const val ERROR = 3
 
         // play mode
         const val LOOP = 0
@@ -67,16 +59,16 @@ class MusicService : Service() {
     private lateinit var remoteViews: RemoteViews
 
     private val binder = MusicServiceBinder()
-    private var listener: MusicServiceListener? = null
+    private var listener: MusicServiceListener2? = null
 
     private var _isPlaying = MutableLiveData(false)
     private var _playMode = MutableLiveData(LOOP)
+    private var _song = MutableLiveData<Song>(null)
 
     private val playerModel by lazy { PlayerModel() }
     private val musicScope by lazy { CoroutineScope(Dispatchers.IO) }
-
     private var progressJob: Job? = null
-    private var loadMusicJob: Job? = null
+    private var loadJob: Job? = null
 
     private var mediaPlayer = Player()
 
@@ -87,12 +79,16 @@ class MusicService : Service() {
 
     private var songIndex = 0
 
+
     init {
         _isPlaying.observeForever { isPlaying ->
             updatePlayingStatus(isPlaying)
         }
         _playMode.observeForever {
             listener?.onPlayModeChanged(it)
+        }
+        _song.observeForever { song ->
+            if (song != null) fetchUrl(song)
         }
     }
 
@@ -127,22 +123,14 @@ class MusicService : Service() {
         refreshRemoteViews()
     }
 
-    private fun setListener(l: MusicServiceListener?) {
+    private fun setListener(l: MusicServiceListener2?) {
         listener = l
     }
-
-    /**
-     * 只要出现错误就修复
-     */
-    private fun reset() {
-        mediaPlayer.clean()
-        mediaPlayer = Player()
-    }
-
 
     private fun getCurrentSong(): Song? {
         try {
             val song = currentPlaylist[songIndex]
+            _song.value = song
             return song
         } catch (_: Exception) {
             return null
@@ -165,36 +153,82 @@ class MusicService : Service() {
         action()
     }.onFailure {
         it.printStackTrace()
-        mediaPlayer.state = ERROR
-        reset()
-        if (_isPlaying.value == true) {
-            _isPlaying.value = false
-        } else {
-            loadAndPlay()
-        }
+        mediaPlayer.clear()
+        logE("$$$", "FAILED")
     }.onSuccess {
         onSuccess()
-    }
-
-    private fun loadAndPlay() = runCatching {
-        listener?.onProgressUpdated(0)
-        reset()
-        withCurrentSong { mediaPlayer.prepareAndPlay(it) }
-    }.onSuccess {
-        _isPlaying.value = true
-        startProgressJob()
-        withCurrentSong {
-            updateRemoteViews(it)
-            listener?.onPlayingStateChanged(it, true)
-        }
     }
 
     fun updatePlaylist(list: List<Song>) {
         songIndex = 0
         currentPlaylist = list.toMutableList()
         backupPlaylist = list.toMutableList()
-        handlePlaylists()
-        loadAndPlay()
+        formatPlaylists()
+        playNew()
+    }
+
+    /**
+     * 根据播放模式调整歌单排序
+     */
+    private fun formatPlaylists() {
+        if (currentPlaylist.isNotEmpty()) {
+            val thisSong = getCurrentSong()
+            when (_playMode.value) {
+                RANDOM -> shuffle(currentPlaylist)
+                else -> currentPlaylist =
+                    backupPlaylist.toMutableList()
+            }
+            songIndex = currentPlaylist.indexOf(thisSong)
+        }
+    }
+
+    private fun playNew() = withCurrentSong {
+        fetchUrl(it) { url ->
+            logE("$$$", "get")
+            playAction({
+                mediaPlayer.playNew(url)
+            }, {
+                _isPlaying.value = true
+                withCurrentSong {
+                    logE("$$$", "lie")
+                    updateRemoteViews(it)
+                    listener?.onPlayingStateChanged(it, true)
+                }
+                startProgressJob()
+            })
+        }
+    }
+
+    private fun fetchUrl(song: Song, callback: ((String) -> Unit)? = null) {
+        val s = songMap[song]
+
+        logE("$$$", s.toString())
+
+        if (s != null)
+            callback?.invoke(s)
+        else {
+            loadJob?.cancel()
+            loadJob = musicScope.launch {
+                playerModel.getSongInfoExecute(song.id, "jymaster", appCookie,
+                    {
+                        try {
+                            val url = it.data[0].url
+                            songMap[song] = url
+
+                            logE("$$$", url)
+
+                            if (_song.value == song) {
+                                logE("$$$", "pl")
+                                callback?.invoke(url)
+                            }
+                        } catch (_: Exception) {
+                        } finally {
+                        }
+                    },
+                    { _, _ ->
+                    })
+            }
+        }
     }
 
     private fun play() = playAction({
@@ -202,11 +236,12 @@ class MusicService : Service() {
         mediaPlayer.start()
     }, {
         _isPlaying.value = true
-        startProgressJob()
         withCurrentSong {
+            logE("$$$", "lie")
             updateRemoteViews(it)
             listener?.onPlayingStateChanged(it, true)
         }
+        startProgressJob()
     })
 
     private fun pause() = playAction({
@@ -220,52 +255,6 @@ class MusicService : Service() {
         }
     })
 
-    private fun seekToPosition(position: Int) = playAction({
-        val seekToPosition = (position * mediaPlayer.duration) / 100
-        mediaPlayer.seekTo(seekToPosition)
-    }, {
-    })
-
-    private fun changePlayMode() {
-        if (_playMode.value == null) return
-        _playMode.value = _playMode.value!! + 1
-        if (_playMode.value!! > RANDOM)
-            _playMode.value = LOOP
-
-        handlePlaylists()
-        listener?.onPlayModeChanged(_playMode.value!!)
-    }
-
-    private fun handlePlaylists() {
-        if (currentPlaylist.isNotEmpty()) {
-            val thisSong =
-                currentPlaylist[songIndex] // 为了让索引重新指向当前播放的音乐
-            when (_playMode.value) {
-                RANDOM -> shuffle(currentPlaylist)
-                else -> currentPlaylist =
-                    backupPlaylist.toMutableList()
-            }
-            songIndex = currentPlaylist.indexOf(thisSong)
-        }
-    }
-
-    private fun startProgressJob() {
-        progressJob?.cancel()
-
-        progressJob = musicScope.launch {
-            runCatching {
-                while (isActive) {
-                    delay(500)
-                    if (!mediaPlayer.isPlaying) continue
-                    val l = mediaPlayer.duration // 音频总长度
-                    val p = mediaPlayer.currentPosition // 播放到的位置
-                    val progress = (p * 100) / l // 得到播放进度的百分比
-                    listener?.onProgressUpdated(progress)
-                }
-            }.onFailure { cancel() }
-        }
-    }
-
     /**
      * 播放下一曲
      */
@@ -274,7 +263,7 @@ class MusicService : Service() {
 
         songIndex++
         if (songIndex > currentPlaylist.size - 1) songIndex = 0
-        loadAndPlay()
+        playNew()
     }, {
         withCurrentSong {
             updateRemoteViews(it)
@@ -290,7 +279,7 @@ class MusicService : Service() {
         songIndex--
         if (songIndex < 0) songIndex =
             currentPlaylist.size - 1
-        loadAndPlay()
+        playNew()
     }, {
         withCurrentSong {
             updateRemoteViews(it)
@@ -298,145 +287,155 @@ class MusicService : Service() {
         }
     })
 
-    private suspend fun loadUrl(song: Song, callback: (String) -> Unit) {
-        songMap[song]?.let {
-            withCurrentSong { c ->
-                if (c == song) callback(it)
-            }
-        } ?: playerModel.getSongInfoExecute(song.id, "jymaster", appCookie,
-            {
-                try {
-                    val url = it.data[0].url
-                    songMap[song] = url
-                    withCurrentSong { c ->
-                        if (c == song) callback(url)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+    private fun seekToPosition(position: Int) = playAction({
+        val seekToPosition = (position * mediaPlayer.duration) / 100
+        mediaPlayer.seekTo(seekToPosition)
+    }, {
+    })
+
+    private fun changePlayMode() {
+        if (_playMode.value == null) return
+        _playMode.value = _playMode.value!! + 1
+        if (_playMode.value!! > RANDOM)
+            _playMode.value = LOOP
+
+        formatPlaylists()
+        listener?.onPlayModeChanged(_playMode.value!!)
+    }
+
+
+    /**
+     * 用协程定时更新进度条
+     */
+    private fun startProgressJob() {
+        progressJob?.cancel()
+
+        progressJob = musicScope.launch {
+            runCatching {
+                while (isActive) {
+                    delay(500)
+                    if (!mediaPlayer.isPlaying) continue
+                    val l = mediaPlayer.duration // 音频总长度
+                    val p = mediaPlayer.currentPosition // 播放到的位置
+
+                    val progress = (p * 100) / l // 得到播放进度的百分比
+                    listener?.onProgressUpdated(progress)
                 }
-            },
-            { _, _ ->
-            })
+            }.onFailure { cancel() }
+        }
     }
 
     inner class Player : MediaPlayer() {
-        var state = RELEASED
+        // player state
+        private val INIT = 0
+        private val CLEARED = 1
+        private val SET = 2
+        private val PREPARED = 3
+
+        private var state = INIT
 
         init {
-            init()
+            clear()
         }
 
-        fun init() {
-            runCatching {
-                setAudioAttributes(
-                    AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                setOnCompletionListener {
-                    _isPlaying.value = false
-                    listener?.onProgressUpdated(0)
-                    if (_playMode.value == SINGLE) {
-                        play()
-                    } else {
-                        next()
-                    }
-                }
+        fun clear() {
+            if (state != INIT)
+                clean()
+            setAudioAttributes(
+                AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
 
-                setOnErrorListener { _, _, _ ->
-                    state = ERROR
-                    true
-                }
-
+            setOnCompletionListener {
                 _isPlaying.value = false
-                state = INIT
+                listener?.onProgressUpdated(0)
+
+                if (_playMode.value == SINGLE)
+                    play()
+                else
+                    next()
+            }
+
+            setOnErrorListener { _, _, _ ->
+                clean()
+                true
             }
         }
 
-        override fun start() {
-            if (state != PREPARED) throw Exception("not prepared")
-            super.start()
-        }
-
-        override fun pause() {
-            if (state != PREPARED) throw Exception("not prepared")
-            super.pause()
-        }
-
-        fun clean() = runCatching {
-            listener?.onProgressUpdated(0)
+        private fun clean() = runCatching {
+            seekTo(0)
             stop()
             reset()
             release()
-            state = RELEASED
+            _isPlaying.value = false
+            listener?.onProgressUpdated(0)
+            state = CLEARED
+        }.onFailure { e ->
+            logE("$$$", e.message.toString())
         }
 
-        override fun seekTo(msec: Int) {
-            if (state != PREPARED) throw Exception("not prepared")
-            super.seekTo(msec)
-        }
-
-        fun prepareAndPlay(song: Song) {
-            loadMusicJob?.cancel()
-            loadMusicJob = musicScope.launch(Dispatchers.IO) {
-                loadUrl(song) { url ->
-                    runCatching {
-                        if (!isActive) return@loadUrl
-                        init()
-                        setDataSource(url)
-                        prepare()
-                        state = PREPARED
-                        start()
-                    }.onFailure {
-                        state = ERROR
-                    }
+        override fun start() {
+            logE("$$$", "stared")
+            when (state) {
+                SET -> {
+                    prepare()
+                    super.start()
                 }
+
+                PREPARED -> super.start()
+
+                else -> playNew()
             }
         }
 
-//        fun prepareAndPlay1(song: Song) {
-//            loadMusicJob?.cancel()
-//            loadMusicJob = musicScope.launch {
-//                playerModel.getSongInfoExecute(song.id, "jymaster", appCookie,
-//                    {
-//                        if (isActive)
-//                            try {
-//                                val url = it.data[0].url
-//                                init()
-//                                setDataSource(url)
-//                                prepare()
-//                                playerState = PREPARED
-//                                start()
-//                            } catch (e: Exception) {
-//                                // 空指针
-//                                playerState = ERROR
-//                                e.printStackTrace()
-//                            }
-//                    },
-//                    { _, _ ->
-//                        playerState = ERROR
-//                    })
-//            }
-//        }
+        override fun pause() {
+            if (state == PREPARED)
+                super.pause()
+        }
+
+        override fun prepare() {
+            state = PREPARED
+            logE("$$$", "prepared")
+            super.prepare()
+        }
+
+        override fun seekTo(msec: Int) {
+            if (state == PREPARED)
+                super.seekTo(msec)
+        }
+
+        override fun setDataSource(path: String?) {
+            super.setDataSource(path)
+            state = SET
+        }
+
+        fun playNew(url: String) {
+            clear()
+            setDataSource(url)
+            prepare()
+            start()
+        }
     }
 
     inner class MusicServiceBinder : Binder() {
-        fun updatePlaylist(list: List<Song>) = this@MusicService.updatePlaylist(list)
-        fun setListener(l: MusicServiceListener?) = this@MusicService.setListener(l)
+        fun resetPlaylist(list: List<Song>) = this@MusicService2.updatePlaylist(list)
+        fun setListener(l: MusicServiceListener2?) = this@MusicService2.setListener(l)
 
-        fun previous() = this@MusicService.previous()
-        fun next() = this@MusicService.next()
-        fun seekToPosition(position: Int) = this@MusicService.seekToPosition(position)
-        fun changePlayMode() = this@MusicService.changePlayMode()
+        fun previous() = this@MusicService2.previous()
+        fun next() = this@MusicService2.next()
+        fun seekToPosition(position: Int) = this@MusicService2.seekToPosition(position)
+        fun changePlayMode() = this@MusicService2.changePlayMode()
         fun play() {
             if (_isPlaying.value == true)
-                this@MusicService.pause()
+                this@MusicService2.pause()
             else
-                this@MusicService.play()
+                this@MusicService2.play()
         }
     }
 
     override fun onCreate() {
         super.onCreate()
+
         remoteViews = RemoteViews(packageName, R.layout.remote_control)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -454,11 +453,11 @@ class MusicService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val iSwitch = Intent(this, MusicService::class.java)
+        val iSwitch = Intent(this, MusicService2::class.java)
         iSwitch.action = ACTION_SWITCH
-        val iPrevious = Intent(this, MusicService::class.java)
+        val iPrevious = Intent(this, MusicService2::class.java)
         iPrevious.action = ACTION_PREVIOUS
-        val iNext = Intent(this, MusicService::class.java)
+        val iNext = Intent(this, MusicService2::class.java)
         iNext.action = ACTION_NEXT
 
         val pSwitch =
@@ -477,6 +476,7 @@ class MusicService : Service() {
             "音乐控制栏",
             NotificationManager.IMPORTANCE_LOW
         )
+
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
@@ -494,6 +494,7 @@ class MusicService : Service() {
     override fun onBind(intent: Intent): IBinder {
         return binder
     }
+
 
     /**
      * 不要调用 , 刷新 remote views 请使用 updateRemoteViews

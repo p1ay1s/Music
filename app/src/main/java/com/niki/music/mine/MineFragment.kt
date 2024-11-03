@@ -1,11 +1,15 @@
 package com.niki.music.mine
 
+import android.os.Build
 import android.view.View
 import android.widget.LinearLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
+import com.niki.common.utils.calculateStatusBarHeight
+import com.niki.common.utils.setMargins
+import com.niki.common.utils.setViewBelowStatusBar
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
 import com.niki.music.databinding.FragmentMineBinding
@@ -45,6 +49,9 @@ class MineFragment : ViewBindingFragment<FragmentMineBinding>() {
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
             structure.alpha = 1 - alpha * alpha
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            setViewBelowStatusBar(toolbar)
 
         // 如果 activity 中没有创建 vm 而使用 activityViewModels 就会是不同的实例
         userViewModel = ViewModelProvider(requireActivity())[UserViewModel::class.java]

@@ -11,11 +11,16 @@ import android.graphics.drawable.TransitionDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.SeekBar
+import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -28,6 +33,8 @@ import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
 import com.niki.common.utils.Point
 import com.niki.common.utils.getIntersectionPoint
+import com.niki.common.utils.getScreenHeight
+import com.niki.common.utils.getScreenWidth
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
 import com.niki.music.databinding.ActivityMainBinding
@@ -46,12 +53,14 @@ import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.base.ui.FragmentHostView
 import com.p1ay1s.impl.ViewBindingActivity
 import com.p1ay1s.util.ServiceBuilder.ping
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 var appLoadingDialog: LoadingDialog? = null
 var appFadeInAnim: Animation? = null
+var appVibrator: Vibrator? = null
 
 // baseUrl 在 MusicApp
 
@@ -60,12 +69,16 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     companion object {
         const val BOTTOM_NAV_WEIGHT = 0.1
+        const val MINI_PLAYER_WEIGHT = 0.075F
+
+        const val MINI_COVER_SIZE = 0.8F // 占 mini player 高度的百分比
     }
 
     private var serviceBinder: MusicService.MusicServiceBinder? = null
     private var connection = MusicServiceConnection()
 
     private var exitJob: Job? = null
+    private var backgroundJob: Job? = null
 
     private var oneMoreClickToExit = false
 
@@ -84,11 +97,22 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private val playerBehavior
         get() = BottomSheetBehavior.from(binding.player)
 
+    private var parentHeight: Int = 0
+    private var parentWidth: Int = 0
+    private var bottomNavHeight: Int = 0
+    private var miniPlayerHeight: Int = 0
+
     override fun ActivityMainBinding.initBinding() {
+        mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
+
         // 非得要 activity 的上下文
         appLoadingDialog = LoadingDialog(this@MainActivity)
-        mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
         appFadeInAnim = AnimationUtils.loadAnimation(this@MainActivity, R.anim.fade_in)
+        appVibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
 
         checkServerUsability()
         startMusicService()
@@ -161,6 +185,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         playMode.setOnClickListener {
             serviceBinder?.changePlayMode()
         }
+
         smallNext.setOnClickListener {
             serviceBinder?.next()
         }
@@ -176,20 +201,21 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun setViewsLayoutParams() {
         binding.apply {
-            val parentHeight = root.resources.displayMetrics.heightPixels
-            val parentWidth = root.resources.displayMetrics.widthPixels
-            val navHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
             fragmentHostView.updateLayoutParams {
-                height = parentHeight - navHeight
+                height = parentHeight - bottomNavHeight
             }
             bottomNavigation.updateLayoutParams {
-                height = navHeight
+                height = bottomNavHeight
             }
             cover.updateLayoutParams {
                 width = (0.85 * parentWidth).toInt()
                 height = (0.85 * parentWidth).toInt()
             }
-            playerBehavior.peekHeight = navHeight * 2
+            playerBehavior.peekHeight = bottomNavHeight + miniPlayerHeight
+            miniPlayer.updateLayoutParams {
+                height = miniPlayerHeight
+                width = parentWidth - miniPlayerHeight
+            }
         }
     }
 
@@ -209,7 +235,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      * 检查通知权限, 有权限则启动通知栏播放器
      */
     private fun startMusicService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             withPermission(POST_NOTIFICATIONS) {
                 if (!it)
                     toast("未授予通知权限, 无法启用状态栏控制")
@@ -220,8 +246,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                     startService(i)
                 }
             }
-        else
-            toast("本设备不支持状态栏控制")
+        }
     }
 
     /**
@@ -261,7 +286,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     fun onSongPass(playlist: List<Song>) {
-        serviceBinder?.resetPlaylist(playlist)
+        serviceBinder?.updatePlaylist(playlist)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -333,8 +358,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         }
                     }
                 }
-                setSong(song)
                 mainViewModel.currentSong = song
+                setSong(song)
             }
 
             binding.run {
@@ -385,7 +410,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-
     /**
      * 绑定播放器和导航栏(播放器展开时导航栏收缩)
      */
@@ -394,10 +418,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         override fun onStateChanged(bottomSheet: View, newState: Int) {
             if (newState == BottomSheetBehavior.STATE_COLLAPSED) { // 弹出播放器后重设大小避免遮挡
                 binding.apply {
-                    val parentHeight = root.resources.displayMetrics.heightPixels
-                    val navHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
                     fragmentHostView.updateLayoutParams {
-                        height = parentHeight - navHeight * 2
+                        height = parentHeight - bottomNavHeight - miniPlayerHeight
                     }
                 }
             }
@@ -409,9 +431,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
          * 此处 slideOffset 完全可以当作一个百分数来看待
          */
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            val navHeight = binding.bottomNavigation.height.toFloat() // 导航栏高
-
-            val navTranslationY = navHeight * slideOffset * 2 // 导航栏的偏移量
+            val navTranslationY = bottomNavHeight * slideOffset * 2 // 导航栏的偏移量
             if (slideOffset in 0.0F..1.0F)
                 binding.bottomNavigation.translationY = navTranslationY
 
@@ -424,10 +444,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         R.color.bar
                     )
                 )
-                binding.smallPlayer.visibility = View.VISIBLE
+                binding.miniPlayer.visibility = View.VISIBLE
             } else {
                 binding.player.background = mainViewModel.playerBackground
-                binding.smallPlayer.visibility = View.INVISIBLE
+                binding.miniPlayer.visibility = View.INVISIBLE
             }
         }
     }
@@ -438,16 +458,15 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      * pivot 计算原理: 以 cover 左上角为原点, 求完全缩小和原始尺寸的 cover 的右上角、左下角坐标的交点即为 pivot 点
      */
     private fun bindCover(slideOffset: Float) {
-        val navHeight = binding.bottomNavigation.height.toFloat() // 导航栏高
-
         binding.cover.run {
             val coverHeight = height // 封面 imageview 宽高
 
             if (coverHeight == 0) return
 
-            val minMargin = 0.1F * navHeight // 封面收缩后距离播放器的最小间距
+            val minTopMargin = (1 - MINI_COVER_SIZE) / 2 * miniPlayerHeight  // 封面收缩后距离播放器的最小间距
+            val minLeftMargin = 0.1F * miniPlayerHeight
 
-            val minScale = (navHeight * 0.8F) / coverHeight // 使封面宽高到达最小的 scale 因子
+            val minScale = (miniPlayerHeight * MINI_COVER_SIZE) / coverHeight // 使封面宽高到达最小的 scale 因子
 
             // (1 - t) * C + t * A 当 slide offset 约为 0 时结果为 minScale, 约为 1 时结果也为 1, 作用是限定 cover 的尺寸
             val scale = (1 - slideOffset) * minScale + slideOffset
@@ -455,11 +474,28 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             scaleX = scale
             scaleY = scale
 
+            /*
+            以 bottom sheet behavior 的左上角为参考系:
+
+                a : 右上角, c : 左下角
+                []
+
+                    b : 右上角, d : 左下角
+                    -------------
+                    |           |
+                    |   cover   |
+                    |           |
+                    |           |
+                    -------------
+             */
             val pivotPoint = getIntersectionPoint( // 求完全展开和完全收缩的方形对应的点(用于计算 pivot)
-                Point(minMargin + minScale * coverHeight, minMargin),
-                Point(right.toFloat(), top.toFloat()),
-                Point(minMargin, minMargin + minScale * coverHeight),
-                Point(left.toFloat(), bottom.toFloat())
+                Point(
+                    minLeftMargin + minScale * coverHeight,
+                    minTopMargin
+                ), // a - coverHeight 其实是 coverWidth, 两者等大
+                Point(right.toFloat(), top.toFloat()), // b
+                Point(minLeftMargin, minTopMargin + minScale * coverHeight), // c
+                Point(left.toFloat(), bottom.toFloat()) // d
             ) // 此处得到的坐标并不是以 cover 的左上角为原点, 需要再计算
 
             pivotPoint?.let {
@@ -491,8 +527,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         if (playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED && playerBehavior.state != BottomSheetBehavior.STATE_HIDDEN) {
                             val transitionDrawable =
                                 TransitionDrawable(arrayOf(player.background, resource))
-                            player.background = transitionDrawable
-                            transitionDrawable.startTransition(600)
+                            backgroundJob?.cancel()
+                            backgroundJob = lifecycleScope.launch(Dispatchers.Main) {
+                                player.background = null
+                                player.background = transitionDrawable
+                                transitionDrawable.startTransition(600)
+                            }
                         }
                     }
 
@@ -510,9 +550,31 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     // 部分数据存取逻辑
     override fun onCreate(savedInstanceState: Bundle?) {
-        savedInstanceState?.run {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            parentHeight = getScreenHeight()
+            parentWidth = getScreenWidth()
+        } else {
+            parentHeight = binding.root.resources.displayMetrics.heightPixels
+            parentWidth = binding.root.resources.displayMetrics.widthPixels
         }
+
+        bottomNavHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
+        miniPlayerHeight = (parentHeight * MINI_PLAYER_WEIGHT).toInt()
+
         super.onCreate(savedInstanceState) // 包含 initBinding 的调用
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation) { v, insets ->
+            val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            v.setPadding(
+                navigationBars.left,
+                navigationBars.top,
+                navigationBars.right,
+                navigationBars.bottom
+            )
+            insets
+        }
+
 //        val builder = MaterialAlertDialogBuilder(this)
 //
 //        builder.setTitle("material dialog test")
