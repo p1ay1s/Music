@@ -32,6 +32,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
 import com.niki.common.utils.Point
+import com.niki.common.utils.formatDuration
 import com.niki.common.utils.getIntersectionPoint
 import com.niki.common.utils.getScreenHeight
 import com.niki.common.utils.getScreenWidth
@@ -43,10 +44,10 @@ import com.niki.music.mine.MineFragment
 import com.niki.music.search.ResultFragment
 import com.niki.music.ui.BlurTransformation
 import com.niki.music.ui.button.PlayButton
+import com.niki.music.ui.loadCover
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
-import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
 import com.p1ay1s.base.ui.FragmentHost
@@ -57,6 +58,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 var appLoadingDialog: LoadingDialog? = null
 var appFadeInAnim: Animation? = null
@@ -84,14 +86,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     private lateinit var mainViewModel: MainViewModel
 
-    /**
-     * 用于处理 bottom navigation view 的点击事件
-     *
-     * 比如点击同一个选项回退上一界面等
-     */
-    private var currentIndex = FragmentTag.LISTEN_FRAGMENT
-    private var previousIndex = FragmentTag.LISTEN_FRAGMENT
-
     private var musicProgress = 0
 
     private val playerBehavior
@@ -101,6 +95,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var parentWidth: Int = 0
     private var bottomNavHeight: Int = 0
     private var miniPlayerHeight: Int = 0
+
+    private val songLength: Int
+        get() = serviceBinder?.getLength() ?: -1
 
     override fun ActivityMainBinding.initBinding() {
         mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
@@ -150,6 +147,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 playerBehavior.isHideable = false
                 playerBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 setSong(currentSong!!)
+                serviceBinder?.getIsPlaying()?.let { setIsPlaying(it) }
             } else {
                 playerBehavior.isHideable = true
                 playerBehavior.state = BottomSheetBehavior.STATE_HIDDEN
@@ -161,7 +159,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 player.background = playerBackground
         }
 
-        bottomNavigation.setSwitchHandler()
+        bottomNavigation.setListeners()
 
         playerBehavior.apply {
             addBottomSheetCallback(BottomSheetCallbackImpl())
@@ -252,18 +250,13 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     /**
      * 设置导航的处理逻辑
      */
-    private fun BottomNavigationView.setSwitchHandler() {
+    private fun BottomNavigationView.setListeners() {
         setOnItemSelectedListener { item ->
-            currentIndex = item.itemId
-
-            if (previousIndex == currentIndex) { // 如果点击了相同的按钮则尝试回退到上一层 fragment
-                handleBackPress(false)
-            } else { // 导航
-                binding.fragmentHostView.switchHost(item.itemId, R.anim.fade_in, R.anim.fade_out)
-            }
-
-            previousIndex = currentIndex // 更新旧的 tag
+            binding.fragmentHostView.switchHost(item.itemId, R.anim.fade_in, R.anim.fade_out)
             true
+        }
+        setOnItemReselectedListener {
+            handleBackPress(false)
         }
     }
 
@@ -304,7 +297,11 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         FragmentTag.run {
             if (pair != null)
                 when (pair.first) {
-                    LISTEN_FRAGMENT, MY_FRAGMENT, RESULT_FRAGMENT -> if (enableTwoClickToExit) twoClicksToExit()
+                    LISTEN_FRAGMENT, MY_FRAGMENT, RESULT_FRAGMENT ->
+                        if (enableTwoClickToExit) {
+                            twoClicksToExit()
+                        }
+
                     else -> mainViewModel.host?.popFragment(
                         R.anim.fade_in,
                         R.anim.right_exit
@@ -329,6 +326,18 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
+    private fun setIsPlaying(isPlaying: Boolean) {
+        binding.run {
+            if (isPlaying) {
+                play.switchImage(PlayButton.PAUSE)
+                smallPlay.setImageResource(R.drawable.ic_pause)
+            } else {
+                play.switchImage(PlayButton.PLAY)
+                smallPlay.setImageResource(R.drawable.ic_play)
+            }
+        }
+    }
+
     inner class OnHostChangeListenerImpl : FragmentHostView.OnHostChangeListener {
         override fun onHostChanged(newHost: FragmentHost?, newIndex: Int) {
             newHost?.let {
@@ -341,40 +350,55 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     // 旨在在各个播放器上显示准确的状态, 当 music controller 完成了工作才通知才更新通知
     inner class MusicControllerListenerImpl : MusicServiceListener {
 
-        override fun onPlayingStateChanged(song: Song, isPlaying: Boolean) {
-            if (mainViewModel.currentSong != song) {
-                playerBehavior.run {
-                    if (state == BottomSheetBehavior.STATE_HIDDEN) {
-                        state = BottomSheetBehavior.STATE_COLLAPSED
-                        lifecycleScope.launch { // 立即设置 false 会导致页面从顶端回落
-                            while (true) {
-                                if (state != BottomSheetBehavior.STATE_COLLAPSED) {
-                                    delay(20)
-                                } else {
-                                    isHideable = false
-                                    return@launch
-                                }
-                            }
+        override fun onSongChanged(song: Song) {
+            if (mainViewModel.currentSong == song)
+                return
+
+            playerBehavior.run {
+                if (state != BottomSheetBehavior.STATE_HIDDEN)
+                    return@run
+                state = BottomSheetBehavior.STATE_COLLAPSED
+                lifecycleScope.launch { // 立即设置 false 会导致页面从顶端回落
+                    while (true) {
+                        if (state != BottomSheetBehavior.STATE_COLLAPSED) {
+                            delay(20)
+                        } else {
+                            isHideable = false
+                            return@launch
                         }
                     }
                 }
-                mainViewModel.currentSong = song
-                setSong(song)
             }
 
-            binding.run {
-                if (isPlaying) {
-                    play.switchImage(PlayButton.PAUSE)
-                    smallPlay.setImageResource(R.drawable.ic_pause)
-                } else {
-                    play.switchImage(PlayButton.PLAY)
-                    smallPlay.setImageResource(R.drawable.ic_play)
-                }
-            }
+            mainViewModel.currentSong = song
+            setSong(song)
         }
 
-        override fun onProgressUpdated(newProgress: Int) {
-            binding.seekBar.progress = newProgress
+        override fun onPlayingStateChanged(isPlaying: Boolean) {
+            setIsPlaying(isPlaying)
+        }
+
+        override fun onProgressUpdated(newProgress: Double, isReset: Boolean) {
+            binding.seekBar.progress = newProgress.toInt()
+
+            lifecycleScope.launch {
+                val total: String
+                val current: String
+
+                val length = songLength
+                if (length <= 0 || isReset) {
+                    total = "-"
+                    current = "0:00"
+                } else {
+                    total = formatDuration(length)
+                    current = formatDuration((length * 0.01 * newProgress).toInt())
+                }
+
+                withContext(Dispatchers.Main) {
+                    binding.current.text = current
+                    binding.total.text = total
+                }
+            }
         }
 
         override fun onPlayModeChanged(newState: Int) {
@@ -466,7 +490,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             val minTopMargin = (1 - MINI_COVER_SIZE) / 2 * miniPlayerHeight  // 封面收缩后距离播放器的最小间距
             val minLeftMargin = 0.1F * miniPlayerHeight
 
-            val minScale = (miniPlayerHeight * MINI_COVER_SIZE) / coverHeight // 使封面宽高到达最小的 scale 因子
+            val minScale =
+                (miniPlayerHeight * MINI_COVER_SIZE) / coverHeight // 使封面宽高到达最小的 scale 因子
 
             // (1 - t) * C + t * A 当 slide offset 约为 0 时结果为 minScale, 约为 1 时结果也为 1, 作用是限定 cover 的尺寸
             val scale = (1 - slideOffset) * minScale + slideOffset
@@ -539,7 +564,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                     override fun onLoadCleared(placeholder: Drawable?) {}
                 })
 
-            cover.loadRadiusImage(song.al.picUrl, radius = 40)
+            cover.loadCover(song.al.picUrl, radius = 40)
             if (playerBehavior.state == BottomSheetBehavior.STATE_COLLAPSED)
                 bindCover(0F) // 让图片立即复位, 否则在初始化时不会显示在下端
             songName.text = song.name

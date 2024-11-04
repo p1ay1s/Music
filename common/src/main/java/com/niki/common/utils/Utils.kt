@@ -17,6 +17,18 @@ import com.niki.common.repository.dataclasses.song.Song
 import com.p1ay1s.base.appContext
 import kotlin.random.Random
 
+fun formatDuration(duration: Int): String {
+    val m = duration / 1000 / 60
+    val s = duration / 1000 % 60
+
+    val minutes: String = m.toString()
+    val seconds: String = if (s < 10)
+        "0$s"
+    else
+        s.toString()
+    return "$minutes:$seconds"
+}
+
 fun Fragment.setViewBelowStatusBar(view: View) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         view.setMargins(top = requireActivity().calculateStatusBarHeight())

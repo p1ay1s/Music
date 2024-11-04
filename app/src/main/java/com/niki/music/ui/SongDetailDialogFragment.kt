@@ -13,7 +13,6 @@ import com.niki.music.appVibrator
 import com.niki.music.databinding.FragmentSongDetailBinding
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.viewModel.MainViewModel
-import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.impl.ui.ViewBindingDialogFragment
 
@@ -23,18 +22,27 @@ fun Fragment.showSongDetail(song: Song) {
     appVibrator?.vibrate(15)
 }
 
-class SongDetailDialogFragment(private val targetSong: Song) :
+class SongDetailDialogFragment(private val song: Song? = null) :
     ViewBindingDialogFragment<FragmentSongDetailBinding>() {
 
     private lateinit var mainViewModel: MainViewModel
     private var isLoading = false
+
+    private val targetSong: Song
+        get() {
+            if (song == null) {
+                dismiss()
+                return Song()
+            } else
+                return song
+        }
 
     override fun FragmentSongDetailBinding.initBinding() {
         mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
         song = targetSong
         singerName.setSingerName(targetSong)
-        cover.loadRadiusImage(targetSong.al.picUrl, radius = 30)
+        cover.loadCover(targetSong.al.picUrl, radius = 30)
         root.setOnClickListener {
 
         }

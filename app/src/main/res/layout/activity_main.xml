@@ -129,6 +129,31 @@
                 app:layout_constraintTop_toBottomOf="@id/singerName"
                 app:layout_constraintWidth_percent="0.9" />
 
+            <TextView
+                android:id="@+id/current"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:maxLines="1"
+                android:paddingHorizontal="20dp"
+                android:textColor="#50ffffff"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="@id/seekBar"
+                app:layout_constraintTop_toBottomOf="@id/seekBar" />
+
+            <TextView
+                android:id="@+id/total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:gravity="end"
+                android:maxLines="1"
+                android:paddingHorizontal="20dp"
+                android:textColor="#50ffffff"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="@id/seekBar"
+                app:layout_constraintTop_toBottomOf="@id/seekBar" />
+
             <com.niki.music.ui.button.PlayButton
                 android:id="@+id/play"
                 android:layout_width="70dp"
@@ -195,8 +220,11 @@
             android:layout_height="0dp"
             android:layout_gravity="bottom"
             android:background="@color/bar"
+            app:itemActiveIndicatorStyle="@null"
             app:itemIconTint="@color/bottom_nav_color"
+            app:itemRippleColor="@android:color/transparent"
             app:itemTextColor="@color/bottom_nav_color"
+            app:labelVisibilityMode="selected"
             app:menu="@menu/menu_main" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

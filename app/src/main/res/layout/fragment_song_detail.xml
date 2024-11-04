@@ -11,8 +11,8 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:background="@color/bar"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/bar">
 
         <ImageView
             android:id="@+id/cover"
@@ -74,11 +74,17 @@
             app:layout_constraintTop_toBottomOf="@id/singerName" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="api: 收藏/取消收藏 查看专辑 查看歌手等"
             android:textSize="25sp"
+            android:visibility="invisible"
             app:layout_constraintTop_toBottomOf="@id/cover" />
+
+        <!--        <DatePicker-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent" />-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
