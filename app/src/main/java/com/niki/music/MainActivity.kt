@@ -19,8 +19,6 @@ import android.view.animation.AnimationUtils
 import android.widget.SeekBar
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -36,6 +34,7 @@ import com.niki.common.utils.formatDuration
 import com.niki.common.utils.getIntersectionPoint
 import com.niki.common.utils.getScreenHeight
 import com.niki.common.utils.getScreenWidth
+import com.niki.common.utils.setMargins
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
 import com.niki.music.databinding.ActivityMainBinding
@@ -70,6 +69,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     ActivityPreferences.TwoClicksListener {
 
     companion object {
+        private const val SEEKBAR_SCALE = 3.0 // 进度条的细腻程度, 越大越细腻
+
+        const val SEEKBAR_MAX = SEEKBAR_SCALE * 100
+
         const val BOTTOM_NAV_WEIGHT = 0.1
         const val MINI_PLAYER_WEIGHT = 0.075F
 
@@ -98,6 +101,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     private val songLength: Int
         get() = serviceBinder?.getLength() ?: -1
+
+    private var allowSetSeekbar = true
 
     override fun ActivityMainBinding.initBinding() {
         mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
@@ -169,6 +174,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             }
         }
 
+        seekBar.max = SEEKBAR_MAX.toInt()
         seekBar.setOnSeekBarChangeListener(OnSeekBarChangeListenerImpl())
 
         play.setOnClickListener {
@@ -205,6 +211,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             bottomNavigation.updateLayoutParams {
                 height = bottomNavHeight
             }
+            line.setMargins(bottom = bottomNavHeight)
             cover.updateLayoutParams {
                 width = (0.85 * parentWidth).toInt()
                 height = (0.85 * parentWidth).toInt()
@@ -294,6 +301,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun handleBackPress(enableTwoClickToExit: Boolean = true) = mainViewModel.run {
         val pair = mainViewModel.host?.getPeekPair()
+
+        if (playerBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            playerBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            return@run
+        }
+
         FragmentTag.run {
             if (pair != null)
                 when (pair.first) {
@@ -338,6 +351,30 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
+    private fun setSeekbar(percent: Double, isReset: Boolean) {
+        binding.seekBar.progress = (percent * SEEKBAR_MAX).toInt()
+        setTimers(percent, isReset)
+    }
+
+    private fun setTimers(percent: Double, isReset: Boolean) = lifecycleScope.launch {
+        val total: String
+        val current: String
+
+        val length = songLength
+        if (length <= 0 || isReset) {
+            total = "-"
+            current = "0:00"
+        } else {
+            total = formatDuration(length)
+            current = formatDuration((percent * length).toInt())
+        }
+
+        withContext(Dispatchers.Main) {
+            binding.current.text = current
+            binding.total.text = total
+        }
+    }
+
     inner class OnHostChangeListenerImpl : FragmentHostView.OnHostChangeListener {
         override fun onHostChanged(newHost: FragmentHost?, newIndex: Int) {
             newHost?.let {
@@ -379,26 +416,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
 
         override fun onProgressUpdated(newProgress: Double, isReset: Boolean) {
-            binding.seekBar.progress = newProgress.toInt()
-
-            lifecycleScope.launch {
-                val total: String
-                val current: String
-
-                val length = songLength
-                if (length <= 0 || isReset) {
-                    total = "-"
-                    current = "0:00"
-                } else {
-                    total = formatDuration(length)
-                    current = formatDuration((length * 0.01 * newProgress).toInt())
-                }
-
-                withContext(Dispatchers.Main) {
-                    binding.current.text = current
-                    binding.total.text = total
-                }
-            }
+            if (allowSetSeekbar)
+                setSeekbar(newProgress, isReset)
         }
 
         override fun onPlayModeChanged(newState: Int) {
@@ -422,15 +441,24 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     inner class OnSeekBarChangeListenerImpl : SeekBar.OnSeekBarChangeListener {
 
+        /**
+         * progress max: 300
+         */
         override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-            if (fromUser)
+            if (fromUser) {
                 musicProgress = progress
+                setTimers(progress / SEEKBAR_MAX, false)
+            }
         }
 
-        override fun onStartTrackingTouch(seekBar: SeekBar) {}
+        override fun onStartTrackingTouch(seekBar: SeekBar) {
+            allowSetSeekbar = false
+        }
 
         override fun onStopTrackingTouch(seekBar: SeekBar) {
+            setSeekbar(musicProgress / SEEKBAR_MAX, false)
             serviceBinder?.seekToPosition(musicProgress)
+            allowSetSeekbar = true
         }
     }
 
@@ -456,8 +484,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
          */
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
             val navTranslationY = bottomNavHeight * slideOffset * 2 // 导航栏的偏移量
-            if (slideOffset in 0.0F..1.0F)
+            if (slideOffset in 0.0F..1.0F) {
                 binding.bottomNavigation.translationY = navTranslationY
+                binding.line.translationY = navTranslationY
+            }
 
             bindCover(slideOffset)
 
@@ -588,17 +618,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         miniPlayerHeight = (parentHeight * MINI_PLAYER_WEIGHT).toInt()
 
         super.onCreate(savedInstanceState) // 包含 initBinding 的调用
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation) { v, insets ->
-            val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            v.setPadding(
-                navigationBars.left,
-                navigationBars.top,
-                navigationBars.right,
-                navigationBars.bottom
-            )
-            insets
-        }
 
 //        val builder = MaterialAlertDialogBuilder(this)
 //

@@ -2,6 +2,9 @@
 <resources>
     <color name="bar">#FFFFFF</color>
     <color name="contrast">#000000</color>
+
+    <color name="contrast_transparent">#40000000</color>
+
     <color name="background">#FFFFFF</color>
 
     <color name="black">#FF000000</color>

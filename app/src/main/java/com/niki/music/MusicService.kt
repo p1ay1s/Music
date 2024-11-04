@@ -37,6 +37,10 @@ import kotlinx.coroutines.launch
 interface MusicServiceListener {
     fun onSongChanged(song: Song)
     fun onPlayingStateChanged(isPlaying: Boolean)
+
+    /**
+     * 回调进度的百分比
+     */
     fun onProgressUpdated(newProgress: Double, isReset: Boolean = false)
     fun onPlayModeChanged(newState: Int)
 }
@@ -44,6 +48,7 @@ interface MusicServiceListener {
 /**
  * 改名一定要看看清单里有没有改成功
  */
+
 class MusicService : Service() {
     companion object {
         const val CHANNEL_ID = "p1ay1s.music"
@@ -63,7 +68,12 @@ class MusicService : Service() {
         const val LOOP = 0
         const val SINGLE = 1
         const val RANDOM = 2
+
+        const val NOTIFY_CD = 200L
+        const val MAX_RETRY_TIME = 3
     }
+
+    private val TAG = this::class.simpleName!!
 
     private var mediaPlayer = Player()
 
@@ -75,7 +85,21 @@ class MusicService : Service() {
         }
 
     private val _isPlaying: Boolean
-        get() = getIsPlaying()
+        get() = try {
+            val i = mediaPlayer.isPlaying
+            i
+        } catch (_: Exception) {
+            false
+        }
+
+    private val _length: Int
+        get() = try {
+            if (mediaPlayer.state != PREPARED) throw NotPreparedException()
+            val d = mediaPlayer.duration
+            d
+        } catch (_: Exception) {
+            -1
+        }
 
     private lateinit var remoteViews: RemoteViews
 
@@ -86,7 +110,6 @@ class MusicService : Service() {
 
     private val musicScope by lazy { CoroutineScope(Dispatchers.IO) }
 
-    private var progressJob: Job? = null
     private var playJob: Job? = null
     private var playNowJob: Job? = null
 
@@ -95,38 +118,37 @@ class MusicService : Service() {
     private var currentPlaylist: MutableList<Song> = mutableListOf()
     private var backupPlaylist: MutableList<Song> = mutableListOf() // 随机序列之前备份
 
-    private var songMap: HashMap<Song, String?> = hashMapOf()
-
     private var songIndex = 0
 
+    // 存储已获取到的 url
+    private var songMap: HashMap<Song, String?> = hashMapOf()
+
     init {
-        progressJob = musicScope.launch {
+        // 开启全局的进度条更新协程
+        musicScope.launch {
             while (true) {
-                if (!_isPlaying) continue
+                delay(NOTIFY_CD)
 
-                val totalLen = mediaPlayer.duration // 音频总长度
+                if (!_isPlaying)
+                    continue
 
+                val totalLen = _length // 音频总长度
                 if (totalLen <= 0) {
                     notifyResetSeekbar()
                     continue
                 }
 
                 val currentLen = mediaPlayer.currentPosition // 播放到的位置
-                val progress = (currentLen * 100.0) / totalLen // 得到播放进度的百分比
+                val progress = currentLen.toDouble() / totalLen // 得到播放进度的百分比
 
                 listener?.onProgressUpdated(progress)
-                delay(250)
             }
         }
     }
 
-    private fun getIsPlaying(): Boolean = try {
-        val i = mediaPlayer.isPlaying
-        i
-    } catch (_: Exception) {
-        false
-    }
-
+    /**
+     * 注册点击事件 intent
+     */
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         when (intent.action) {
             ACTION_SWITCH ->
@@ -142,34 +164,14 @@ class MusicService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun updateRemoteViews(song: Song) {
-        remoteViews = RemoteViews(packageName, R.layout.remote_control) // 切换过多后就不会响应, 尝试每次都重建
-        setSongViews(song) {
-            refreshRemoteViews()
-        }
-    }
-
-    private fun updatePlayingStatus(isPlaying: Boolean?) {
-        if (!::remoteViews.isInitialized) return
-        if (isPlaying == true)
-            remoteViews.setImageViewResource(R.id.ivSwitch, R.drawable.ic_pause)
-        else
-            remoteViews.setImageViewResource(R.id.ivSwitch, R.drawable.ic_play)
-        refreshRemoteViews()
-    }
-
-    private fun setListener(l: MusicServiceListener?) {
-        listener = l
-    }
-
     private fun notifyPlayingStateChanged(isPlaying: Boolean) {
-        listener?.onPlayingStateChanged(isPlaying)
         updatePlayingStatus(isPlaying)
+        listener?.onPlayingStateChanged(isPlaying)
     }
 
     private fun notifySongChanged(song: Song) {
-        listener?.onSongChanged(song)
         updateRemoteViews(song)
+        listener?.onSongChanged(song)
     }
 
     private fun notifyResetSeekbar() {
@@ -177,7 +179,7 @@ class MusicService : Service() {
     }
 
     /**
-     * 只要出现错误就修复
+     * 重置 media player
      */
     private fun reset() {
         mediaPlayer.clean()
@@ -204,6 +206,9 @@ class MusicService : Service() {
 
     private fun withCurrentUrl(block: (String) -> Unit) = getCurrentUrl()?.let(block)
 
+    /**
+     * 传入新的播放列表, 并根据模式设置排序
+     */
     fun updatePlaylist(list: List<Song>) {
         songIndex = 0
         currentPlaylist = list.toMutableList()
@@ -212,20 +217,26 @@ class MusicService : Service() {
         playNow()
     }
 
-    private fun playNow(isRetry: Boolean = false): Any = runCatching {
+    /**
+     * 立即进行播放, 失败后进行一次重试
+     */
+    private fun playNow(retryValue: Int = MAX_RETRY_TIME): Any = runCatching {
         reset()
         withCurrentSong { mediaPlayer.playNow(it) }
     }.onSuccess {
         withCurrentSong {
-            notifyPlayingStateChanged(true)
             notifySongChanged(it)
+            notifyPlayingStateChanged(true)
         }
     }.onFailure {
-        logE("$$$", it.stackTrace.toString())
-        if (!isRetry)
-            playNow(true)
+        logE(TAG, it.stackTrace.toString())
+        if (retryValue > 0)
+            playNow(retryValue - 1)
     }
 
+    /**
+     * 直接播放, 通常在 player 已经准备好后调用
+     */
     private fun play() = runCatching {
         if (currentPlaylist.isEmpty()) throw Exception() // 此处抛出异常是不希望进入 on success 块
         mediaPlayer.start()
@@ -235,17 +246,16 @@ class MusicService : Service() {
             notifyPlayingStateChanged(true)
         }
     }.onFailure {
-        if (it is NotPreparedException)
-            "请稍候".toast()
-        else {
-            logE("$$$", it.stackTrace.toString())
-            if (_isPlaying)
-                reset()
-            else
-                playNow()
-        }
+        logE(TAG, it.stackTrace.toString())
+        if (_isPlaying)
+            reset()
+        else
+            playNow()
     }
 
+    /**
+     * 直接暂停, 通常在 player 已经准备好后调用
+     */
     private fun pause() = runCatching {
         if (currentPlaylist.isEmpty()) throw Exception()
         mediaPlayer.pause()
@@ -255,21 +265,31 @@ class MusicService : Service() {
             notifyPlayingStateChanged(false)
         }
     }.onFailure {
-        if (it is NotPreparedException)
-            "请稍候".toast()
-        else {
-            logE("$$$", it.stackTrace.toString())
-            if (!_isPlaying)
-                reset()
-        }
+        logE(TAG, it.stackTrace.toString())
+        if (!_isPlaying)
+            reset()
     }
 
+    /**
+     * 设置 media player 的播放位置
+     */
     private fun seekToPosition(position: Int) = runCatching {
-        val seekToPosition = (position * mediaPlayer.duration) / 100
-        if (mediaPlayer.state != PREPARED) return@runCatching
-        mediaPlayer.seekTo(seekToPosition)
+        val seekToPosition = (position * _length) / MainActivity.SEEKBAR_MAX.toInt()
+        if (_length > 0)
+            mediaPlayer.seekTo(seekToPosition)
+        else
+            notifyResetSeekbar()
+    }.onFailure {
+        logE(TAG, it.stackTrace.toString())
+        if (_isPlaying)
+            reset()
+        else
+            playNow()
     }
 
+    /**
+     * 更换播放模式
+     */
     private fun changePlayMode() {
         _playMode += 1
         if (_playMode > RANDOM)
@@ -278,16 +298,25 @@ class MusicService : Service() {
         handlePlaylists()
     }
 
+    /**
+     * 根据播放模式设置 list
+     */
     private fun handlePlaylists() {
-        if (currentPlaylist.isNotEmpty()) {
-            val thisSong =
-                currentPlaylist[songIndex] // 为了让索引重新指向当前播放的音乐
-            when (_playMode) {
-                RANDOM -> shuffle(currentPlaylist)
-                else -> currentPlaylist =
-                    backupPlaylist.toMutableList()
+        if (currentPlaylist.isEmpty()) return
+
+        val thisSong =
+            currentPlaylist[songIndex] // 为了让索引重新指向当前播放的音乐
+        when (_playMode) {
+            RANDOM -> musicScope.launch {
+                shuffle(currentPlaylist)
+                songIndex = currentPlaylist.indexOf(thisSong)
             }
-            songIndex = currentPlaylist.indexOf(thisSong)
+
+            else -> {
+                currentPlaylist =
+                    backupPlaylist.toMutableList()
+                songIndex = currentPlaylist.indexOf(thisSong)
+            }
         }
     }
 
@@ -307,7 +336,7 @@ class MusicService : Service() {
     }
 
     /**
-     * 主动播放并加载下一曲
+     * 播放上一曲
      */
     private fun previous() = runCatching {
         if (currentPlaylist.isEmpty()) throw Exception("empty list")
@@ -322,6 +351,9 @@ class MusicService : Service() {
         }
     }
 
+    /**
+     * 加载音乐 url 并回调
+     */
     private suspend fun loadUrl(song: Song, callback: (String) -> Unit) {
         songMap[song]?.let {
             withCurrentSong { c ->
@@ -336,29 +368,31 @@ class MusicService : Service() {
                         if (c == song) callback(url)
                     }
                 }.onFailure {
-                    logE("$$$", it.stackTrace.toString())
+                    logE(TAG, it.stackTrace.toString())
                 }
             },
             { _, _ ->
+                if (song != getCurrentSong()) return@getSongInfoExecute
+                "网络错误, 请重试".toast()
+                notifyResetSeekbar()
+                notifyPlayingStateChanged(false)
+                reset()
             })
     }
 
     inner class Player : MediaPlayer() {
-        var state = RELEASED
-            private set
+        private var _state = INIT
+        val state: Int
+            get() = _state
 
         init {
-            init()
-        }
-
-        fun init() = runCatching {
             setAudioAttributes(
                 AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build()
             )
 
             setOnPreparedListener {
-                state = PREPARED
+                _state = PREPARED
             }
 
             setOnCompletionListener {
@@ -371,13 +405,17 @@ class MusicService : Service() {
             }
 
             setOnErrorListener { _, _, _ ->
-                state = ERROR
+                _state = ERROR
+                reset()
                 true
             }
-
-            state = INIT
         }
 
+        /**
+         * 立即获取 url 并播放
+         *
+         * 优先级高于 play & pause(当 playNow 执行中不允许他们干扰)
+         */
         fun playNow(song: Song) {
             playJob?.cancel()
             playNowJob?.cancel()
@@ -385,7 +423,7 @@ class MusicService : Service() {
                 playNowJobIsAlive = true
                 loadUrl(song) { url ->
                     runCatching {
-                        if (!isActive) {
+                        if (!isActive || song != getCurrentSong()) {
                             playNowJobIsAlive = false
                             return@loadUrl
                         }
@@ -395,19 +433,22 @@ class MusicService : Service() {
                         playNowJobIsAlive = false
                         start()
                     }.onFailure {
-                        state = ERROR
+                        _state = ERROR
                     }
                 }
             }
         }
 
+        /**
+         * prepare 的回调有一定延迟, 此处使用协程检查
+         */
         override fun start() {
             if (playNowJobIsAlive) return
             playJob?.cancel()
             playJob = musicScope.launch {
                 var timer = 0
                 while (timer <= 500) {
-                    if (state != PREPARED) {
+                    if (_state != PREPARED) {
                         delay(100)
                         timer += 100
                     } else {
@@ -421,13 +462,16 @@ class MusicService : Service() {
             }
         }
 
+        /**
+         * prepare 的回调有一定延迟, 此处使用协程检查
+         */
         override fun pause() {
             if (playNowJobIsAlive) return
             playJob?.cancel()
             playJob = musicScope.launch {
                 var timer = 0
                 while (timer <= 500) {
-                    if (state != PREPARED) {
+                    if (_state != PREPARED) {
                         delay(100)
                         timer += 100
                     } else {
@@ -441,34 +485,33 @@ class MusicService : Service() {
             }
         }
 
+        /**
+         * 释放
+         */
         fun clean() = runCatching {
-            seekTo(0)
             stop()
             reset()
             release()
-            state = RELEASED
+            _state = RELEASED
         }.onFailure {
-            state = ERROR
+            _state = ERROR
         }
 
         override fun seekTo(msec: Int) {
-            if (state != PREPARED) throw NotPreparedException()
+            if (_state != PREPARED) throw NotPreparedException()
             super.seekTo(msec)
         }
     }
 
     inner class MusicServiceBinder : Binder() {
         fun updatePlaylist(list: List<Song>) = this@MusicService.updatePlaylist(list)
-        fun setListener(l: MusicServiceListener?) = this@MusicService.setListener(l)
-
-        fun getLength(): Int = try {
-            val d = mediaPlayer.duration
-            d
-        } catch (_: Exception) {
-            -1
+        fun setListener(l: MusicServiceListener?) {
+            listener = l
         }
 
-        fun getIsPlaying(): Boolean = this@MusicService.getIsPlaying()
+        fun getLength(): Int = _length
+
+        fun getIsPlaying(): Boolean = _isPlaying
 
         fun previous() = this@MusicService.previous()
         fun next() = this@MusicService.next()
@@ -542,6 +585,22 @@ class MusicService : Service() {
         return binder
     }
 
+    private fun updateRemoteViews(song: Song) {
+        remoteViews = RemoteViews(packageName, R.layout.remote_control) // 切换过多后就不会响应, 尝试每次都重建
+        setSongViews(song) {
+            refreshRemoteViews()
+        }
+    }
+
+    private fun updatePlayingStatus(isPlaying: Boolean?) {
+        if (!::remoteViews.isInitialized) return
+        if (isPlaying == true)
+            remoteViews.setImageViewResource(R.id.ivSwitch, R.drawable.ic_pause)
+        else
+            remoteViews.setImageViewResource(R.id.ivSwitch, R.drawable.ic_play)
+        refreshRemoteViews()
+    }
+
     /**
      * 不要调用 , 刷新 remote views 请使用 updateRemoteViews
      */
@@ -562,6 +621,7 @@ class MusicService : Service() {
                 }
             }
         }
+        if (getCurrentSong() != song) return
         remoteViews.setTextViewText(R.id.tvSongName, song.name)
         remoteViews.setTextViewText(R.id.tvSinger, builder.toString())
         updatePlayingStatus(_isPlaying)

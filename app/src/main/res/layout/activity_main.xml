@@ -21,6 +21,12 @@
             app:behavior_hideable="false"
             app:layout_behavior="@string/bottom_sheet_behavior">
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/contrast_transparent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/miniPlayer"
                 android:layout_width="0dp"
@@ -119,7 +125,7 @@
             <SeekBar
                 android:id="@+id/seekBar"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="15dp"
                 android:layout_marginVertical="8dp"
                 android:background="@null"
                 android:progressDrawable="@drawable/seek_bar"
@@ -213,6 +219,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:tint="#a0ffffff" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:id="@+id/line"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            android:background="@color/contrast_transparent" />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigation"

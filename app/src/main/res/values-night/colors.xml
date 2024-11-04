@@ -4,6 +4,8 @@
     <color name="contrast">#FFFFFF</color>
     <color name="background">#000000</color>
 
+    <color name="contrast_transparent">#40FFFFFF</color>
+
     <color name="black">#FF000000</color>
 
     <color name="unselected">#9a9a9c</color>
