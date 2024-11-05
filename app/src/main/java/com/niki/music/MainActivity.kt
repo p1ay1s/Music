@@ -16,6 +16,7 @@ import android.os.VibratorManager
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.EditText
 import android.widget.SeekBar
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
@@ -27,6 +28,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.ui.LoadingDialog
 import com.niki.common.utils.Point
@@ -34,9 +36,15 @@ import com.niki.common.utils.formatDuration
 import com.niki.common.utils.getIntersectionPoint
 import com.niki.common.utils.getScreenHeight
 import com.niki.common.utils.getScreenWidth
+import com.niki.common.utils.getStringData
+import com.niki.common.utils.isUrl
+import com.niki.common.utils.putStringData
+import com.niki.common.utils.restartApplication
 import com.niki.common.utils.setMargins
+import com.niki.common.utils.setSize
 import com.niki.common.utils.setSongDetails
 import com.niki.common.values.FragmentTag
+import com.niki.common.values.preferenceBaseUrl
 import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ListenFragment
 import com.niki.music.mine.MineFragment
@@ -47,6 +55,7 @@ import com.niki.music.ui.loadCover
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
+import com.p1ay1s.base.appIpAddress
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
 import com.p1ay1s.base.ui.FragmentHost
@@ -105,6 +114,18 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var allowSetSeekbar = true
 
     override fun ActivityMainBinding.initBinding() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+            parentHeight = getScreenHeight()
+            parentWidth = getScreenWidth()
+        } else {
+            parentHeight = binding.root.resources.displayMetrics.heightPixels
+            parentWidth = binding.root.resources.displayMetrics.widthPixels
+        }
+
+        bottomNavHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
+        miniPlayerHeight = (parentHeight * MINI_PLAYER_WEIGHT).toInt()
+
         mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
 
         // 非得要 activity 的上下文
@@ -116,7 +137,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             getSystemService(VIBRATOR_SERVICE) as Vibrator
         }
 
-        checkServerUsability()
         startMusicService()
 
         fragmentHostView.apply {
@@ -205,52 +225,111 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun setViewsLayoutParams() {
         binding.apply {
-            fragmentHostView.updateLayoutParams {
-                height = parentHeight - bottomNavHeight
-            }
-            bottomNavigation.updateLayoutParams {
-                height = bottomNavHeight
-            }
-            line.setMargins(bottom = bottomNavHeight)
-            cover.updateLayoutParams {
-                width = (0.85 * parentWidth).toInt()
-                height = (0.85 * parentWidth).toInt()
-            }
-            playerBehavior.peekHeight = bottomNavHeight + miniPlayerHeight
-            miniPlayer.updateLayoutParams {
-                height = miniPlayerHeight
+            val avg = (parentHeight + parentWidth) / 2.0
+
+            fragmentHostView.setSize(height = parentHeight - bottomNavHeight)
+            bottomNavigation.setSize(height = bottomNavHeight)
+
+            cover.setSize((0.85 * parentWidth).toInt())
+            playlist.setSize((0.1 * parentWidth).toInt())
+            playMode.setSize((0.1 * parentWidth).toInt())
+            miniPlayer.setSize(
+                height = miniPlayerHeight,
                 width = parentWidth - miniPlayerHeight
-            }
+            )
+            play.setSize((0.17 * parentWidth).toInt())
+            previous.setSize((0.16 * parentWidth).toInt())
+            next.setSize((0.17 * parentWidth).toInt())
+
+            cover.setMargins(top = (0.1* parentHeight).toInt())
+            songName.setMargins(top = (0.05 * parentHeight).toInt())
+            line.setMargins(bottom = bottomNavHeight)
+
+            playlist.setMargins(
+                start = (0.03 * parentHeight).toInt(),
+                bottom = (0.03 * parentHeight).toInt()
+            )
+            playMode.setMargins(
+                end = (0.03 * parentHeight).toInt(),
+                bottom = (0.03 * parentHeight).toInt()
+            )
+
+            playerBehavior.peekHeight = bottomNavHeight + miniPlayerHeight
         }
     }
 
     /**
      * 检查 localhost 是否可用
      */
-    private fun checkServerUsability() {
+    private suspend fun checkServerUsability() {
         appLoadingDialog?.show()
-        ping(appBaseUrl) { isSuccess ->
-            if (!isSuccess)
-                toast("服务器连接失败")
-            appLoadingDialog?.dismiss()
+        while (!appBaseUrl.isUrl()) {
+            delay(20)
         }
+        ping(appBaseUrl) { isSuccess ->
+            appLoadingDialog?.dismiss()
+            if (!isSuccess) {
+                requireNewUrl()
+            } else {
+                appBaseUrl.toast()
+            }
+        }
+    }
+
+    private fun requireNewUrl() {
+        val builder = MaterialAlertDialogBuilder(this@MainActivity)
+
+        val editText = EditText(this@MainActivity)
+        editText.hint = "输入新的 baseurl"
+        editText.setText(appBaseUrl)
+
+        builder.setTitle("服务器连接失败")
+            .setMessage("输入新的 baseurl")
+            .setCancelable(true)
+            .setView(editText)
+            .setNegativeButton("提交") { _, _ ->
+                var newUrl = editText.text.toString().trim()
+
+                if (!newUrl.isUrl())
+                    newUrl = appBaseUrl
+                if (!newUrl.endsWith("/"))
+                    newUrl += "/"
+
+                lifecycleScope.launch {
+                    putStringData(preferenceBaseUrl, newUrl)
+                    restartApplication()
+                }
+            }
+            .setNeutralButton("IP") { _, _ ->
+                lifecycleScope.launch {
+                    putStringData(preferenceBaseUrl, "http://$appIpAddress:3000/")
+                    restartApplication()
+                }
+            }
+            .setPositiveButton("取消") { _, _ ->
+            }
+        builder.create().show()
     }
 
     /**
      * 检查通知权限, 有权限则启动通知栏播放器
      */
     private fun startMusicService() {
+        if (serviceBinder?.isBinderAlive == true) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             withPermission(POST_NOTIFICATIONS) {
                 if (!it)
                     toast("未授予通知权限, 无法启用状态栏控制")
                 else {
-                    if (serviceBinder?.isBinderAlive == true) return@withPermission
                     val i = Intent(this, MusicService::class.java)
                     bindService(i, connection, Context.BIND_AUTO_CREATE)
                     startService(i)
                 }
             }
+        } else {
+            val i = Intent(this, MusicService::class.java)
+            bindService(i, connection, Context.BIND_AUTO_CREATE)
+            startService(i)
         }
     }
 
@@ -605,31 +684,13 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
     // 部分数据存取逻辑
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            enableEdgeToEdge()
-            parentHeight = getScreenHeight()
-            parentWidth = getScreenWidth()
-        } else {
-            parentHeight = binding.root.resources.displayMetrics.heightPixels
-            parentWidth = binding.root.resources.displayMetrics.widthPixels
+        lifecycleScope.launch {
+            val customUrl = getStringData(preferenceBaseUrl)
+            val ipUrl = "http://$appIpAddress:3000/"
+            appBaseUrl = customUrl.ifBlank { ipUrl }
+            checkServerUsability()
         }
 
-        bottomNavHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
-        miniPlayerHeight = (parentHeight * MINI_PLAYER_WEIGHT).toInt()
-
         super.onCreate(savedInstanceState) // 包含 initBinding 的调用
-
-//        val builder = MaterialAlertDialogBuilder(this)
-//
-//        builder.setTitle("material dialog test")
-//            .setMessage("baseurl: http://\${your_ip}:3000/")
-//            .setCancelable(true)
-//            .setPositiveButton("positive") { dialog, which ->
-//            }
-//            .setNegativeButton("negative") { dialog, which ->
-//            }
-//
-//        val dialog = builder.create()
-//        dialog.show()
     }
 }

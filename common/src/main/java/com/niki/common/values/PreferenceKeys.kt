@@ -11,3 +11,5 @@ val preferenceAvatar = stringPreferencesKey("avatar")
 val preferenceBackground = stringPreferencesKey("background")
 
 val preferenceUid = stringPreferencesKey("uid")
+
+val preferenceBaseUrl = stringPreferencesKey("baseUrl")

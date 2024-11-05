@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.niki.common.repository.dataclasses.login.loginApi.LoginResponse
 import com.niki.common.utils.getStringData
 import com.niki.common.utils.putStringData
+import com.niki.common.utils.waitForBaseUrl
 import com.niki.common.values.preferenceAvatar
 import com.niki.common.values.preferenceBackground
 import com.niki.common.values.preferenceCookie
@@ -42,18 +43,20 @@ class UserViewModel : BaseViewModel<UserIntent, UserState, UserEffect>() {
     override fun handleIntent(intent: UserIntent) {
         intent.run {
             logE(TAG, "RECEIVED " + this::class.simpleName.toString())
-            when (this) {
-                is UserIntent.UpdatePhone -> updateState { copy(phone = this@run.phone) }
-                is UserIntent.UpdateCaptcha -> updateState { copy(captcha = this@run.captcha) }
-                UserIntent.GetAvatarUrl -> getAvatarUrl()
-                UserIntent.CaptchaLogin -> captchaLogin()
-                UserIntent.GetLikePlaylist -> getLikePlaylist()
-                UserIntent.GetLikeAlbums -> getLikeAlbums()
-                UserIntent.SendCaptcha -> sendCaptcha()
-                UserIntent.Logout -> logout()
-                UserIntent.PasswordLogin -> passwordLogin()
-                UserIntent.SwitchMethod -> updateState {
-                    copy(useCaptcha = !useCaptcha)
+            waitForBaseUrl {
+                when (this) {
+                    is UserIntent.UpdatePhone -> updateState { copy(phone = this@run.phone) }
+                    is UserIntent.UpdateCaptcha -> updateState { copy(captcha = this@run.captcha) }
+                    UserIntent.GetAvatarUrl -> getAvatarUrl()
+                    UserIntent.CaptchaLogin -> captchaLogin()
+                    UserIntent.GetLikePlaylist -> getLikePlaylist()
+                    UserIntent.GetLikeAlbums -> getLikeAlbums()
+                    UserIntent.SendCaptcha -> sendCaptcha()
+                    UserIntent.Logout -> logout()
+                    UserIntent.PasswordLogin -> passwordLogin()
+                    UserIntent.SwitchMethod -> updateState {
+                        copy(useCaptcha = !useCaptcha)
+                    }
                 }
             }
         }
@@ -99,11 +102,10 @@ class UserViewModel : BaseViewModel<UserIntent, UserState, UserEffect>() {
                         }
                     }
                 },
-                { code, _ ->
+                { code, msg ->
                     appLoadingDialog?.dismiss()
-                    code?.let {
-                        logout(code.toString())
-                    } ?: logout("网络错误")
+                    logE(TAG, "code: $code, msg: $msg")
+                    logout(msg.ifBlank { "网络错误" })
                 })
     }
 
@@ -123,11 +125,10 @@ class UserViewModel : BaseViewModel<UserIntent, UserState, UserEffect>() {
                         }
                     }
                 },
-                { code, _ ->
+                { code, msg ->
                     appLoadingDialog?.dismiss()
-                    code?.let {
-                        logout(code.toString())
-                    } ?: logout("网络错误")
+                    logE(TAG, "code: $code, msg: $msg")
+                    logout(msg.ifBlank { "网络错误" })
                 })
     }
 
@@ -216,10 +217,11 @@ class UserViewModel : BaseViewModel<UserIntent, UserState, UserEffect>() {
             loginModel.loginRefresh(
                 appCookie, // 状态码不为 2xx 且没有网络问题时登出
                 {},
-                { code, _ ->
-                    code?.let {
-                        logE("###", it.toString())
-                        logout("身份验证失败! 请重新登录")
+                { code, msg ->
+                    appLoadingDialog?.dismiss()
+                    logE(TAG, "code: $code, msg: $msg")
+                    code?.run {
+                        logout("网络不安全, 请重新登录")
                     }
                 })
     }

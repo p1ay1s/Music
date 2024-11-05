@@ -104,6 +104,7 @@ class ResultFragment : ViewBindingFragment<FragmentResultBinding>() {
 
     override fun onResume() {
         super.onResume()
+
         if (resultViewModel.state.hotKeywords == null)
             resultViewModel.sendIntent(ResultIntent.GetHotSuggests)
     }

@@ -9,13 +9,41 @@ import android.view.Window
 import android.view.WindowInsets
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.niki.common.repository.dataclasses.album.AlbumDetails
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
+import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.appContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
+
+fun ViewModel.waitForBaseUrl(callback: () -> Unit) = viewModelScope.launch {
+    while (!appBaseUrl.isUrl()) {
+        delay(20)
+    }
+    callback()
+}
+
+fun String.isUrl(): Boolean {
+    return startsWith("https://") || startsWith("http://")
+}
+
+fun Activity.restartApplication() {
+    packageManager.getLaunchIntentForPackage(packageName)?.run {
+        this.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(this)
+    }
+}
+
+fun Fragment.restartApplication() {
+    requireActivity().restartApplication()
+}
 
 fun formatDuration(duration: Int): String {
     val m = duration / 1000 / 60
@@ -34,6 +62,27 @@ fun Fragment.setViewBelowStatusBar(view: View) {
         view.setMargins(top = requireActivity().calculateStatusBarHeight())
 }
 
+fun View.setSize(size: Int) = setSize(size, size)
+
+fun View.setSize(width: Int? = null, height: Int? = null) = runCatching {
+    updateLayoutParams {
+        width?.let { this.width = it }
+        height?.let { this.height = it }
+    }
+}
+
+fun View.setHorizontalMargins(margin: Int) {
+    setMargins(start = margin, end = margin)
+}
+
+fun View.setVerticalMargins(margin: Int) {
+    setMargins(top = margin, bottom = margin)
+}
+
+fun View.setMargins(margin: Int) {
+    setMargins(margin, margin, margin, margin)
+}
+
 fun View.setMargins(
     start: Int? = null,
     end: Int? = null,
@@ -46,7 +95,7 @@ fun View.setMargins(
         end?.let { rightMargin = it }
         top?.let { topMargin = it }
         bottom?.let { bottomMargin = it }
-    }
+    } ?: return@runCatching
     layoutParams = lp
     requestLayout()
 }

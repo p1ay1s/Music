@@ -1,6 +1,7 @@
 package com.niki.music.search
 
 import com.niki.common.repository.dataclasses.search.searchApi.SearchResponse
+import com.niki.common.utils.waitForBaseUrl
 import com.niki.music.viewModel.BaseViewModel
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.extension.toast
@@ -19,24 +20,22 @@ class ResultViewModel : BaseViewModel<ResultIntent, ResultState, ResultEffect>()
 
     override fun initUiState() = ResultState("", true, 0, null, null, null, null)
 
-    init {
-        getHotSuggest()
-    }
-
-    override fun handleIntent(intent: ResultIntent) =
+    override fun handleIntent(intent: ResultIntent): Unit =
         intent.run {
             logE(TAG, "RECEIVED " + this::class.simpleName.toString())
-            when (this) {
-                is ResultIntent.SearchSongs -> searchSongs()
+            waitForBaseUrl {
+                when (this) {
+                    is ResultIntent.SearchSongs -> searchSongs()
 
-                is ResultIntent.KeywordsChanged ->
-                    if (state.searchContent != keywords) {
-                        updateState { copy(searchContent = keywords) }
-                        resetResult()
-                        getRelativeSuggest()
-                    }
+                    is ResultIntent.KeywordsChanged ->
+                        if (state.searchContent != keywords) {
+                            updateState { copy(searchContent = keywords) }
+                            resetResult()
+                            getRelativeSuggest()
+                        }
 
-                is ResultIntent.GetHotSuggests-> getHotSuggest()
+                    is ResultIntent.GetHotSuggests -> getHotSuggest()
+                }
             }
         }
 

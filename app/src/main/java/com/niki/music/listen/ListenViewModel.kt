@@ -1,10 +1,14 @@
 package com.niki.music.listen
 
 import androidx.lifecycle.viewModelScope
+import com.niki.common.utils.isUrl
+import com.niki.common.utils.waitForBaseUrl
 import com.niki.music.viewModel.BaseViewModel
+import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.extension.TAG
 import com.p1ay1s.base.log.logE
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>() {
@@ -20,9 +24,11 @@ class ListenViewModel : BaseViewModel<ListenIntent, ListenState, ListenEffect>()
     override fun handleIntent(intent: ListenIntent): Unit =
         intent.run {
             logE(TAG, "RECEIVED " + this::class.simpleName.toString())
-            when (this) {
-                is ListenIntent.GetTopPlaylists -> getTopPlaylists(resetPage)
-            }
+          waitForBaseUrl {
+              when (this) {
+                  is ListenIntent.GetTopPlaylists -> getTopPlaylists(resetPage)
+              }
+          }
         }
 
     private fun getTopPlaylists(
