@@ -225,8 +225,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun setViewsLayoutParams() {
         binding.apply {
-            val avg = (parentHeight + parentWidth) / 2.0
-
             fragmentHostView.setSize(height = parentHeight - bottomNavHeight)
             bottomNavigation.setSize(height = bottomNavHeight)
 
@@ -241,7 +239,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             previous.setSize((0.16 * parentWidth).toInt())
             next.setSize((0.17 * parentWidth).toInt())
 
-            cover.setMargins(top = (0.1* parentHeight).toInt())
+            cover.setMargins(top = (0.1 * parentHeight).toInt())
             songName.setMargins(top = (0.05 * parentHeight).toInt())
             line.setMargins(bottom = bottomNavHeight)
 
@@ -316,8 +314,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun startMusicService() {
         if (serviceBinder?.isBinderAlive == true) return
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             withPermission(POST_NOTIFICATIONS) {
+                if (serviceBinder?.isBinderAlive == true) return@withPermission
                 if (!it)
                     toast("未授予通知权限, 无法启用状态栏控制")
                 else {
@@ -326,6 +326,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                     startService(i)
                 }
             }
+
+            val i = Intent(this, MusicService::class.java)
+            bindService(i, connection, Context.BIND_AUTO_CREATE)
+            startService(i)
         } else {
             val i = Intent(this, MusicService::class.java)
             bindService(i, connection, Context.BIND_AUTO_CREATE)
