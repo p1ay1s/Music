@@ -88,7 +88,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         const val MINI_COVER_SIZE = 0.8F // 占 mini player 高度的百分比
     }
 
-    private var serviceBinder: MusicService.MusicServiceBinder? = null
+    //    private var serviceBinder: MusicService.MusicServiceBinder? = null
+    private var serviceBinder: SafeMusicService.SafeMusicServiceBinder? = null
     private var connection = MusicServiceConnection()
 
     private var exitJob: Job? = null
@@ -109,7 +110,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var miniPlayerHeight: Int = 0
 
     private val songLength: Int
-        get() = serviceBinder?.getLength() ?: -1
+        //        get() = serviceBinder?.getLength() ?: -1
+        get() = serviceBinder?.songDuration ?: -1
 
     private var allowSetSeekbar = true
 
@@ -172,7 +174,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 playerBehavior.isHideable = false
                 playerBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 setSong(currentSong!!)
-                serviceBinder?.getIsPlaying()?.let { setIsPlaying(it) }
+//                serviceBinder?.getIsPlaying()?.let { setIsPlaying(it) }
+                serviceBinder?.isPlaying?.let { setIsPlaying(it) }
             } else {
                 playerBehavior.isHideable = true
                 playerBehavior.state = BottomSheetBehavior.STATE_HIDDEN
@@ -198,7 +201,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         seekBar.setOnSeekBarChangeListener(OnSeekBarChangeListenerImpl())
 
         play.setOnClickListener {
-            serviceBinder?.play()
+//            serviceBinder?.play()
+            serviceBinder?.switch()
         }
         previous.setOnClickListener {
             serviceBinder?.previous()
@@ -214,7 +218,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             serviceBinder?.next()
         }
         smallPlay.setOnClickListener {
-            serviceBinder?.play()
+//            serviceBinder?.play()
+            serviceBinder?.switch()
         }
 
         setViewsLayoutParams()
@@ -241,7 +246,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             cover.setMargins(top = (0.1 * parentHeight).toInt())
             songName.setMargins(top = (0.05 * parentHeight).toInt())
-            line.setMargins(bottom = bottomNavHeight)
+            lineBottom.setMargins(bottom = bottomNavHeight)
 
             playlist.setMargins(
                 start = (0.03 * parentHeight).toInt(),
@@ -314,6 +319,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun startMusicService() {
         if (serviceBinder?.isBinderAlive == true) return
+        val i = Intent(this, SafeMusicService::class.java)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             withPermission(POST_NOTIFICATIONS) {
@@ -321,17 +327,14 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 if (!it)
                     toast("未授予通知权限, 无法启用状态栏控制")
                 else {
-                    val i = Intent(this, MusicService::class.java)
                     bindService(i, connection, Context.BIND_AUTO_CREATE)
                     startService(i)
                 }
             }
 
-            val i = Intent(this, MusicService::class.java)
             bindService(i, connection, Context.BIND_AUTO_CREATE)
             startService(i)
         } else {
-            val i = Intent(this, MusicService::class.java)
             bindService(i, connection, Context.BIND_AUTO_CREATE)
             startService(i)
         }
@@ -513,7 +516,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     inner class MusicServiceConnection : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            serviceBinder = service as MusicService.MusicServiceBinder
+//            serviceBinder = service as MusicService.MusicServiceBinder
+            serviceBinder = service as SafeMusicService.SafeMusicServiceBinder
             serviceBinder?.setListener(MusicControllerListenerImpl())
         }
 
@@ -569,7 +573,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             val navTranslationY = bottomNavHeight * slideOffset * 2 // 导航栏的偏移量
             if (slideOffset in 0.0F..1.0F) {
                 binding.bottomNavigation.translationY = navTranslationY
-                binding.line.translationY = navTranslationY
+                binding.lineBottom.translationY = navTranslationY
             }
 
             bindCover(slideOffset)
@@ -582,9 +586,11 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                     )
                 )
                 binding.miniPlayer.visibility = View.VISIBLE
+                binding.lineTop.visibility = View.VISIBLE
             } else {
                 binding.player.background = mainViewModel.playerBackground
                 binding.miniPlayer.visibility = View.INVISIBLE
+                binding.lineTop.visibility = View.INVISIBLE
             }
         }
     }

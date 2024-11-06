@@ -22,6 +22,7 @@
             app:layout_behavior="@string/bottom_sheet_behavior">
 
             <View
+                android:id="@+id/line_Top"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/contrast_transparent"
@@ -216,7 +217,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <View
-            android:id="@+id/line"
+            android:id="@+id/line_Bottom"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_gravity="bottom"

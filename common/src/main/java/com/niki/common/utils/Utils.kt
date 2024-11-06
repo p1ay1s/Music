@@ -19,9 +19,16 @@ import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
 import com.p1ay1s.base.appBaseUrl
 import com.p1ay1s.base.appContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlin.random.Random
+
+suspend fun <T> withTimer(timeout: Long, block: suspend CoroutineScope.() -> T) = try {
+    withTimeout(timeout, block)
+} catch (_: Exception) {
+}
 
 fun ViewModel.waitForBaseUrl(callback: () -> Unit) = viewModelScope.launch {
     while (!appBaseUrl.isUrl()) {
@@ -30,7 +37,8 @@ fun ViewModel.waitForBaseUrl(callback: () -> Unit) = viewModelScope.launch {
     callback()
 }
 
-fun String.isUrl(): Boolean {
+fun String?.isUrl(): Boolean {
+    if (this.isNullOrEmpty()) return false
     return startsWith("https://") || startsWith("http://")
 }
 
