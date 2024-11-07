@@ -1,6 +1,9 @@
 package com.niki.common.utils
 
 import android.app.Activity
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.os.Build
 import android.view.View
@@ -30,7 +33,7 @@ suspend fun <T> withTimer(timeout: Long, block: suspend CoroutineScope.() -> T) 
 } catch (_: Exception) {
 }
 
-fun ViewModel.waitForBaseUrl(callback: () -> Unit) = viewModelScope.launch {
+inline fun ViewModel.waitForBaseUrl(crossinline callback: () -> Unit) = viewModelScope.launch {
     while (!appBaseUrl.isUrl()) {
         delay(20)
     }
@@ -42,11 +45,36 @@ fun String?.isUrl(): Boolean {
     return startsWith("https://") || startsWith("http://")
 }
 
-fun Activity.restartApplication() {
-    packageManager.getLaunchIntentForPackage(packageName)?.run {
-        this.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        startActivity(this)
+fun Activity.restartApplication(mode: Int = 2) {
+    when (mode) {
+        1 -> {
+            val intent = packageManager.getLaunchIntentForPackage(packageName)
+            intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            val pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+            alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pendingIntent)
+
+            // 结束当前进程
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }
+
+        2 -> {
+            packageManager.getLaunchIntentForPackage(packageName)?.run {
+                this.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivity(this)
+                Runtime.getRuntime().exit(0)
+            }
+        }
     }
+
 }
 
 fun Fragment.restartApplication() {

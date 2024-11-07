@@ -7,8 +7,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.song.Song
-import com.niki.common.utils.calculateStatusBarHeight
-import com.niki.common.utils.setMargins
 import com.niki.common.utils.setViewBelowStatusBar
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
@@ -21,7 +19,7 @@ import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.loadCircleImage
 import com.p1ay1s.base.extension.loadImage
 import com.p1ay1s.base.ui.PreloadLayoutManager
-import com.p1ay1s.impl.ViewBindingFragment
+import com.p1ay1s.vbclass.ViewBindingFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull

@@ -60,8 +60,8 @@ import com.p1ay1s.base.extension.toast
 import com.p1ay1s.base.extension.withPermission
 import com.p1ay1s.base.ui.FragmentHost
 import com.p1ay1s.base.ui.FragmentHostView
-import com.p1ay1s.impl.ViewBindingActivity
 import com.p1ay1s.util.ServiceBuilder.ping
+import com.p1ay1s.vbclass.ViewBindingActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -88,8 +88,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         const val MINI_COVER_SIZE = 0.8F // 占 mini player 高度的百分比
     }
 
-    //    private var serviceBinder: MusicService.MusicServiceBinder? = null
-    private var serviceBinder: SafeMusicService.SafeMusicServiceBinder? = null
+    private var serviceBinder: MusicService.MusicServiceBinder? = null
     private var connection = MusicServiceConnection()
 
     private var exitJob: Job? = null
@@ -109,8 +108,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var bottomNavHeight: Int = 0
     private var miniPlayerHeight: Int = 0
 
-    private val songLength: Int
-        //        get() = serviceBinder?.getLength() ?: -1
+    private val songDuration: Int
         get() = serviceBinder?.songDuration ?: -1
 
     private var allowSetSeekbar = true
@@ -143,7 +141,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
         fragmentHostView.apply {
             this.fragmentManager = supportFragmentManager
-            setOnHostChangeListener(OnHostChangeListenerImpl())
+            setOnHostChangeListener(HostListenerImpl())
             if (mainViewModel.hostMap == null || mainViewModel.host == null) {
                 addHost(R.id.index_search) {
                     pushFragment(
@@ -174,7 +172,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 playerBehavior.isHideable = false
                 playerBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 setSong(currentSong!!)
-//                serviceBinder?.getIsPlaying()?.let { setIsPlaying(it) }
                 serviceBinder?.isPlaying?.let { setIsPlaying(it) }
             } else {
                 playerBehavior.isHideable = true
@@ -190,7 +187,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         bottomNavigation.setListeners()
 
         playerBehavior.apply {
-            addBottomSheetCallback(BottomSheetCallbackImpl())
+            addBottomSheetCallback(SheetCallbackImpl())
             player.setOnClickListener {
                 if (this.state != BottomSheetBehavior.STATE_EXPANDED)
                     this.state = BottomSheetBehavior.STATE_EXPANDED
@@ -198,10 +195,9 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
 
         seekBar.max = SEEKBAR_MAX.toInt()
-        seekBar.setOnSeekBarChangeListener(OnSeekBarChangeListenerImpl())
+        seekBar.setOnSeekBarChangeListener(SeekBarListenerImpl())
 
         play.setOnClickListener {
-//            serviceBinder?.play()
             serviceBinder?.switch()
         }
         previous.setOnClickListener {
@@ -218,7 +214,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             serviceBinder?.next()
         }
         smallPlay.setOnClickListener {
-//            serviceBinder?.play()
             serviceBinder?.switch()
         }
 
@@ -226,7 +221,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     /**
-     * 不用约束布局只能用 layout params 设置
+     * 不用约束布局只能用 layout params 设置(由于使用 bottomSheetBehavior 需要 coordinatorLayout)
      */
     private fun setViewsLayoutParams() {
         binding.apply {
@@ -246,7 +241,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
 
             cover.setMargins(top = (0.1 * parentHeight).toInt())
             songName.setMargins(top = (0.05 * parentHeight).toInt())
-            lineBottom.setMargins(bottom = bottomNavHeight)
+            line.setMargins(bottom = bottomNavHeight)
 
             playlist.setMargins(
                 start = (0.03 * parentHeight).toInt(),
@@ -279,24 +274,24 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
+    /**
+     * 当 ping 不通 baseurl 时显示 dialog要求输入新的 baseurl
+     */
     private fun requireNewUrl() {
-        val builder = MaterialAlertDialogBuilder(this@MainActivity)
+        val editText = EditText(this).also {
+            it.hint = "输入新的 baseurl"
+            it.setText(appBaseUrl)
+        }
 
-        val editText = EditText(this@MainActivity)
-        editText.hint = "输入新的 baseurl"
-        editText.setText(appBaseUrl)
-
-        builder.setTitle("服务器连接失败")
+        MaterialAlertDialogBuilder(this)
+            .setTitle("服务器连接失败")
             .setMessage("输入新的 baseurl")
             .setCancelable(true)
             .setView(editText)
             .setNegativeButton("提交") { _, _ ->
                 var newUrl = editText.text.toString().trim()
-
-                if (!newUrl.isUrl())
-                    newUrl = appBaseUrl
-                if (!newUrl.endsWith("/"))
-                    newUrl += "/"
+                if (!newUrl.isUrl()) newUrl = appBaseUrl
+                if (!newUrl.endsWith("/")) newUrl += "/"
 
                 lifecycleScope.launch {
                     putStringData(preferenceBaseUrl, newUrl)
@@ -310,8 +305,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 }
             }
             .setPositiveButton("取消") { _, _ ->
-            }
-        builder.create().show()
+            }.create().show()
     }
 
     /**
@@ -319,21 +313,15 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun startMusicService() {
         if (serviceBinder?.isBinderAlive == true) return
-        val i = Intent(this, SafeMusicService::class.java)
+        val i = Intent(this, MusicService::class.java)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             withPermission(POST_NOTIFICATIONS) {
-                if (serviceBinder?.isBinderAlive == true) return@withPermission
+                bindService(i, connection, Context.BIND_AUTO_CREATE)
+                startService(i)
                 if (!it)
                     toast("未授予通知权限, 无法启用状态栏控制")
-                else {
-                    bindService(i, connection, Context.BIND_AUTO_CREATE)
-                    startService(i)
-                }
             }
-
-            bindService(i, connection, Context.BIND_AUTO_CREATE)
-            startService(i)
         } else {
             bindService(i, connection, Context.BIND_AUTO_CREATE)
             startService(i)
@@ -362,17 +350,17 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     override fun onStop() {
         mainViewModel.host?.hide() // 防止残留
         mainViewModel.hostMap = binding.fragmentHostView.map
-        super.onStop()
+        super.onStop() // on stop 之后不能再访问 fragment manager
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        serviceBinder?.setListener(null)
+        serviceBinder?.setMusicServiceListener(null)
         unbindService(connection) // 不仅是要同一个 connection, 还得是同一个 context
     }
 
     fun onSongPass(playlist: List<Song>) {
-        serviceBinder?.updatePlaylist(playlist)
+        serviceBinder?.setNewPlaylist(playlist)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -438,19 +426,21 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     }
 
     private fun setSeekbar(percent: Double, isReset: Boolean) {
-        binding.seekBar.progress = (percent * SEEKBAR_MAX).toInt()
         setTimers(percent, isReset)
+        binding.seekBar.progress = (percent * SEEKBAR_MAX).toInt()
     }
 
     private fun setTimers(percent: Double, isReset: Boolean) = lifecycleScope.launch {
         val total: String
         val current: String
 
-        val length = songLength
+        val length = songDuration
         if (length <= 0 || isReset) {
-            total = "-"
+            binding.seekBar.setLoading(true)
+            total = "-0:00"
             current = "0:00"
         } else {
+            binding.seekBar.setLoading(false)
             total = formatDuration(length)
             current = formatDuration((percent * length).toInt())
         }
@@ -461,7 +451,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    inner class OnHostChangeListenerImpl : FragmentHostView.OnHostChangeListener {
+    /**
+     * 监听 fragment host 的当前栈变化
+     */
+    inner class HostListenerImpl : FragmentHostView.OnHostChangeListener {
         override fun onHostChanged(newHost: FragmentHost?, newIndex: Int) {
             newHost?.let {
                 mainViewModel.host = it
@@ -470,25 +463,25 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    // 旨在在各个播放器上显示准确的状态, 当 music controller 完成了工作才通知才更新通知
-    inner class MusicControllerListenerImpl : MusicServiceListener {
+    /**
+     * 音乐服务的回调
+     */
+    inner class MusicServiceListenerImpl : MusicServiceListener {
 
         override fun onSongChanged(song: Song) {
-            if (mainViewModel.currentSong == song)
-                return
+            if (mainViewModel.currentSong == song) return
 
             playerBehavior.run {
-                if (state != BottomSheetBehavior.STATE_HIDDEN)
-                    return@run
+                if (state != BottomSheetBehavior.STATE_HIDDEN) return@run
+
                 state = BottomSheetBehavior.STATE_COLLAPSED
                 lifecycleScope.launch { // 立即设置 false 会导致页面从顶端回落
                     while (true) {
-                        if (state != BottomSheetBehavior.STATE_COLLAPSED) {
-                            delay(20)
-                        } else {
+                        if (state == BottomSheetBehavior.STATE_COLLAPSED) {
                             isHideable = false
                             return@launch
                         }
+                        delay(20)
                     }
                 }
             }
@@ -502,8 +495,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
 
         override fun onProgressUpdated(newProgress: Double, isReset: Boolean) {
-            if (allowSetSeekbar)
-                setSeekbar(newProgress, isReset)
+            if (allowSetSeekbar) setSeekbar(newProgress, isReset) // 在用户拉动时不允许回调函数更新 seekbar
         }
 
         override fun onPlayModeChanged(newState: Int) {
@@ -516,9 +508,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     inner class MusicServiceConnection : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-//            serviceBinder = service as MusicService.MusicServiceBinder
-            serviceBinder = service as SafeMusicService.SafeMusicServiceBinder
-            serviceBinder?.setListener(MusicControllerListenerImpl())
+            serviceBinder = service as MusicService.MusicServiceBinder
+            serviceBinder?.setMusicServiceListener(MusicServiceListenerImpl())
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
@@ -526,16 +517,15 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    inner class OnSeekBarChangeListenerImpl : SeekBar.OnSeekBarChangeListener {
+    inner class SeekBarListenerImpl : SeekBar.OnSeekBarChangeListener {
 
         /**
          * progress max: 300
          */
         override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-            if (fromUser) {
-                musicProgress = progress
-                setTimers(progress / SEEKBAR_MAX, false)
-            }
+            if (!fromUser) return
+            musicProgress = progress
+            setTimers(progress / SEEKBAR_MAX, false)
         }
 
         override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -552,14 +542,21 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     /**
      * 绑定播放器和导航栏(播放器展开时导航栏收缩)
      */
-    inner class BottomSheetCallbackImpl : BottomSheetBehavior.BottomSheetCallback() {
+    inner class SheetCallbackImpl : BottomSheetBehavior.BottomSheetCallback() {
 
         override fun onStateChanged(bottomSheet: View, newState: Int) {
-            if (newState == BottomSheetBehavior.STATE_COLLAPSED) { // 弹出播放器后重设大小避免遮挡
-                binding.apply {
-                    fragmentHostView.updateLayoutParams {
+            binding.apply {
+                if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    fragmentHostView.updateLayoutParams { // 弹出播放器后重设大小避免遮挡
                         height = parentHeight - bottomNavHeight - miniPlayerHeight
                     }
+
+                    val color = ContextCompat.getColor(this@MainActivity, R.color.bar)
+                    player.setBackgroundColor(color)
+                    miniPlayer.visibility = View.VISIBLE
+                } else {
+                    player.background = mainViewModel.playerBackground
+                    miniPlayer.visibility = View.INVISIBLE
                 }
             }
         }
@@ -570,28 +567,13 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
          * 此处 slideOffset 完全可以当作一个百分数来看待
          */
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            val navTranslationY = bottomNavHeight * slideOffset * 2 // 导航栏的偏移量
             if (slideOffset in 0.0F..1.0F) {
+                val navTranslationY = bottomNavHeight * slideOffset * 2 // 导航栏的偏移量
                 binding.bottomNavigation.translationY = navTranslationY
-                binding.lineBottom.translationY = navTranslationY
+                binding.line.translationY = navTranslationY
             }
 
             bindCover(slideOffset)
-
-            if (slideOffset < 0.005) { // 拉动一点点就隐藏歌名和设置背景
-                binding.player.setBackgroundColor(
-                    ContextCompat.getColor(
-                        this@MainActivity,
-                        R.color.bar
-                    )
-                )
-                binding.miniPlayer.visibility = View.VISIBLE
-                binding.lineTop.visibility = View.VISIBLE
-            } else {
-                binding.player.background = mainViewModel.playerBackground
-                binding.miniPlayer.visibility = View.INVISIBLE
-                binding.lineTop.visibility = View.INVISIBLE
-            }
         }
     }
 
@@ -692,7 +674,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         }
     }
 
-    // 部分数据存取逻辑
     override fun onCreate(savedInstanceState: Bundle?) {
         lifecycleScope.launch {
             val customUrl = getStringData(preferenceBaseUrl)

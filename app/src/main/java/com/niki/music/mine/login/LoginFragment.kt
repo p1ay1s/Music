@@ -10,7 +10,7 @@ import com.niki.music.mine.UserEffect
 import com.niki.music.mine.UserIntent
 import com.niki.music.mine.UserViewModel
 import com.p1ay1s.base.extension.loadCircleImage
-import com.p1ay1s.impl.ui.ViewBindingDialogFragment
+import com.p1ay1s.vbclass.ui.ViewBindingDialogFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map

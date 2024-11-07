@@ -24,7 +24,7 @@ import com.p1ay1s.base.extension.addOnLoadMoreListener_H
 import com.p1ay1s.base.extension.findHost
 import com.p1ay1s.base.extension.setSnapHelper
 import com.p1ay1s.base.ui.PreloadLayoutManager
-import com.p1ay1s.impl.ViewBindingFragment
+import com.p1ay1s.vbclass.ViewBindingFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull

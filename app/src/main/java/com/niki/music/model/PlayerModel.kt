@@ -8,6 +8,7 @@ import com.niki.common.services.PlayerService
 import com.p1ay1s.util.ServiceBuilder
 import com.p1ay1s.util.ServiceBuilder.requestEnqueue
 import com.p1ay1s.util.ServiceBuilder.requestExecute
+import com.p1ay1s.util.ServiceBuilder.requestSuspend
 
 class PlayerModel {
     val playerService by lazy {
@@ -43,7 +44,15 @@ class PlayerModel {
         crossinline onError: (Int?, String) -> Unit
     ) = requestEnqueue(playerService.getSongInfo(id, level, cookie), onSuccess, onError)
 
-    suspend inline fun getSongInfoExecute(
+    suspend inline fun getSongInfoSuspend(
+        id: String,
+        level: String,
+        cookie: String?,
+        crossinline onSuccess: (GetSongInfoApiResponse) -> Unit,
+        crossinline onError: (Int?, String) -> Unit
+    ) = requestSuspend(playerService.getSongInfo(id, level, cookie), onSuccess, onError)
+
+    inline fun getSongInfoExecute(
         id: String,
         level: String,
         cookie: String?,

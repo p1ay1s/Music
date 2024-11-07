@@ -5,10 +5,9 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.song.Song
 import com.niki.common.utils.setSongDetails
-import com.niki.music.appVibrator
 import com.niki.music.databinding.LayoutSongBinding
 import com.p1ay1s.base.extension.loadRadiusImage
-import com.p1ay1s.impl.ui.ViewBindingListAdapter
+import com.p1ay1s.vbclass.ui.ViewBindingListAdapter
 
 interface SongAdapterListener {
     fun onPlayMusic(list: List<Song>)

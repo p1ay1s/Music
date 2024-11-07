@@ -33,11 +33,6 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback" />
-        <service
-            android:name=".SafeMusicService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="mediaPlayback" />
 
         <activity
             android:name=".MainActivity"

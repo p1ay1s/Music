@@ -21,13 +21,6 @@
             app:behavior_hideable="false"
             app:layout_behavior="@string/bottom_sheet_behavior">
 
-            <View
-                android:id="@+id/line_Top"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/contrast_transparent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/miniPlayer"
                 android:layout_width="0dp"
@@ -121,7 +114,7 @@
                 app:layout_constraintStart_toStartOf="@id/seekBar"
                 app:layout_constraintTop_toBottomOf="@id/songName" />
 
-            <SeekBar
+            <com.niki.music.ui.LoadingSeekBar
                 android:id="@+id/seekBar"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -217,11 +210,11 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <View
-            android:id="@+id/line_Bottom"
+            android:id="@+id/line"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_gravity="bottom"
-            android:background="@color/contrast_transparent" />
+            android:background="@color/line" />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigation"

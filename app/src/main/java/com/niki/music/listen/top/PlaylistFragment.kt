@@ -21,7 +21,7 @@ import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
 import com.p1ay1s.base.extension.loadImage
 import com.p1ay1s.base.ui.PreloadLayoutManager
-import com.p1ay1s.impl.ViewBindingFragment
+import com.p1ay1s.vbclass.ViewBindingFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

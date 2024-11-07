@@ -14,7 +14,7 @@ import com.niki.music.databinding.FragmentSongDetailBinding
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.toast
-import com.p1ay1s.impl.ui.ViewBindingDialogFragment
+import com.p1ay1s.vbclass.ui.ViewBindingDialogFragment
 
 fun Fragment.showSongDetail(song: Song) {
     val fragment = SongDetailDialogFragment(song)

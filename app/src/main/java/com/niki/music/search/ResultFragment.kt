@@ -18,7 +18,7 @@ import com.niki.music.ui.showSongDetail
 import com.p1ay1s.base.extension.addLineDecoration
 import com.p1ay1s.base.extension.addOnLoadMoreListener_V
 import com.p1ay1s.base.ui.PreloadLayoutManager
-import com.p1ay1s.impl.ViewBindingFragment
+import com.p1ay1s.vbclass.ViewBindingFragment
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
