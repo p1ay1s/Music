@@ -8,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
+import com.niki.common.utils.setSize
 import com.niki.common.utils.setViewBelowStatusBar
 import com.niki.music.MainActivity
 import com.niki.music.appFadeInAnim
@@ -58,6 +59,11 @@ class PlaylistFragment : ViewBindingFragment<FragmentTopPlaylistBinding>() {
         appbar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val alpha = (-verticalOffset / appBarLayout.totalScrollRange.toFloat())
             block.alpha = 1 - alpha * alpha
+        }
+
+        (activity as? MainActivity)?.parentWidth?.let {
+            background.maxHeight = it
+            background.setSize(it)
         }
 
         toolbar.title = playlist.name

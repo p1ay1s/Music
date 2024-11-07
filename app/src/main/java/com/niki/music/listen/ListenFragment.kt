@@ -19,10 +19,10 @@ import com.niki.music.listen.ListenViewModel.Companion.TOP_LIMIT
 import com.niki.music.listen.top.PlaylistFragment
 import com.niki.music.listen.top.TopPlaylistAdapter
 import com.niki.music.listen.top.TopPlaylistAdapterListener
+import com.niki.music.ui.setEdgeSnapHelper
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.extension.addOnLoadMoreListener_H
 import com.p1ay1s.base.extension.findHost
-import com.p1ay1s.base.extension.setSnapHelper
 import com.p1ay1s.base.ui.PreloadLayoutManager
 import com.p1ay1s.vbclass.ViewBindingFragment
 import kotlinx.coroutines.Job
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 
 class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
     private lateinit var topAdapter: TopPlaylistAdapter
-    private lateinit var topLayoutManager: ToMiddleLayoutManager
+    private lateinit var topLayoutManager: PreloadLayoutManager
 
     private lateinit var listenViewModel: ListenViewModel
     private val mainViewModel: MainViewModel by activityViewModels<MainViewModel>()
@@ -50,7 +50,8 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
             setViewBelowStatusBar(recyclerViewTop)
 
         with(binding.recyclerViewTop) {
-            setSnapHelper()
+//            setSnapHelper()
+            setEdgeSnapHelper()
 
             adapter = topAdapter
             layoutManager = topLayoutManager
@@ -92,15 +93,14 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
     }
 
     private fun requireScroll(position: Int = listenViewModel.position) {
-        if (getItemRealPosition() != position)
-            binding.recyclerViewTop.smoothScrollToPosition(position)
+        binding.recyclerViewTop.smoothScrollToPosition(position)
     }
 
     private fun initValues() {
         topAdapter = TopPlaylistAdapter()
         topAdapter.setOnTopPlaylistAdapterListener(TopPlaylistAdapterListenerImpl())
 
-        topLayoutManager = ToMiddleLayoutManager(
+        topLayoutManager = PreloadLayoutManager(
             requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             TOP_LIMIT
@@ -128,12 +128,12 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
 
     inner class TopPlaylistAdapterListenerImpl : TopPlaylistAdapterListener {
         override fun onContact(position: Int): Boolean {
-            if (getItemRealPosition() == position) { // 是居中的 item , 打开
-                return true
-            } else {
-                requireScroll(position) // 不是居中的 , 滚动使其居中
-                return false
-            }
+//            if (getItemRealPosition() == position) { // 是居中的 item , 打开
+            return true
+//            } else {
+//                requireScroll(position) // 不是居中的 , 滚动使其居中
+//                return false
+//            }
         }
 
         // adapter 准备完成 , 添加 fragment
@@ -152,7 +152,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
     /**
      * 具有预加载功能的 layoutManager 子类
      */
-    class ToMiddleLayoutManager(
+    class ToMiddleLayoutManjager(
         context: Context,
         orientation: Int,
         size: Int = 4,

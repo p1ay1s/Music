@@ -19,7 +19,6 @@ import android.view.animation.AnimationUtils
 import android.widget.EditText
 import android.widget.SeekBar
 import androidx.activity.enableEdgeToEdge
-import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -103,8 +102,12 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private val playerBehavior
         get() = BottomSheetBehavior.from(binding.player)
 
-    private var parentHeight: Int = 0
-    private var parentWidth: Int = 0
+    private var _parentHeight: Int = 0
+    val parentHeight: Int
+        get() = _parentHeight
+    private var _parentWidth: Int = 0
+    val parentWidth: Int
+        get() = _parentWidth
     private var bottomNavHeight: Int = 0
     private var miniPlayerHeight: Int = 0
 
@@ -116,15 +119,15 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     override fun ActivityMainBinding.initBinding() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             enableEdgeToEdge()
-            parentHeight = getScreenHeight()
-            parentWidth = getScreenWidth()
+            _parentHeight = getScreenHeight()
+            _parentWidth = getScreenWidth()
         } else {
-            parentHeight = binding.root.resources.displayMetrics.heightPixels
-            parentWidth = binding.root.resources.displayMetrics.widthPixels
+            _parentHeight = binding.root.resources.displayMetrics.heightPixels
+            _parentWidth = binding.root.resources.displayMetrics.widthPixels
         }
 
-        bottomNavHeight = (parentHeight * BOTTOM_NAV_WEIGHT).toInt()
-        miniPlayerHeight = (parentHeight * MINI_PLAYER_WEIGHT).toInt()
+        bottomNavHeight = (_parentHeight * BOTTOM_NAV_WEIGHT).toInt()
+        miniPlayerHeight = (_parentHeight * MINI_PLAYER_WEIGHT).toInt()
 
         mainViewModel = ViewModelProvider(this@MainActivity)[MainViewModel::class.java]
 
@@ -210,10 +213,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             serviceBinder?.changePlayMode()
         }
 
-        smallNext.setOnClickListener {
+        miniNext.setOnClickListener {
             serviceBinder?.next()
         }
-        smallPlay.setOnClickListener {
+        miniPlay.setOnClickListener {
             serviceBinder?.switch()
         }
 
@@ -225,31 +228,32 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun setViewsLayoutParams() {
         binding.apply {
-            fragmentHostView.setSize(height = parentHeight - bottomNavHeight)
+            fragmentHostView.setSize(height = _parentHeight - bottomNavHeight)
             bottomNavigation.setSize(height = bottomNavHeight)
 
-            cover.setSize((0.85 * parentWidth).toInt())
-            playlist.setSize((0.1 * parentWidth).toInt())
-            playMode.setSize((0.1 * parentWidth).toInt())
+            cover.setSize((0.85 * _parentWidth).toInt())
+            playlist.setSize((0.1 * _parentWidth).toInt())
+            playMode.setSize((0.1 * _parentWidth).toInt())
+
             miniPlayer.setSize(
                 height = miniPlayerHeight,
-                width = parentWidth - miniPlayerHeight
+                width = _parentWidth - miniPlayerHeight
             )
-            play.setSize((0.17 * parentWidth).toInt())
-            previous.setSize((0.16 * parentWidth).toInt())
-            next.setSize((0.17 * parentWidth).toInt())
+            play.setSize((0.17 * _parentWidth).toInt())
+            previous.setSize((0.16 * _parentWidth).toInt())
+            next.setSize((0.17 * _parentWidth).toInt())
 
-            cover.setMargins(top = (0.1 * parentHeight).toInt())
-            songName.setMargins(top = (0.05 * parentHeight).toInt())
+            cover.setMargins(top = (0.1 * _parentHeight).toInt())
+            songName.setMargins(top = (0.05 * _parentHeight).toInt())
             line.setMargins(bottom = bottomNavHeight)
 
             playlist.setMargins(
-                start = (0.03 * parentHeight).toInt(),
-                bottom = (0.03 * parentHeight).toInt()
+                start = (0.03 * _parentHeight).toInt(),
+                bottom = (0.03 * _parentHeight).toInt()
             )
             playMode.setMargins(
-                end = (0.03 * parentHeight).toInt(),
-                bottom = (0.03 * parentHeight).toInt()
+                end = (0.03 * _parentHeight).toInt(),
+                bottom = (0.03 * _parentHeight).toInt()
             )
 
             playerBehavior.peekHeight = bottomNavHeight + miniPlayerHeight
@@ -417,10 +421,10 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
         binding.run {
             if (isPlaying) {
                 play.switchImage(PlayButton.PAUSE)
-                smallPlay.setImageResource(R.drawable.ic_pause)
+                miniPlay.setImageResource(R.drawable.ic_pause)
             } else {
                 play.switchImage(PlayButton.PLAY)
-                smallPlay.setImageResource(R.drawable.ic_play)
+                miniPlay.setImageResource(R.drawable.ic_play)
             }
         }
     }
@@ -548,14 +552,21 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             binding.apply {
                 if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
                     fragmentHostView.updateLayoutParams { // 弹出播放器后重设大小避免遮挡
-                        height = parentHeight - bottomNavHeight - miniPlayerHeight
+                        height = _parentHeight - bottomNavHeight - miniPlayerHeight
                     }
 
-                    val color = ContextCompat.getColor(this@MainActivity, R.color.bar)
-                    player.setBackgroundColor(color)
+//                    val color = ContextCompat.getColor(this@MainActivity, R.color.bar)
+//                    player.setBackgroundColor(color)
+//                    miniPlay.visibility = View.VISIBLE
+//                    miniNext.visibility = View.VISIBLE
+//                    miniSongName.visibility = View.VISIBLE
                     miniPlayer.visibility = View.VISIBLE
                 } else {
-                    player.background = mainViewModel.playerBackground
+//                    player.background = mainViewModel.playerBackground
+
+//                    miniPlay.visibility = View.INVISIBLE
+//                    miniNext.visibility = View.INVISIBLE
+//                    miniSongName.visibility = View.INVISIBLE
                     miniPlayer.visibility = View.INVISIBLE
                 }
             }
@@ -568,6 +579,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
          */
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
             if (slideOffset in 0.0F..1.0F) {
+                binding.shade.alpha =  1 - slideOffset * 15 // 使小播放器渐变消失
                 val navTranslationY = bottomNavHeight * slideOffset * 2 // 导航栏的偏移量
                 binding.bottomNavigation.translationY = navTranslationY
                 binding.line.translationY = navTranslationY
@@ -669,7 +681,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             if (playerBehavior.state == BottomSheetBehavior.STATE_COLLAPSED)
                 bindCover(0F) // 让图片立即复位, 否则在初始化时不会显示在下端
             songName.text = song.name
-            smallSongName.text = song.name
+            miniSongName.text = song.name
             singerName.setSongDetails(song)
         }
     }

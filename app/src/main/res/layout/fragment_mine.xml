@@ -39,6 +39,7 @@
                     android:id="@+id/structure"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@color/line"
                     app:layout_collapseMode="parallax"
                     app:layout_collapseParallaxMultiplier="0.75">
 
@@ -83,11 +84,6 @@
                         android:textColor="@color/unselected"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/background" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="40dp"
-                        app:layout_constraintTop_toBottomOf="@id/nickname" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
             </com.google.android.material.appbar.CollapsingToolbarLayout>

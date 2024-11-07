@@ -316,6 +316,7 @@ class MusicService : Service() {
      */
     private fun setNewPlaylist(list: List<Song>) = musicScope.launch(singleThreadContext) {
         list.let {
+            if (it.isEmpty()) return@launch
             currentIndex = 0
             currentSongs = it.toMutableList()
             backupSongs = it.toMutableList()

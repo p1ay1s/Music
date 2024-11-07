@@ -1,9 +1,10 @@
 package com.niki.music.listen.top
 
-import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
+import com.niki.common.utils.setHorizontalMargins
+import com.niki.common.utils.setSize
 import com.niki.music.appLoadingDialog
 import com.niki.music.databinding.LayoutTopPlaylistBinding
 import com.niki.music.model.PlayerModel
@@ -31,6 +32,8 @@ class TopPlaylistAdapter :
 
     companion object {
         const val PLAYLIST_SONGS_LIMIT = 15
+        private const val NORMAL_MARGIN = 0.02
+        private const val ROOT_SIZE = 0.5 - NORMAL_MARGIN * 2
     }
 
     private var listener: TopPlaylistAdapterListener? = null
@@ -39,12 +42,13 @@ class TopPlaylistAdapter :
     private var isLoading = false
 
     override fun LayoutTopPlaylistBinding.onBindViewHolder(data: Playlist, position: Int) {
-        root.updateLayoutParams {
-            val w = root.resources.displayMetrics.widthPixels
-            width = (w * 0.83).toInt()
-        }
-
         playlist = data
+        val w = root.resources.displayMetrics.widthPixels
+
+        root.setSize(width = (w * ROOT_SIZE).toInt())
+        root.setHorizontalMargins((w * NORMAL_MARGIN).toInt())
+
+        cover.setSize((w * ROOT_SIZE).toInt())
 
         cover.loadRadiusImage(data.coverImgUrl, radius = 55)
         root.setOnClickListener {

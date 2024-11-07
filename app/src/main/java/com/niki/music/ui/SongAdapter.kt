@@ -67,7 +67,7 @@ class SongAdapter(
         }
     }
 
-    private fun getRelocatedList(startSong: Song): List<Song> {
+    private fun getRelocatedList(startSong: Song): List<Song> = try {
         val list = mutableListOf<Song>()
         currentList.apply {
             if (isEmpty()) return emptyList()
@@ -76,7 +76,9 @@ class SongAdapter(
             list.addAll(subList(index, size)) // 不用减一
             list.addAll(subList(0, index))
         }
-        return list.toList()
+        list.toList()
+    } catch (_: Exception) {
+        emptyList()
     }
 
     class SongCallback : DiffUtil.ItemCallback<Song>() {

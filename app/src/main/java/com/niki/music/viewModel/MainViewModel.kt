@@ -24,6 +24,7 @@ class MainViewModel : BaseViewModel<Null, Null, Null>() {
     var activityIndex = -1
 
     var playlistMap: LimitedMap<String, Pair<Playlist, List<Song>>> = LimitedMap(MAX_PLAYLIST_SIZE)
+    var listMap: HashMap<String, List<Song>?> = hashMapOf()
 
     fun getSongsFromPlaylist(
         id: String,
