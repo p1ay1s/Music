@@ -50,7 +50,6 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
             setViewBelowStatusBar(recyclerViewTop)
 
         with(binding.recyclerViewTop) {
-//            setSnapHelper()
             setEdgeSnapHelper()
 
             adapter = topAdapter
@@ -127,15 +126,6 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
     }
 
     inner class TopPlaylistAdapterListenerImpl : TopPlaylistAdapterListener {
-        override fun onContact(position: Int): Boolean {
-//            if (getItemRealPosition() == position) { // 是居中的 item , 打开
-            return true
-//            } else {
-//                requireScroll(position) // 不是居中的 , 滚动使其居中
-//                return false
-//            }
-        }
-
         // adapter 准备完成 , 添加 fragment
         override fun onReady(playlist: Playlist, songs: List<Song>) {
             val num = getLargeRandomNum()
@@ -152,7 +142,7 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
     /**
      * 具有预加载功能的 layoutManager 子类
      */
-    class ToMiddleLayoutManjager(
+    class ToMiddleLayoutManager(
         context: Context,
         orientation: Int,
         size: Int = 4,
@@ -168,6 +158,9 @@ class ListenFragment : ViewBindingFragment<FragmentListenBinding>() {
             startSmoothScroll(smoothScroller)
         }
 
+        /**
+         * 帮助滚至中间
+         */
         private class CenterSmoothScroller(context: Context) : LinearSmoothScroller(context) {
             override fun calculateDtToFit(
                 viewStart: Int,

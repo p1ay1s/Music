@@ -12,14 +12,7 @@ import com.p1ay1s.base.extension.loadRadiusImage
 import com.p1ay1s.base.extension.toast
 import com.p1ay1s.vbclass.ui.ViewBindingListAdapter
 
-/**
- * 用于实现点击居中 item 时打开 fragment , 否则滚动
- */
 interface TopPlaylistAdapterListener {
-    /**
-     * 是否继续加载
-     */
-    fun onContact(position: Int): Boolean
 
     /**
      * 资源准备完成后回调
@@ -32,7 +25,8 @@ class TopPlaylistAdapter :
 
     companion object {
         const val PLAYLIST_SONGS_LIMIT = 15
-        private const val NORMAL_MARGIN = 0.02
+
+        private const val NORMAL_MARGIN = 0.03
         private const val ROOT_SIZE = 0.5 - NORMAL_MARGIN * 2
     }
 
@@ -52,13 +46,6 @@ class TopPlaylistAdapter :
 
         cover.loadRadiusImage(data.coverImgUrl, radius = 55)
         root.setOnClickListener {
-            onItemClick(data, position)
-        }
-    }
-
-    private fun onItemClick(data: Playlist, position: Int) {
-        val shouldKeepOn = listener?.onContact(position) ?: false
-        if (shouldKeepOn) {
             loadFirstPage(data)
         }
     }

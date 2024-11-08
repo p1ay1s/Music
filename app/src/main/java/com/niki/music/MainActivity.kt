@@ -6,7 +6,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.TransitionDrawable
 import android.os.Build
 import android.os.Bundle
@@ -22,9 +21,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -48,9 +44,10 @@ import com.niki.music.databinding.ActivityMainBinding
 import com.niki.music.listen.ListenFragment
 import com.niki.music.mine.MineFragment
 import com.niki.music.search.ResultFragment
-import com.niki.music.ui.BlurTransformation
 import com.niki.music.ui.button.PlayButton
-import com.niki.music.ui.loadCover
+import com.niki.music.ui.loadBlurDrawable
+import com.niki.music.ui.loadCCover
+import com.niki.music.ui.loadDrawable
 import com.niki.music.viewModel.MainViewModel
 import com.p1ay1s.base.ActivityPreferences
 import com.p1ay1s.base.appBaseUrl
@@ -91,7 +88,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
     private var connection = MusicServiceConnection()
 
     private var exitJob: Job? = null
-    private var backgroundJob: Job? = null
 
     private var oneMoreClickToExit = false
 
@@ -146,7 +142,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
             this.fragmentManager = supportFragmentManager
             setOnHostChangeListener(HostListenerImpl())
             if (mainViewModel.hostMap == null || mainViewModel.host == null) {
-                addHost(R.id.index_search) {
+                addHost(R.id.index_search) { // 用 menu id 创建一个栈并添加一个 fragment
                     pushFragment(
                         FragmentTag.RESULT_FRAGMENT,
                         ResultFragment::class.java
@@ -180,11 +176,6 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                 playerBehavior.isHideable = true
                 playerBehavior.state = BottomSheetBehavior.STATE_HIDDEN
             }
-
-            if (playerBackground == null)
-                playerBackground = player.background
-            if (playerBackground != null && playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED && playerBehavior.state != BottomSheetBehavior.STATE_HIDDEN)
-                player.background = playerBackground
         }
 
         bottomNavigation.setListeners()
@@ -555,18 +546,8 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
                         height = _parentHeight - bottomNavHeight - miniPlayerHeight
                     }
 
-//                    val color = ContextCompat.getColor(this@MainActivity, R.color.bar)
-//                    player.setBackgroundColor(color)
-//                    miniPlay.visibility = View.VISIBLE
-//                    miniNext.visibility = View.VISIBLE
-//                    miniSongName.visibility = View.VISIBLE
                     miniPlayer.visibility = View.VISIBLE
                 } else {
-//                    player.background = mainViewModel.playerBackground
-
-//                    miniPlay.visibility = View.INVISIBLE
-//                    miniNext.visibility = View.INVISIBLE
-//                    miniSongName.visibility = View.INVISIBLE
                     miniPlayer.visibility = View.INVISIBLE
                 }
             }
@@ -579,7 +560,7 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
          */
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
             if (slideOffset in 0.0F..1.0F) {
-                binding.shade.alpha =  1 - slideOffset * 15 // 使小播放器渐变消失
+                binding.shade.alpha = 1 - slideOffset * 15 // 使小播放器渐变消失
                 val navTranslationY = bottomNavHeight * slideOffset * 2 // 导航栏的偏移量
                 binding.bottomNavigation.translationY = navTranslationY
                 binding.line.translationY = navTranslationY
@@ -649,35 +630,21 @@ class MainActivity : ViewBindingActivity<ActivityMainBinding>(),
      */
     private fun setSong(song: Song) {
         binding.run {
-            Glide.with(this@MainActivity)
-                .load(song.al.picUrl)
-                .override(100) // 先把原图质量变低再模糊就会是比较好的模糊效果
-                .fitCenter()
-                .transform(BlurTransformation(this@MainActivity, 40))
-                .into(object : CustomTarget<Drawable?>() {
-                    override fun onResourceReady(
-                        resource: Drawable,
-                        transition: Transition<in Drawable?>?
-                    ) {
-                        if (mainViewModel.currentSong != song) return
+            loadDrawable(song.al.picUrl, true) { drawable ->
+                cover.loadCCover(drawable, 40)
+                loadBlurDrawable(drawable, 40) {
+                    if (mainViewModel.currentSong != song) return@loadBlurDrawable
 
-                        mainViewModel.playerBackground = resource
-                        if (playerBehavior.state != BottomSheetBehavior.STATE_COLLAPSED && playerBehavior.state != BottomSheetBehavior.STATE_HIDDEN) {
-                            val transitionDrawable =
-                                TransitionDrawable(arrayOf(player.background, resource))
-                            backgroundJob?.cancel()
-                            backgroundJob = lifecycleScope.launch(Dispatchers.Main) {
-                                player.background = null
-                                player.background = transitionDrawable
-                                transitionDrawable.startTransition(600)
-                            }
-                        }
-                    }
+                    val transitionDrawable =
+                        TransitionDrawable(
+                            arrayOf(player.background, it)
+                        )
+                    player.background = null
+                    player.background = transitionDrawable
+                    transitionDrawable.startTransition(600)
+                }
+            }
 
-                    override fun onLoadCleared(placeholder: Drawable?) {}
-                })
-
-            cover.loadCover(song.al.picUrl, radius = 40)
             if (playerBehavior.state == BottomSheetBehavior.STATE_COLLAPSED)
                 bindCover(0F) // 让图片立即复位, 否则在初始化时不会显示在下端
             songName.text = song.name

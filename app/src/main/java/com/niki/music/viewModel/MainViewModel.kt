@@ -1,6 +1,5 @@
 package com.niki.music.viewModel
 
-import android.graphics.drawable.Drawable
 import com.niki.common.repository.dataclasses.album.AlbumResponse
 import com.niki.common.repository.dataclasses.playlist.Playlist
 import com.niki.common.repository.dataclasses.song.Song
@@ -15,7 +14,6 @@ class MainViewModel : BaseViewModel<Null, Null, Null>() {
         const val MAX_PLAYLIST_SIZE = 10
     }
 
-    var playerBackground: Drawable? = null
     var currentSong: Song? = null
 
     var hostMap: HashMap<Int, FragmentHost>? = null

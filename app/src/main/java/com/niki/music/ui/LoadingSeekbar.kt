@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.animation.LinearInterpolator
 import androidx.appcompat.widget.AppCompatSeekBar
+import kotlin.math.roundToInt
 
 /**
  * 支持显示加载状态的 seekbar
@@ -18,7 +19,7 @@ class LoadingSeekBar @JvmOverloads constructor(
     private var isLoading = false
     private var loadingAnimator: ValueAnimator? = null
 
-    private val animDuration = 400L        // 时长
+    private val animDuration = 600L        // 时长
     private val startPos = 0f             // 起始进度
     private val endPos = 1f               // 结束进度
     private val customInterpolator = LinearInterpolator() // 匀速插值器
@@ -37,7 +38,7 @@ class LoadingSeekBar @JvmOverloads constructor(
                         if (animation.currentPlayTime % (animDuration * 2) < 50L) 0F else 180F // 0, 2 * duration, 4 * duration... 设置旋转为 0, 否则 180
 
                 val progress = animation.animatedValue as Float
-                setProgress((progress * max).toInt())
+                setProgress((progress * max).roundToInt())
             }
         }
     }

@@ -42,10 +42,12 @@ class SongDetailDialogFragment(private val song: Song? = null) :
 
         song = targetSong
         singerName.setSingerName(targetSong)
-        cover.loadCover(targetSong.al.picUrl, radius = 30)
-        root.setOnClickListener {
-
+        requireActivity().loadDrawable(
+            targetSong.al.picUrl
+        ) {
+            cover.loadCCover(it, 30)
         }
+
         singerName.setOnClickListener { singerName.text.toast() }
         songName.setOnClickListener { songName.text.toast() }
         albumName.setOnClickListener {
